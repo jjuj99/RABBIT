@@ -1,0 +1,33 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router";
+import App from "./App.tsx";
+import "./index.css";
+
+const queryClient = new QueryClient();
+
+// MSW 활성화 함수
+async function enableMocking() {
+  // Vite의 환경변수 사용
+  if (import.meta.env.MODE === "development") {
+    const { worker } = await import("./shared/lib/browser");
+    return worker.start();
+  }
+}
+
+// MSW 초기화 후 앱 렌더링
+enableMocking().then(() => {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+        {/* 개발 환경에서만 DevTools 표시 */}
+        {import.meta.env.DEV && <ReactQueryDevtools />}
+      </QueryClientProvider>
+    </StrictMode>,
+  );
+});

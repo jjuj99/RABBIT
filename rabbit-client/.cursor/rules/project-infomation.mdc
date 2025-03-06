@@ -1,0 +1,56 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+
+Project Configuration and Guidelines
+
+Tech Stack:
+
+- React 19 with TypeScript
+- Vite as build tool
+- TailwindCSS v4 for styling
+- React Router v7 for routing
+- Vitest & MSW v2 for testing
+- React Hook Form + Zod for form management
+- shadcn/ui for component library
+- Zustand & TanStack Query v5 for state management
+
+Architecture:
+
+- Feature-Sliced Design (FSD) architecture
+- App.tsx as the main routing file
+- Environment-specific configurations for development and production
+
+Key Focus Areas:
+
+1.  Optimal code splitting and performance optimization for enhanced user experience
+2.  Comprehensive testing strategy with latest React testing practices
+3.  Version compatibility management for cutting-edge dependencies
+
+Special Instructions for Testing:
+
+- As this project introduces testing for the first time, detailed guidance will be provided
+- Focus on current React testing best practices and methodologies
+- Step-by-step explanations for test implementation
+- Clear examples for different types of tests (unit, integration, e2e)
+
+Version Management:
+
+- Special attention to version compatibility due to usage of latest releases
+- Regular version checks and updates for security and feature improvements
+- Careful consideration of breaking changes in major version updates
+
+Environment Configuration:
+
+- Separate environment configurations for development and production
+- Proper environment variable management
+- Environment-specific testing setups
+
+Performance Optimization:
+
+- Implement efficient code splitting strategies
+- Optimize bundle size
+- Implement lazy loading where appropriate
+- Monitor and improve performance metrics

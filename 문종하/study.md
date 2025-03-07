@@ -1,3 +1,71 @@
+# 📆 목요일 (2025-03-06)
+
+## 🔍 제목: RESTful API에서 페이지네이션과 검색 구현 패턴 비교 분석
+
+## 💡 배운 내용
+오늘은 JPA 프로젝트에서 페이지네이션과 검색 기능을 구현하는 여러 방법에 대해 학습했습니다. 크게 다음과 같은 내용을 배웠습니다:
+
+1. **페이지네이션 구현 방법**:
+   - Spring Data JPA의 `@PageableDefault`를 사용한 간결한 방식
+   - 커스텀 `PageRequestDTO`를 활용한 유연한 방식
+
+2. **검색 구현 방법**:
+   - JPA의 Example 패턴을 활용한 검색 기능 구현
+   - 추상 클래스를 활용한 범용적인 검색 DTO 설계
+
+3. **REST API 설계 패턴**:
+   - GET 요청 + 쿼리 파라미터: RESTful 원칙에 충실한 방식
+   - POST 요청 + 요청 본문: 복잡한 검색 조건에 적합한 방식
+   
+4. **Swagger UI와 관련된 문제점**:
+   - GET 요청에 `@RequestBody`를 사용할 때 발생하는 이슈 및 해결 방법
+
+
+## 🔧 실제 적용 방법
+현재 개발 중인 프로젝트에는 다음과 같이 적용할 계획입니다:
+
+1. **단순 조회 API**: `@PageableDefault`와 쿼리 파라미터를 사용
+   ```java
+   @GetMapping
+   public ResponseEntity<Page<ItemDTO>> getItems(
+       @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) 
+       Pageable pageable) {
+       return ResponseEntity.ok(itemService.findAll(pageable));
+   }
+   ```
+
+2. **복잡한 검색 API**: 전용 검색 엔드포인트와 POST 요청 사용
+   ```java
+   @PostMapping("/search")
+   public ResponseEntity<Page<ItemDTO>> searchItems(
+       @Valid @RequestBody ItemSearchDTO searchDTO) {
+       return ResponseEntity.ok(itemService.searchItems(searchDTO));
+   }
+   ```
+
+3. **하이브리드 접근법**: 중간 복잡도의 검색에는 `@ModelAttribute`와 GET 요청 사용
+   ```java
+   @GetMapping("/filter")
+   public ResponseEntity<Page<ItemDTO>> filterItems(
+       @ModelAttribute @Valid ItemFilterDTO filterDTO,
+       @PageableDefault(page = 0, size = 10) Pageable pageable) {
+       return ResponseEntity.ok(itemService.filterItems(filterDTO, pageable));
+   }
+   ```
+
+## 🔎 추가 학습이 필요한 부분
+1. **JPA Specification**: 더 복잡한 동적 쿼리를 위한 Specification 패턴 심화 학습
+2. **QueryDSL**: 타입 안전한 쿼리 작성을 위한 QueryDSL 학습
+3. **HATEOAS**: 하이퍼미디어를 포함한 RESTful API 구현 방법
+4. **성능 최적화**: 대용량 데이터에서 페이지네이션 성능 최적화 기법
+
+## 💭 느낀 점
+오늘 학습을 통해 API 설계에는 정답이 없다는 것을 다시 한번 깨달았습니다. RESTful 원칙을 완벽하게, 엄격하게 따르는 것과 실용적인 접근법 사이에서 균형을 찾는 것이 중요하다고 생각합니다. 특히 복잡한 비즈니스 요구사항을 표현할 때는 때로는 순수 RESTful 원칙에서 벗어나는 것이 더 효율적일 수 있습니다.
+
+또한 Spring Data JPA가 제공하는 풍부한 기능들을 제대로 활용하면 반복적인 코드를 크게 줄일 수 있다는 점도 인상적이었습니다. 앞으로 공부할 QueryDSL과 함께 활용하면 더 강력한 검색 기능을 구현할 수 있을 것으로 기대됩니다.
+
+---
+
 # 📆 수요일 (2025-03-05)
 
 ## 🔍 제목

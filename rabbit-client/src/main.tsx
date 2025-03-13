@@ -1,10 +1,15 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import * as Sentry from "@sentry/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
-import App from "./App.tsx";
+import App from "./app/App.tsx";
 import "./index.css";
+
+Sentry.init({
+  dsn: "https://2e097efb394a743c3037123fca3b4f36@o4508969411084288.ingest.de.sentry.io/4508969412591696",
+});
 
 const queryClient = new QueryClient();
 

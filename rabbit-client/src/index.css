@@ -1,1 +1,455 @@
+/* Pretendard 폰트 (9가지 두께) */
+@font-face {
+  font-family: "Pretendard";
+  src: url("/fonts/pretendard/Pretendard-Thin.woff2") format("woff2");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pretendard";
+  src: url("/fonts/pretendard/Pretendard-ExtraLight.woff2") format("woff2");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pretendard";
+  src: url("/fonts/pretendard/Pretendard-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pretendard";
+  src: url("/fonts/pretendard/Pretendard-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pretendard";
+  src: url("/fonts/pretendard/Pretendard-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pretendard";
+  src: url("/fonts/pretendard/Pretendard-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pretendard";
+  src: url("/fonts/pretendard/Pretendard-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pretendard";
+  src: url("/fonts/pretendard/Pretendard-ExtraBold.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pretendard";
+  src: url("/fonts/pretendard/Pretendard-Black.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* DNF Bit Bit v2 폰트 */
+@font-face {
+  font-family: "DNFBitBit";
+  src: url("/fonts/DNFBitBitv2.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Partial Sans KR 폰트 */
+@font-face {
+  font-family: "PartialSansKR";
+  src: url("/fonts/PartialSansKR-Regular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Pixel-Regular 폰트 */
+@font-face {
+  font-family: "Pixel-Regular";
+  src: url("/fonts/Pixel-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* DungGeunMo 폰트 */
+@font-face {
+  font-family: "DungGeunMo";
+  src: url("/fonts/DungGeunMo.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Tailwind와 나머지 CSS */
 @import "tailwindcss";
+@plugin 'tailwindcss-animate';
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  html,
+  body {
+    font-family: "Pretendard", sans-serif;
+    background-image: var(--gradient-radial-lg);
+    height: 100%;
+    color: white !important; /* 강제로 흰색 텍스트 적용 */
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  :root {
+    /* 브레이크포인트 */
+    --breakpoint-mobile: 480px;
+    --breakpoint-tablet: 800px;
+    --breakpoint-desktop: 1200px;
+    --shadow-glow: 0 0 12px rgba(255, 255, 255, 0.4);
+    --blur-custom: 17.98px;
+
+    /* foreground를 흰색으로 설정하여 shadcn 컴포넌트의 텍스트도 밝게 표시 */
+    --foreground: #ffffff;
+
+    /* shadcn 라이트 모드를 어두운 테마로 재정의 */
+    --background: #00010f;
+    --card: #1a1a1a;
+    --card-foreground: #ffffff;
+    --popover: #1a1a1a;
+    --popover-foreground: #ffffff;
+    --primary: #00ff66;
+    --primary-foreground: #000000;
+    --secondary: #333333;
+    --secondary-foreground: #ffffff;
+    --muted: #282828;
+    --muted-foreground: #c0c0c0;
+    --accent: #333333;
+    --accent-foreground: #ffffff;
+    --destructive: #ff4646;
+    --destructive-foreground: #ffffff;
+    --border: #474747;
+    --input: #333333;
+    --ring: #00ff66;
+    --radius: 0.625rem;
+  }
+}
+
+/* 다크 모드 - 이미 어둡게 설정했으므로 큰 변화 없음 */
+.dark {
+  --background: #00010f;
+  --foreground: #ffffff;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+  --popover: #1a1a1a;
+  --popover-foreground: #ffffff;
+  --primary: #00ff66;
+  --primary-foreground: #000000;
+  --secondary: #333333;
+  --secondary-foreground: #ffffff;
+  --muted: #282828;
+  --muted-foreground: #c0c0c0;
+  --accent: #333333;
+  --accent-foreground: #ffffff;
+  --destructive: #ff4646;
+  --destructive-foreground: #ffffff;
+  --border: #474747;
+  --input: #333333;
+  --ring: #00ff66;
+}
+
+@theme {
+  /* 폰트 관련 변수 추가 */
+  --font-pretendard: "Pretendard", sans-serif;
+  --font-bit: "DNFBitBit", sans-serif;
+  --font-partial: "PartialSansKR", sans-serif;
+  --font-pixel: "Pixel-Regular", sans-serif;
+  --font-dunggeunmo: "DungGeunMo", sans-serif;
+
+  /* 일반 색상 */
+  --color-white: #fff;
+  --color-gray-900: #1a1a1a;
+  --color-gray-800: #282828;
+  --color-gray-700: #333333;
+  --color-gray-600: #474747;
+  --color-gray-500: #555555;
+  --color-gray-400: #777777;
+  --color-gray-300: #848484;
+  --color-gray-200: #c0c0c0;
+  --color-gray-100: #d9d9d9;
+  --color-background: #e7e1f4;
+  --color-secondary: #f6851b;
+  --color-fail: #ff4646;
+  --color-positive: #037dd6;
+  --color-caution-light: #ffd700;
+  --color-caution-dark: #332200;
+  --color-text-disabled: #848484;
+  --color-text-secondary: #aaaaaa;
+  --color-brand-primary: #00ff66;
+
+  --color-black-half-overlay: rgba(48, 48, 48, 0.5);
+
+  /* 투명 효과 색상 */
+  --color-black-glass: rgba(0, 0, 0, 0.5);
+  --color-white-glass: rgba(255, 255, 255, 0.1);
+  --color-white-glass-hover: rgba(255, 255, 255, 0.2);
+
+  /* 그라데이션 */
+  --gradient-brand: linear-gradient(94deg, #00ff37 -15.54%, #f6ff00 111.18%);
+  --gradient-border:
+    linear-gradient(277deg, rgba(0, 0, 0, 0) 0%, #fff 100%),
+    linear-gradient(277deg, #fff 0%, #000 100%);
+  --gradient-radial-lg: radial-gradient(
+    126.48% 117.29% at 46.91% 0%,
+    #000 0%,
+    #333 71.6%,
+    #00010f 100%
+  );
+  --gradient-radial-accent: radial-gradient(
+    50% 20% at 50% 50%,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(44, 44, 44, 0.4) 100%
+  );
+  --gradient-radial-sm: radial-gradient(
+    126.48% 117.29% at 46.91% 0%,
+    #232323 49.5%,
+    #333 99.99%
+  );
+
+  /* shadcn 컬러 매핑 */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* 반경 */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* 커스텀 유틸리티 클래스 정의 */
+@layer utilities {
+  /* 폰트 유틸리티 클래스 */
+  .font-pretendard {
+    font-family: var(--font-pretendard);
+  }
+
+  .font-bit {
+    font-family: var(--font-bit);
+  }
+
+  .font-partial {
+    font-family: var(--font-partial);
+  }
+
+  .font-pixel {
+    font-family: var(--font-pixel);
+    position: relative;
+    top: 1.5px; /* 아래로 1.5px 이동 */
+  }
+
+  .font-dunggeunmo {
+    font-family: var(--font-dunggeunmo);
+  }
+
+  /* 배경 관련 유틸리티 클래스 */
+  .bg-black-half-overlay {
+    background: var(--color-black-half-overlay);
+    background-blend-mode: overlay;
+  }
+
+  .bg-radial-lg {
+    background-image: var(--gradient-radial-lg);
+  }
+
+  .bg-radial-sm {
+    background-image: var(--gradient-radial-sm);
+  }
+
+  .bg-radial-accent {
+    background-image: var(--gradient-radial-accent);
+  }
+
+  .bg-brand-gradient {
+    background-image: var(--gradient-brand);
+  }
+
+  /* 텍스트 관련 유틸리티 클래스 */
+  .text-brand-gradient {
+    background-image: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* 테두리 관련 유틸리티 클래스 */
+  .border-gradient {
+    position: relative;
+    box-sizing: border-box;
+    isolation: isolate;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .border-gradient::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    border-radius: inherit;
+    background-image: var(--gradient-border);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: -1;
+    transition: opacity 0.2s ease;
+  }
+
+  .border-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .border-gradient:hover::before {
+    opacity: 0.8;
+  }
+
+  .border-gradient:active {
+    transform: translateY(1px);
+  }
+
+  /* 효과 관련 유틸리티 클래스 */
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+    transition: box-shadow 0.2s ease;
+  }
+
+  .shadow-glow:hover {
+    box-shadow: 0 0 24px rgba(255, 255, 255);
+  }
+
+  .text-shadow-glow {
+    text-shadow: var(--shadow-glow);
+  }
+
+  .blur-custom {
+    filter: blur(var(--blur-custom));
+  }
+
+  .backdrop-blur-custom {
+    backdrop-filter: blur(var(--blur-custom));
+    -webkit-backdrop-filter: blur(var(--blur-custom));
+  }
+
+  /* 버튼 스타일 */
+  .btn-glass {
+    border-radius: 4px;
+    border: 1px solid var(--color-white);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0px 0px 12px 0px rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(8.991399765014648px);
+    -webkit-backdrop-filter: blur(8.991399765014648px);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .btn-glass:hover {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0px 0px 16px 0px rgba(255, 255, 255, 0.7);
+    transform: translateY(-2px);
+  }
+
+  .btn-glass:active {
+    transform: translateY(1px);
+    box-shadow: 0px 0px 8px 0px rgba(255, 255, 255, 0.4);
+  }
+
+  /* 카드 호버 효과 */
+  .card-hover {
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  /* 링크 호버 효과 */
+  .link-hover {
+    position: relative;
+    transition: color 0.2s ease;
+  }
+
+  .link-hover::after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 1px;
+    bottom: -2px;
+    left: 0;
+    background-color: var(--color-brand-primary);
+    transition: width 0.3s ease;
+  }
+
+  .link-hover:hover {
+    color: var(--color-brand-primary);
+  }
+
+  .link-hover:hover::after {
+    width: 100%;
+  }
+
+  /* 글자색 강제 적용 */
+  .text-force-white {
+    color: white !important;
+  }
+}

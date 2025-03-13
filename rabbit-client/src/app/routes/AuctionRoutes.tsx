@@ -11,6 +11,14 @@ const AuctionRoutes = () => {
     <Routes>
       <Route path="/" element={<Navigate to="list" replace />} />
       <Route
+        path="list"
+        element={
+          <Suspense fallback={<div>로딩중...</div>}>
+            <AuctionList />
+          </Suspense>
+        }
+      />
+      <Route
         path="history"
         element={
           <Suspense fallback={<div>로딩중...</div>}>
@@ -19,21 +27,14 @@ const AuctionRoutes = () => {
         }
       />
       <Route
-        path="create"
+        path="new"
         element={
           <Suspense fallback={<div>로딩중...</div>}>
             <AuctionCreate />
           </Suspense>
         }
       />
-      <Route
-        path="list"
-        element={
-          <Suspense fallback={<div>로딩중...</div>}>
-            <AuctionList />
-          </Suspense>
-        }
-      />
+
       <Route
         path=":auctionId"
         element={

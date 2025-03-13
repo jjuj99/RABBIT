@@ -3,8 +3,8 @@ import { Navigate, Route, Routes } from "react-router";
 
 const ContractCreate = lazy(() => import("@/pages/contract/ui/ContractCreate"));
 const ContractDetail = lazy(() => import("@/pages/contract/ui/ContractDetail"));
-const ContractReceived = lazy(
-  () => import("@/pages/contract/ui/ContractReceived"),
+const ContractReceivedList = lazy(
+  () => import("@/pages/contract/ui/ContractReceivedList"),
 );
 const ContractSentList = lazy(
   () => import("@/pages/contract/ui/ContractSentList"),
@@ -13,9 +13,9 @@ const ContractSentList = lazy(
 const ContractRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="create" replace />} />
+      <Route path="/" element={<Navigate to="new" replace />} />
       <Route
-        path="create"
+        path="new"
         element={
           <Suspense fallback={<div>로딩중...</div>}>
             <ContractCreate />
@@ -34,7 +34,7 @@ const ContractRoutes = () => {
         path="received"
         element={
           <Suspense fallback={<div>로딩중...</div>}>
-            <ContractReceived />
+            <ContractReceivedList />
           </Suspense>
         }
       />

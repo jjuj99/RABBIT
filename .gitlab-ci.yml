@@ -1,0 +1,67 @@
+stages:
+  - merge_request_update
+
+update_mr_description:
+  stage: merge_request_update
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl jq bash
+  script:
+    - |
+      # 브랜치 이름에서 Jira 이슈 키 추출 (S12P21A604-31 또는 S12P21A604-131과 같은 패턴)
+      BRANCH_NAME=$CI_COMMIT_REF_NAME
+      # 일반적인 Jira 이슈 키 패턴 (예: S12P21A604-31, ABC-123 등)
+      JIRA_ISSUE=$(echo $BRANCH_NAME | grep -oE '[A-Z0-9]+-[0-9]+')
+      
+      # Jira 이슈 키를 찾았을 경우에만 실행
+      if [ ! -z "$JIRA_ISSUE" ]; then
+        echo "찾은 Jira 이슈 키: $JIRA_ISSUE"
+        
+        # 현재 브랜치에 대한 열린 머지 리퀘스트가 있는지 확인
+        MR_IID=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_API_TOKEN" \
+          "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests?state=opened&source_branch=$CI_COMMIT_REF_NAME" | \
+          jq '.[0].iid')
+        
+        # 열린 머지 리퀘스트가 있을 경우에만 실행
+        if [ "$MR_IID" != "null" ]; then
+          echo "머지 리퀘스트 ID: $MR_IID"
+          
+          # 현재 머지 리퀘스트 설명 가져오기
+          MR_DESCRIPTION=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_API_TOKEN" \
+            "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$MR_IID" | \
+            jq -r '.description')
+          
+          # Jira 이슈 닫기 문구가 없으면 추가
+          if [[ $MR_DESCRIPTION != *"Closes $JIRA_ISSUE"* ]]; then
+            echo "머지 리퀘스트 설명에 Jira 이슈 키 추가"
+            
+            # 설명이 비어있는 경우 처리
+            if [ -z "$MR_DESCRIPTION" ] || [ "$MR_DESCRIPTION" == "null" ]; then
+              NEW_DESCRIPTION="Closes $JIRA_ISSUE"
+            else
+              NEW_DESCRIPTION="$MR_DESCRIPTION\n\nCloses $JIRA_ISSUE"
+            fi
+            
+            # 머지 리퀘스트 설명 업데이트
+            curl --silent --request PUT \
+              --header "PRIVATE-TOKEN: $GITLAB_API_TOKEN" \
+              --header "Content-Type: application/json" \
+              --data "{\"description\":\"$NEW_DESCRIPTION\"}" \
+              "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$MR_IID"
+            
+            echo "머지 리퀘스트 설명 업데이트 완료"
+          else
+            echo "이미 머지 리퀘스트 설명에 Jira 이슈 키가 있습니다"
+          fi
+        else
+          echo "이 브랜치에 대한 열린 머지 리퀘스트가 없습니다"
+        fi
+      else
+        echo "브랜치 이름에서 Jira 이슈 키를 찾을 수 없습니다"
+      fi
+  only:
+    - branches
+  except:
+    - main
+    - master
+  allow_failure: true

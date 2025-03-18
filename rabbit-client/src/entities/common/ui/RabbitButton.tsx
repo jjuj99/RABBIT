@@ -14,9 +14,9 @@ const RabbitButton = () => {
     console.log("로그아웃");
   };
   return (
-    <Menubar className="border-none bg-transparent p-0">
+    <Menubar className="bg-transparent p-0">
       <MenubarMenu>
-        <MenubarTrigger className="btn-default bg-transparent p-2">
+        <MenubarTrigger className="border-gradient bg-transparent p-2">
           <img src="/icons/Rabbit.svg" alt="옵션버튼" />
         </MenubarTrigger>
         <MenubarContent>

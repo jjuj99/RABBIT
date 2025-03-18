@@ -62,6 +62,8 @@ bin/
 *.iml
 *.ipr
 *.properties
+!messages_en.properties
+!messages_ko.properties
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/

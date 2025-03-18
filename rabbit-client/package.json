@@ -23,7 +23,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.479.0",
-    "pnpm": "^10.6.4",
     "rabbit-client": "file:",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

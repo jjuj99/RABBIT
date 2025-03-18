@@ -3,7 +3,6 @@ import { cva } from "class-variance-authority";
 import { cn } from "@/shared/lib/utils";
 
 interface InputProps extends React.ComponentProps<"input"> {
-  unit?: string;
   borderType?: "none" | "white";
 }
 
@@ -23,30 +22,22 @@ const inputVariants = cva(
   },
 ); //...
 
-function Input({ className, type, unit, borderType, ...props }: InputProps) {
+function Input({ className, type, borderType, ...props }: InputProps) {
   return (
-    <div className="relative flex w-full items-center justify-center">
-      <input
-        type={type}
-        data-slot="input"
-        className={cn(
-          "dark:bg-input/30 flex h-[34px] w-full min-w-0 ring-0",
-          "rounded-sm bg-gray-600 px-3 text-base shadow-xs transition-[color,box-shadow] outline-none",
-          "font-light file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium",
-          "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-base",
-          "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
-          unit && "pr-7",
-          inputVariants({ borderType }),
-          className,
-        )}
-        {...props}
-      />
-      {unit && (
-        <span className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-50">
-          {unit}
-        </span>
+    <input
+      type={type}
+      data-slot="input"
+      className={cn(
+        "dark:bg-input/30 flex h-[34px] w-full min-w-0 ring-0",
+        "rounded-sm bg-gray-600 px-3 text-base shadow-xs transition-[color,box-shadow] outline-none",
+        "font-light file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium",
+        "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-base",
+        "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+        inputVariants({ borderType }),
+        className,
       )}
-    </div>
+      {...props}
+    />
   );
 }
 

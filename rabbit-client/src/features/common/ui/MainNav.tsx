@@ -1,25 +1,8 @@
 import NavItem from "@/entities/common/ui/NavItem";
+import { NAV_ITEMS } from "@/shared/constant/navigation/nav";
 import { useLocation } from "react-router";
 
 const MainNav = () => {
-  const NAV_ITEMS = [
-    {
-      to: "/contract/new",
-      label: "차용증 작성",
-    },
-    {
-      to: "/auction/list",
-      label: "차용증 경매",
-    },
-    {
-      to: "/loan/borrow",
-      label: "채권\u2022채무",
-    },
-    {
-      to: "/account/charge",
-      label: "입\u2022출금",
-    },
-  ];
   const pathname = useLocation().pathname;
   console.log(pathname);
 

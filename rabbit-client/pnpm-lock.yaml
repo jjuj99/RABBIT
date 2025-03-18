@@ -41,6 +41,9 @@ importers:
       lucide-react:
         specifier: ^0.479.0
         version: 0.479.0(react@19.0.0)
+      pnpm:
+        specifier: ^10.6.4
+        version: 10.6.4
       rabbit-client:
         specifier: 'file:'
         version: file:(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(vite@6.2.0(@types/node@22.13.9)(jiti@2.4.2)(lightningcss@1.29.2))
@@ -1851,6 +1854,11 @@ packages:
   picomatch@2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
+
+  pnpm@10.6.4:
+    resolution: {integrity: sha512-2j1xW/0iqaEF5ugIjPx4JmmTMt7WDEI7FOxhOhhfFgIgZwL/D+TEOMsVyXkIHOTLAlaONksVF0UDpjx6jipfbA==}
+    engines: {node: '>=18.12'}
+    hasBin: true
 
   postcss@8.5.3:
     resolution: {integrity: sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==}
@@ -4006,6 +4014,8 @@ snapshots:
 
   picomatch@2.3.1: {}
 
+  pnpm@10.6.4: {}
+
   postcss@8.5.3:
     dependencies:
       nanoid: 3.3.8
@@ -4037,6 +4047,7 @@ snapshots:
   rabbit-client@file:(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(vite@6.2.0(@types/node@22.13.9)(jiti@2.4.2)(lightningcss@1.29.2)):
     dependencies:
       '@hookform/resolvers': 4.1.3(react-hook-form@7.54.2(react@19.0.0))
+      '@radix-ui/react-menubar': 1.1.6(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@radix-ui/react-navigation-menu': 1.2.5(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@radix-ui/react-slot': 1.1.2(@types/react@19.0.10)(react@19.0.0)
       '@sentry/react': 9.5.0(react@19.0.0)
@@ -4046,6 +4057,7 @@ snapshots:
       class-variance-authority: 0.7.1
       clsx: 2.1.1
       lucide-react: 0.479.0(react@19.0.0)
+      pnpm: 10.6.4
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
       react-hook-form: 7.54.2(react@19.0.0)

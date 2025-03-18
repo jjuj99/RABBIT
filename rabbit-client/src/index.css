@@ -221,8 +221,8 @@
   /* 그라데이션 */
   --gradient-brand: linear-gradient(94deg, #00ff37 -15.54%, #f6ff00 111.18%);
   --gradient-border:
-    linear-gradient(277deg, rgba(0, 0, 0, 0) 0%, #fff 100%),
-    linear-gradient(277deg, #fff 0%, #000 100%);
+    linear-gradient(277deg, rgba(0, 0, 0, 0) 30%, #fff 100%),
+    linear-gradient(277deg, #fff 0%, #000 70%);
   --gradient-radial-lg: radial-gradient(
     126.48% 117.29% at 46.91% 0%,
     #000 0%,
@@ -343,8 +343,10 @@
   /* 테두리 관련 유틸리티 클래스 */
   .border-gradient {
     position: relative;
+    border-radius: 4px;
     box-sizing: border-box;
     isolation: isolate;
+    border: none;
     transition:
       transform 0.2s ease,
       box-shadow 0.2s ease;
@@ -354,7 +356,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    padding: 2px;
+    padding: 1px;
     border-radius: inherit;
     background-image: var(--gradient-border);
     -webkit-mask:
@@ -370,7 +372,6 @@
   }
 
   .border-gradient:hover {
-    transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   }
 
@@ -405,33 +406,19 @@
     -webkit-backdrop-filter: blur(var(--blur-custom));
   }
 
-  /* 버튼 스타일 */
-  .btn-default {
-    border-radius: 4px;
-    border: 1px solid var(--color-white);
+  .bg-glass {
     background: rgba(255, 255, 255, 0.1);
-    transition: all 0.2s ease;
-    cursor: pointer;
-  }
-  .btn-default:hover {
-    background: rgba(255, 255, 255, 0.2);
-    /* transform: translateY(-2px); */
-  }
-
-  .btn-glass {
     box-shadow: 0px 0px 12px 0px rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(8.991399765014648px);
     -webkit-backdrop-filter: blur(8.991399765014648px);
   }
 
-  .btn-glass:hover {
+  .bg-glass:hover {
     background: rgba(255, 255, 255, 0.2);
     box-shadow: 0px 0px 16px 0px rgba(255, 255, 255, 0.7);
-    transform: translateY(-2px);
   }
 
-  .btn-glass:active {
-    transform: translateY(1px);
+  .bg-glass:active {
     box-shadow: 0px 0px 8px 0px rgba(255, 255, 255, 0.4);
   }
 

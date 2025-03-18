@@ -12,7 +12,7 @@ const MainNav = () => {
         <NavItem
           key={item.to}
           to={item.to}
-          isActive={pathname.includes(item.to)}
+          isActive={pathname.includes(item.activeLabel)}
         >
           {item.label}
         </NavItem>

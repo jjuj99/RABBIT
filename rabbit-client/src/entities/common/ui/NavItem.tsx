@@ -18,7 +18,7 @@ const NavItem = ({ to, children, isActive, size = "main" }: NavItemProps) => {
         size === "main" ? "text-lg" : "text-base",
         isActive
           ? "border-white text-white"
-          : "text-text-disabled border-transparent",
+          : "text-text-disabled border-transparent hover:border-white",
       )}
     >
       {children}

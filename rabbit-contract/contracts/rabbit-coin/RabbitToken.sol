@@ -24,7 +24,7 @@ contract RabbitToken is ICustomERC20, Ownable {
      * @dev 생성자. 초기 토큰 공급량을 설정하고 배포자에게 할당
      * @param initialSupply 초기 토큰 공급량
      */
-    constructor(uint256 initialSupply) {
+    constructor(uint256 initialSupply) Ownable(msg.sender) {
         _totalSupply = initialSupply * 10**uint256(decimals);
         _balances[msg.sender] = _totalSupply;
         emit Transfer(address(0), msg.sender, _totalSupply);

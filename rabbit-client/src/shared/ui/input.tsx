@@ -21,7 +21,7 @@ const inputVariants = cva(
       borderType: "none",
     },
   },
-);
+); //...
 
 function Input({ className, type, unit, borderType, ...props }: InputProps) {
   return (

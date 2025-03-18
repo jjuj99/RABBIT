@@ -1,12 +1,15 @@
 import NavItem from "@/entities/common/ui/NavItem";
+import { SUB_NAV_ITEMS } from "@/shared/constant/navigation/nav";
 import { useLocation } from "react-router";
 
-interface subNavType {
-  label: string;
-  to: string;
-}
-const SubNav = ({ subNav }: { subNav: subNavType[] }) => {
+const SubNav = () => {
   const pathname = useLocation().pathname;
+  const subNav =
+    SUB_NAV_ITEMS[pathname.split("/")[1] as keyof typeof SUB_NAV_ITEMS];
+
+  if (!subNav) {
+    return null;
+  }
   return (
     <nav className="flex gap-4 p-3">
       {subNav.map((item) => {

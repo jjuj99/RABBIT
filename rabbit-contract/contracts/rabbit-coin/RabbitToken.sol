@@ -2,12 +2,13 @@
 pragma solidity ^0.8.0;
 
 import "./interfaces/ICustomERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title RabbitToken
  * @dev ERC-20 표준을 구현한 RABBIT 토큰
  */
-contract RabbitToken is ICustomERC20 {
+contract RabbitToken is ICustomERC20, Ownable {
     string public name = "Rabbit Token";
     string public symbol = "RABBIT";
     uint8 public decimals = 18;
@@ -94,7 +95,7 @@ contract RabbitToken is ICustomERC20 {
      * @param account 토큰을 받을 주소
      * @param amount 추가할 토큰 양
      */
-    function mint(address account, uint256 amount) external {
+    function mint(address account, uint256 amount) external override onlyOwner {
         require(account != address(0), "ERC20: mint to the zero address");
         
         _totalSupply += amount;

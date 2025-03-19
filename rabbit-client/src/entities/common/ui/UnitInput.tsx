@@ -7,6 +7,8 @@ interface UnitInputProps extends React.ComponentProps<"input"> {
   type: string;
   unit: string;
   className?: string;
+  label?: string; // 라벨 텍스트를 위한 prop 추가
+  placeholder?: string;
 }
 
 const unitInputContainerVariants = cva(
@@ -31,17 +33,29 @@ const UnitInput = ({
   unit,
   className,
   textAlign = "right",
+  label,
+  placeholder,
 }: UnitInputProps) => {
   return (
-    <div className={cn(unitInputContainerVariants({ borderType }), className)}>
-      <input
-        type={type}
-        className={cn(
-          "w-full [appearance:textfield] border-none bg-transparent py-1 pr-1 pl-3 text-right outline-none focus:ring-0 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-          textAlign && `text-${textAlign}`,
-        )}
-      />
-      <span className="pr-3">{unit}</span>
+    <div>
+      {label && (
+        <label className="mb-1 ml-1 block text-sm font-medium text-white">
+          {label}
+        </label>
+      )}
+      <div
+        className={cn(unitInputContainerVariants({ borderType }), className)}
+      >
+        <input
+          placeholder={placeholder}
+          type={type}
+          className={cn(
+            "w-full [appearance:textfield] border-none bg-transparent py-1 pr-1 pl-3 text-right outline-none focus:ring-0 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+            textAlign && `text-${textAlign}`,
+          )}
+        />
+        <span className="pr-3 whitespace-nowrap">{unit}</span>
+      </div>
     </div>
   );
 };

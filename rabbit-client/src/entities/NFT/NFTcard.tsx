@@ -5,7 +5,7 @@ export const NFTCard = () => {
   return (
     <Link
       to={"#"}
-      className="group bg-black-glass border-white-glass shadow-glow flex w-[326px] flex-col items-center gap-3 rounded-lg border px-3 pt-4 pb-7"
+      className="group bg-black-glass border-white-glass shadow-glow flex h-fit w-[326px] flex-col items-center gap-3 rounded-lg border px-3 pt-4 pb-7"
     >
       <div className="relative h-[302px] w-[302px] rounded-sm">
         <NFTCardInfo />

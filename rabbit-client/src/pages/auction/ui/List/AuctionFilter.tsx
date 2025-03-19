@@ -1,4 +1,5 @@
 import UnitInput from "@/entities/common/ui/UnitInput";
+import { Checkbox } from "@/shared/ui/checkbox";
 import { MenubarSeparator } from "@/shared/ui/menubar";
 
 const AuctionFilter = () => {
@@ -43,6 +44,7 @@ const AuctionFilter = () => {
           />
         </div>
       </div>
+      <Checkbox checkboxType="brand" />
     </div>
   );
 };

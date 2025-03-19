@@ -1,9 +1,9 @@
 import { NFTCard } from "@/entities/NFT/NFTcard";
-import AuctionFilter from "./Create/AuctionFilter";
+import AuctionFilter from "./List/AuctionFilter";
 
 const AuctionList = () => {
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-9">
       <AuctionFilter />
       <NFTCard />
     </div>

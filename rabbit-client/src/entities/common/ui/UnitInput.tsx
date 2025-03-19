@@ -16,9 +16,9 @@ const unitInputContainerVariants = cva(
   {
     variants: {
       borderType: {
-        none: "border-none hover:ring-2 focus-within:ring-[2px] focus-within:ring-positive",
+        none: "border-none hover:ring-2 focus-within:ring-[2px] focus-within:ring-positive focus-within:hover:ring-positive",
         white:
-          "ring ring-gray-200 hover:ring-2 hover:ring-white focus-within:ring-[2px] focus-within:ring-positive",
+          "ring ring-gray-200 hover:ring-2 hover:ring-white focus-within:ring-[2px] focus-within:ring-positive focus-within:hover:ring-positive",
       },
     },
     defaultVariants: {

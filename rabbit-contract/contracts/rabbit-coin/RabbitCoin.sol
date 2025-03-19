@@ -9,9 +9,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev ERC-20 표준을 구현한 RABBIT 코인
  */
 contract RabbitCoin is ICustomERC20, Ownable {
-    string public name = "RABBIT";
-    string public symbol = "RAB";
-    uint8 public decimals = 0;
+    string public constant name = "RABBIT";
+    string public constant symbol = "RAB";
+    uint8 public constant decimals = 0;
     uint256 private _totalSupply;
     
     // 각 주소별 잔액을 저장하는 매핑

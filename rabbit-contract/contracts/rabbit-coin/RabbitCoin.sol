@@ -5,13 +5,13 @@ import "./interfaces/ICustomERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title RabbitToken
- * @dev ERC-20 표준을 구현한 RABBIT 토큰
+ * @title RabbitCoin
+ * @dev ERC-20 표준을 구현한 RABBIT 코인
  */
-contract RabbitToken is ICustomERC20, Ownable {
-    string public name = "Rabbit Token";
-    string public symbol = "RABBIT";
-    uint8 public decimals = 18;
+contract RabbitCoin is ICustomERC20, Ownable {
+    string public name = "RABBIT";
+    string public symbol = "RAB";
+    uint8 public decimals = 0;
     uint256 private _totalSupply;
     
     // 각 주소별 잔액을 저장하는 매핑

@@ -6,12 +6,12 @@ async function main() {
   
   // 배포 계정 가져오기
   const [deployer] = await ethers.getSigners();
-  console.log("Deploying contracts with the account:", deployer.address);
+  console.log("Deploying with account:", deployer.address);
+  console.log("Account balance:", (await ethers.provider.getBalance(deployer.address)).toString());
+
+  // 여기에 배포 로직 추가
   
-  // 여기에 초기 배포 로직 추가
-  // 예시: Migrations 대신 다른 초기 컨트랙트가 필요하면 여기서 배포
-  
-  console.log("Initial deployment completed");
+  console.log("Contract deployed successfully!");
 }
 
 // 스크립트 실행 및 에러 처리

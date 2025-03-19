@@ -4,13 +4,13 @@ spring:
   data:
   # MySQL 설정
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.postgresql.Driver
     url: jdbc:mysql://${DEV_DB_HOST}:${DEV_DB_PORT:5432}/${DEV_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUniCode=yes&characterEncoding=UTF-8
     username: ${DEV_DB_USERNAME}
     password: ${DEV_DB_PASSWORD}
   # JPA 설정 추가
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
     hibernate:
       ddl-auto: none

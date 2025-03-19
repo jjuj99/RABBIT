@@ -3,6 +3,8 @@ package com.rabbit.global.exception;
 import java.security.SignatureException;
 
 import com.rabbit.global.response.CustomApiResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,8 +31,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
+    private final MessageSource messageSource;
 
     /**
      * ============================================
@@ -345,12 +349,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     protected ResponseEntity<CustomApiResponse<Void>> handleBusinessException(BusinessException e) {
         log.error("BusinessException", e);
-        HttpStatus status = e.getErrorCode().getStatus() != null ? e.getErrorCode().getStatus() : HttpStatus.BAD_REQUEST;
+
+        ErrorCode errorCode = e.getErrorCode();
+        HttpStatus status = errorCode.getStatus() != null ? errorCode.getStatus() : HttpStatus.BAD_REQUEST;
+
+        // 국제화된 메시지 가져오기
+        String message = e.getLocalizedMessage(messageSource);
+
         return ResponseEntity
                 .status(status)
                 .body(CustomApiResponse.error(
                         status.value(),
-                        e.getMessage()
+                        message
                 ));
     }
 

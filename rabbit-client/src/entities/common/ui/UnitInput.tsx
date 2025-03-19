@@ -39,7 +39,7 @@ const UnitInput = ({
   return (
     <div>
       {label && (
-        <label className="mb-1 ml-1 block text-sm font-medium text-white">
+        <label className="mb-1 block text-sm font-normal text-white">
           {label}
         </label>
       )}

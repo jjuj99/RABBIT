@@ -14,36 +14,28 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
-      },
-    },
-  },
-  paths: {
-    sources: "./contracts",
-    tests: "./test",
-    cache: "./cache",
-    artifacts: "./artifacts",
+        runs: 200
+      }
+    }
   },
   networks: {
+    // 로컬 개발 네트워크
     hardhat: {
-      chainId: 1337,
     },
-    localhost: {
-      url: "http://127.0.0.1:8545",
-    },
-    // 테스트넷 설정
-    goerli: {
-      url: `https://goerli.infura.io/v3/${INFURA_API_KEY}`,
-      accounts: PRIVATE_KEY !== "" ? [PRIVATE_KEY] : [],
-    },
-    // 메인넷 설정
-    mainnet: {
-      url: `https://mainnet.infura.io/v3/${INFURA_API_KEY}`,
-      accounts: PRIVATE_KEY !== "" ? [PRIVATE_KEY] : [],
-    },
+    // Sepolia 테스트넷 설정
+    sepolia: {
+      url: `https://sepolia.infura.io/v3/${INFURA_API_KEY}`,
+      accounts: [PRIVATE_KEY],
+      chainId: 11155111,
+      gasMultiplier: 1.2
+    }
   },
-  // Etherscan 검증을 위한 설정
+  // 컨트랙트 확인을 위한 Etherscan 설정
   etherscan: {
-    apiKey: ETHERSCAN_API_KEY,
+    apiKey: ETHERSCAN_API_KEY
   },
+  // 긴 스택 트레이스 표시
+  mocha: {
+    timeout: 40000
+  }
 };

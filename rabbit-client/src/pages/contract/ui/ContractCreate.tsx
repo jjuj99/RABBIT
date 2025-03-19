@@ -1,5 +1,5 @@
 const ContractCreate = () => {
-  return <div></div>;
+  return <></>;
 };
 
 export default ContractCreate;

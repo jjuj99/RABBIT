@@ -4,8 +4,8 @@ spring:
   data:
   # MySQL 설정
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${PROD_DB_HOST}:${PROD_DB_PORT:3306}/${PROD_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUniCode=yes&characterEncoding=UTF-8&rewriteBatchedStatements=true
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:mysql://${PROD_DB_HOST}:${PROD_DB_PORT:5432}/${PROD_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUniCode=yes&characterEncoding=UTF-8&rewriteBatchedStatements=true
     username: ${PROD_DB_USERNAME}
     password: ${PROD_DB_PASSWORD}
   #    hikari:
@@ -17,7 +17,7 @@ spring:
 
   # JPA 설정 추가
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false  # 운영 환경에서는 비활성화
     hibernate:
       ddl-auto: none  # 운영 환경에서는 반드시 none으로 설정

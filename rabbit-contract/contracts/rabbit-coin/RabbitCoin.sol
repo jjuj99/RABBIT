@@ -5,24 +5,24 @@ import "./interfaces/ICustomERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title RabbitToken
- * @dev ERC-20 표준을 구현한 RABBIT 토큰
+ * @title RabbitCoin
+ * @dev ERC-20 표준을 구현한 RABBIT 코인
  */
-contract RabbitToken is ICustomERC20, Ownable {
-    string public name = "Rabbit Token";
-    string public symbol = "RABBIT";
-    uint8 public decimals = 18;
+contract RabbitCoin is ICustomERC20, Ownable {
+    string public constant name = "RABBIT";
+    string public constant symbol = "RAB";
+    uint8 public constant decimals = 0;
     uint256 private _totalSupply;
     
     // 각 주소별 잔액을 저장하는 매핑
     mapping(address => uint256) private _balances;
     
-    // 특정 주소가 다른 주소에게 허용한 토큰 양을 저장하는 매핑
+    // 특정 주소가 다른 주소에게 허용한 RAB 양을 저장하는 매핑
     mapping(address => mapping(address => uint256)) private _allowances;
     
     /**
-     * @dev 생성자. 초기 토큰 공급량을 설정하고 배포자에게 할당
-     * @param initialSupply 초기 토큰 공급량
+     * @dev 생성자. 초기 RAB 공급량을 설정하고 배포자에게 할당
+     * @param initialSupply 초기 RAB 공급량
      */
     constructor(uint256 initialSupply) Ownable(msg.sender) {
         _totalSupply = initialSupply * 10**uint256(decimals);
@@ -31,14 +31,14 @@ contract RabbitToken is ICustomERC20, Ownable {
     }
     
     /**
-     * @dev 토큰의 총 공급량을 반환
+     * @dev RAB의 총 공급량을 반환
      */
     function totalSupply() external view override returns (uint256) {
         return _totalSupply;
     }
     
     /**
-     * @dev 특정 계정의 토큰 잔액을 반환
+     * @dev 특정 계정의 RAB 잔액을 반환
      * @param account 잔액을 조회할 주소
      */
     function balanceOf(address account) external view override returns (uint256) {
@@ -46,9 +46,9 @@ contract RabbitToken is ICustomERC20, Ownable {
     }
     
     /**
-     * @dev 특정 주소로 토큰을 전송
+     * @dev 특정 주소로 RAB를 전송
      * @param recipient 수신자 주소
-     * @param amount 전송할 토큰 양
+     * @param amount 전송할 RAB 양
      */
     function transfer(address recipient, uint256 amount) external override returns (bool) {
         _transfer(msg.sender, recipient, amount);
@@ -56,18 +56,18 @@ contract RabbitToken is ICustomERC20, Ownable {
     }
     
     /**
-     * @dev 토큰 소유자가 다른 주소에 허용한 토큰 양을 반환
-     * @param owner 토큰 소유자 주소
-     * @param spender 토큰 사용이 허용된 주소
+     * @dev RAB 소유자가 다른 주소에 허용한 RAB 양을 반환
+     * @param owner RAB 소유자 주소
+     * @param spender RAB 사용이 허용된 주소
      */
     function allowance(address owner, address spender) external view override returns (uint256) {
         return _allowances[owner][spender];
     }
     
     /**
-     * @dev 다른 주소가 귀하의 계정에서 사용할 수 있는 토큰 양을 승인
-     * @param spender 토큰 사용이 허용될 주소
-     * @param amount 승인할 토큰 양
+     * @dev 다른 주소가 귀하의 계정에서 사용할 수 있는 RAB 양을 승인
+     * @param spender RAB 사용이 허용될 주소
+     * @param amount 승인할 RAB 양
      */
     function approve(address spender, uint256 amount) external override returns (bool) {
         _approve(msg.sender, spender, amount);
@@ -75,10 +75,10 @@ contract RabbitToken is ICustomERC20, Ownable {
     }
     
     /**
-     * @dev 승인된 양만큼 한 주소에서 다른 주소로 토큰을 전송
-     * @param sender 토큰을 보내는 주소
-     * @param recipient 토큰을 받는 주소
-     * @param amount 전송할 토큰 양
+     * @dev 승인된 양만큼 한 주소에서 다른 주소로 RAB를 전송
+     * @param sender RAB를 보내는 주소
+     * @param recipient RAB를 받는 주소
+     * @param amount 전송할 RAB 양
      */
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         uint256 currentAllowance = _allowances[sender][msg.sender];
@@ -91,9 +91,9 @@ contract RabbitToken is ICustomERC20, Ownable {
     }
     
     /**
-     * @dev 토큰 양을 늘림 (Mint)
-     * @param account 토큰을 받을 주소
-     * @param amount 추가할 토큰 양
+     * @dev RAB 양을 늘림 (Mint)
+     * @param account RAB를를 받을 주소
+     * @param amount 추가할 RAB 양
      */
     function mint(address account, uint256 amount) external override onlyOwner {
         require(account != address(0), "ERC20: mint to the zero address");
@@ -104,8 +104,8 @@ contract RabbitToken is ICustomERC20, Ownable {
     }
     
     /**
-     * @dev 토큰 양을 소각 (Burn)
-     * @param amount 소각할 토큰 양
+     * @dev RAB 양을 소각 (Burn)
+     * @param amount 소각할 RAB 양
      */
     function burn(uint256 amount) external {
         require(_balances[msg.sender] >= amount, "ERC20: burn amount exceeds balance");

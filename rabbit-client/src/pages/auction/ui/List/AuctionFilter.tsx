@@ -1,25 +1,26 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import UnitInput from "@/entities/common/ui/UnitInput";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { MenubarSeparator } from "@/shared/ui/menubar";
+import { Label } from "@/shared/ui/label";
 
 interface PaymentType {
-  id: number;
+  id: string;
   label: string;
   checked: boolean;
 }
 
 const AuctionFilter = () => {
   const initialPaymentTypes: PaymentType[] = [
-    { id: 1, label: "원리금 균등 상환", checked: false },
-    { id: 2, label: "원금 균등 상환", checked: false },
-    { id: 3, label: "만기 일시 상환", checked: false },
+    { id: "equal-pi", label: "원리금 균등 상환", checked: false },
+    { id: "equal-principal", label: "원금 균등 상환", checked: false },
+    { id: "bullet", label: "만기 일시 상환", checked: false },
   ];
 
   const [paymentTypes, setPaymentTypes] =
     useState<PaymentType[]>(initialPaymentTypes);
 
-  const handleCheckboxChange = (id: number, newChecked: boolean) => {
+  const handleCheckboxChange = (id: string, newChecked: boolean) => {
     const updatedTypes = paymentTypes.map((item) =>
       item.id === id ? { ...item, checked: newChecked } : item,
     );
@@ -32,20 +33,25 @@ const AuctionFilter = () => {
       <div className="flex h-fit w-full flex-col gap-3">
         <label className="text-base font-bold">가격</label>
         <div className="flex flex-col gap-4 px-2">
-          <UnitInput
-            type="number"
-            unit="원"
-            borderType="white"
-            className="w-full"
-            label="최소 가격"
-          />
-          <UnitInput
-            type="number"
-            unit="원"
-            borderType="white"
-            className="w-full"
-            label="최대 가격"
-          />
+          <div>
+            <Label id="minPrice">최소 가격</Label>
+            <UnitInput
+              id="minPrice"
+              type="number"
+              unit="원"
+              borderType="white"
+            />
+          </div>
+          <div>
+            <Label id="maxPrice">최대 가격</Label>
+            <UnitInput
+              id="maxPrice"
+              type="number"
+              unit="원"
+              borderType="white"
+              className="w-full"
+            />
+          </div>
         </div>
       </div>
       <MenubarSeparator className="h-[0.2px] bg-white" />
@@ -53,20 +59,26 @@ const AuctionFilter = () => {
       <div className="flex h-fit w-full flex-col gap-3">
         <label className="text-base font-bold">수익률</label>
         <div className="flex flex-row gap-4 px-2">
-          <UnitInput
-            type="number"
-            unit="%"
-            borderType="white"
-            className="w-full"
-            label="최소 가격"
-          />
-          <UnitInput
-            type="number"
-            unit="%"
-            borderType="white"
-            className="w-full"
-            label="최대 가격"
-          />
+          <div>
+            <Label id="minyield">최소 수익률</Label>
+            <UnitInput
+              id="minyield"
+              type="number"
+              unit="%"
+              borderType="white"
+              className="w-full"
+            />
+          </div>
+          <div>
+            <Label id="maxyield">최대 수익률</Label>
+            <UnitInput
+              id="maxyield"
+              type="number"
+              unit="%"
+              borderType="white"
+              className="w-full"
+            />
+          </div>
         </div>
       </div>
       <MenubarSeparator className="h-[0.2px] bg-white" />

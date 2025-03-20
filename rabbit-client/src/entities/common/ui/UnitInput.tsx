@@ -12,7 +12,7 @@ interface UnitInputProps extends React.ComponentProps<"input"> {
 }
 
 const unitInputContainerVariants = cva(
-  "flex w-[100px] items-center overflow-hidden rounded-sm bg-gray-600",
+  "flex items-center overflow-hidden rounded-sm bg-gray-600",
   {
     variants: {
       borderType: {
@@ -33,29 +33,18 @@ const UnitInput = ({
   unit,
   className,
   textAlign = "right",
-  label,
-  placeholder,
 }: UnitInputProps) => {
   return (
-    <div>
-      {label && (
-        <label className="mb-1 block text-sm font-normal text-white">
-          {label}
-        </label>
-      )}
-      <div
-        className={cn(unitInputContainerVariants({ borderType }), className)}
-      >
-        <input
-          placeholder={placeholder}
-          type={type}
-          className={cn(
-            "w-full [appearance:textfield] border-none bg-transparent py-1 pr-1 pl-3 text-right outline-none focus:ring-0 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-            textAlign && `text-${textAlign}`,
-          )}
-        />
-        <span className="pr-3 whitespace-nowrap">{unit}</span>
-      </div>
+    <div className={cn(unitInputContainerVariants({ borderType }))}>
+      <input
+        type={type}
+        className={cn(
+          className,
+          "w-full [appearance:textfield] border-none bg-transparent py-1 pr-1 pl-3 text-right outline-none focus:ring-0 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+          textAlign && `text-${textAlign}`,
+        )}
+      />
+      <span className="pr-3 whitespace-nowrap">{unit}</span>
     </div>
   );
 };

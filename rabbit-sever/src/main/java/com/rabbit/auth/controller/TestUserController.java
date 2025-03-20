@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "TestUser", description = "JPA 연결 확인 관련 API")
 @RestController
 @RequestMapping("/api/v1/test/users")
 @RequiredArgsConstructor

@@ -42,6 +42,7 @@ public class AuthController {
 //	private final JwtTokenUtil jwtTokenUtil;
 //	private final StringUtil stringUtil;
 
+    @GetMapping("/login")
     public ResponseEntity<CustomApiResponse<MessageResponse>> login(HttpServletResponse response) {
 		log.debug("[로그인 요청 전체] request: {}", "hi");
 //        TokenResponse tokenResponse = authService.login(request, response);

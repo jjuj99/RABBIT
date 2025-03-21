@@ -6,6 +6,7 @@ interface UnitInputProps extends React.ComponentProps<"input"> {
   textAlign?: "left" | "right" | "center";
   type: string;
   unit: string;
+  wrapperClassName?: string;
   className?: string;
   label?: string; // 라벨 텍스트를 위한 prop 추가
   placeholder?: string;
@@ -13,7 +14,7 @@ interface UnitInputProps extends React.ComponentProps<"input"> {
 }
 
 const unitInputContainerVariants = cva(
-  "flex items-center overflow-hidden rounded-sm bg-gray-600",
+  "flex items-center w-full overflow-hidden rounded-sm bg-gray-600",
   {
     variants: {
       borderType: {
@@ -30,6 +31,7 @@ const unitInputContainerVariants = cva(
 
 const UnitInput = ({
   id,
+  wrapperClassName,
   type,
   borderType = "none",
   unit,
@@ -39,7 +41,12 @@ const UnitInput = ({
   "aria-label": ariaLabel,
 }: UnitInputProps) => {
   return (
-    <div className={cn(unitInputContainerVariants({ borderType }))}>
+    <div
+      className={cn(
+        unitInputContainerVariants({ borderType }),
+        wrapperClassName,
+      )}
+    >
       <input
         id={id}
         aria-label={ariaLabel}
@@ -47,11 +54,11 @@ const UnitInput = ({
         readOnly={readOnly}
         className={cn(
           className,
-          "w-full border-none bg-transparent py-1 pl-3 pr-1 text-right outline-none [appearance:textfield] focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+          "w-full [appearance:textfield] border-none bg-transparent py-1 pr-1 pl-3 text-right outline-none focus:ring-0 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
           textAlign && `text-${textAlign}`,
         )}
       />
-      <span className="whitespace-nowrap pr-3">{unit}</span>
+      <span className="pr-3 whitespace-nowrap">{unit}</span>
     </div>
   );
 };

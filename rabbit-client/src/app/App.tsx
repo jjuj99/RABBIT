@@ -16,7 +16,7 @@ const Home = lazy(() => import("@/pages/common/ui/Home"));
 function App() {
   const isDesktop = useMediaQuery("md");
   return (
-    <div className="mx-auto max-w-[1440px]">
+    <div className="mx-auto max-w-[1440px] px-8 pb-20">
       {isDesktop && <Header />}
       {isDesktop && <SubNav />}
       <Routes>

@@ -10,7 +10,7 @@ interface UnitInputProps extends React.ComponentProps<"input"> {
 }
 
 const unitInputContainerVariants = cva(
-  "flex w-[100px] items-center overflow-hidden rounded-sm bg-gray-600",
+  "flex items-center overflow-hidden rounded-sm bg-gray-600",
   {
     variants: {
       borderType: {
@@ -29,6 +29,7 @@ const UnitInput = ({
   type,
   borderType = "none",
   unit,
+  readOnly,
   className,
   textAlign = "right",
 }: UnitInputProps) => {
@@ -36,12 +37,13 @@ const UnitInput = ({
     <div className={cn(unitInputContainerVariants({ borderType }), className)}>
       <input
         type={type}
+        readOnly={readOnly}
         className={cn(
           "w-full [appearance:textfield] border-none bg-transparent py-1 pr-1 pl-3 text-right outline-none focus:ring-0 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
           textAlign && `text-${textAlign}`,
         )}
       />
-      <span className="pr-3">{unit}</span>
+      <span className="pr-3 text-nowrap">{unit}</span>
     </div>
   );
 };

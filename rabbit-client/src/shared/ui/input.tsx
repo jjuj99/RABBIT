@@ -4,6 +4,7 @@ import { cn } from "@/shared/lib/utils";
 
 interface InputProps extends React.ComponentProps<"input"> {
   borderType?: "none" | "white";
+  ariaLabel?: string;
 }
 
 const inputVariants = cva(
@@ -11,9 +12,9 @@ const inputVariants = cva(
   {
     variants: {
       borderType: {
-        none: "border-none hover:ring-2 focus:ring-[2px] focus:ring-positive",
+        none: "border-none hover:ring-2 focus-within:ring-[2px] focus-within:ring-positive focus-within:hover:ring-positive",
         white:
-          "ring ring-gray-200 hover:ring-2 hover:ring-white focus:ring-[2px] focus:ring-positive",
+          "ring ring-gray-200 hover:ring-2 hover:ring-white focus-within:ring-[2px] focus-within:ring-positive focus-within:hover:ring-positive",
       },
     },
     defaultVariants: {
@@ -22,10 +23,20 @@ const inputVariants = cva(
   },
 ); //...
 
-function Input({ className, type, borderType, ...props }: InputProps) {
+function Input({
+  className,
+  type,
+  borderType,
+  id,
+  "aria-label": ariaLabel,
+
+  ...props
+}: InputProps) {
   return (
     <input
+      id={id}
       type={type}
+      aria-label={ariaLabel}
       data-slot="input"
       className={cn(
         "dark:bg-input/30 flex h-[34px] w-full min-w-0 ring-0",

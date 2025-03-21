@@ -7,6 +7,9 @@ interface UnitInputProps extends React.ComponentProps<"input"> {
   type: string;
   unit: string;
   className?: string;
+  label?: string; // 라벨 텍스트를 위한 prop 추가
+  placeholder?: string;
+  ariaLabel?: string;
 }
 
 const unitInputContainerVariants = cva(
@@ -14,9 +17,9 @@ const unitInputContainerVariants = cva(
   {
     variants: {
       borderType: {
-        none: "border-none hover:ring-2 focus-within:ring-[2px] focus-within:ring-positive",
+        none: "border-none hover:ring-2 focus-within:ring-[2px] focus-within:ring-positive focus-within:hover:ring-positive",
         white:
-          "ring ring-gray-200 hover:ring-2 hover:ring-white focus-within:ring-[2px] focus-within:ring-positive",
+          "ring ring-gray-200 hover:ring-2 hover:ring-white focus-within:ring-[2px] focus-within:ring-positive focus-within:hover:ring-positive",
       },
     },
     defaultVariants: {
@@ -26,24 +29,29 @@ const unitInputContainerVariants = cva(
 );
 
 const UnitInput = ({
+  id,
   type,
   borderType = "none",
   unit,
   readOnly,
   className,
   textAlign = "right",
+  "aria-label": ariaLabel,
 }: UnitInputProps) => {
   return (
-    <div className={cn(unitInputContainerVariants({ borderType }), className)}>
+    <div className={cn(unitInputContainerVariants({ borderType }))}>
       <input
+        id={id}
+        aria-label={ariaLabel}
         type={type}
         readOnly={readOnly}
         className={cn(
-          "w-full [appearance:textfield] border-none bg-transparent py-1 pr-1 pl-3 text-right outline-none focus:ring-0 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+          className,
+          "w-full border-none bg-transparent py-1 pl-3 pr-1 text-right outline-none [appearance:textfield] focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
           textAlign && `text-${textAlign}`,
         )}
       />
-      <span className="pr-3 text-nowrap">{unit}</span>
+      <span className="whitespace-nowrap pr-3">{unit}</span>
     </div>
   );
 };

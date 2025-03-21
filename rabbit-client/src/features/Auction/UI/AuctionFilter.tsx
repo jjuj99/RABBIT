@@ -34,7 +34,7 @@ const AuctionFilter = () => {
         <label className="text-base font-bold">가격</label>
         <div className="flex flex-col gap-4 px-2">
           <div>
-            <Label id="minPrice">최소 가격</Label>
+            <Label htmlFor="minPrice">최소 가격</Label>
             <UnitInput
               id="minPrice"
               type="number"
@@ -43,7 +43,7 @@ const AuctionFilter = () => {
             />
           </div>
           <div>
-            <Label id="maxPrice">최대 가격</Label>
+            <Label htmlFor="maxPrice">최대 가격</Label>
             <UnitInput
               id="maxPrice"
               type="number"
@@ -88,7 +88,8 @@ const AuctionFilter = () => {
           {paymentTypes.map((item) => (
             <div
               key={item.id}
-              className="flex w-full flex-row items-center justify-between px-2 py-1"
+              className="flex w-full cursor-pointer flex-row items-center justify-between rounded-sm px-2 py-1 hover:bg-gray-600"
+              onClick={() => handleCheckboxChange(item.id, !item.checked)}
             >
               <span>{item.label}</span>
               <Checkbox
@@ -97,6 +98,8 @@ const AuctionFilter = () => {
                 onCheckedChange={(newChecked: boolean) =>
                   handleCheckboxChange(item.id, newChecked)
                 }
+                // Checkbox 클릭 시 부모 onClick 이벤트 전파 방지
+                onClick={(e) => e.stopPropagation()}
               />
             </div>
           ))}

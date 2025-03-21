@@ -1,5 +1,5 @@
 import { NFTCard } from "@/entities/NFT/NFTcard";
-import AuctionFilter from "./List/AuctionFilter";
+import AuctionFilter from "@/features/Auction/UI/AuctionFilter";
 
 const AuctionList = () => {
   return (

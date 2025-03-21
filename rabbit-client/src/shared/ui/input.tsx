@@ -4,6 +4,7 @@ import { cn } from "@/shared/lib/utils";
 
 interface InputProps extends React.ComponentProps<"input"> {
   borderType?: "none" | "white";
+  ariaLabel?: string;
 }
 
 const inputVariants = cva(
@@ -22,10 +23,20 @@ const inputVariants = cva(
   },
 ); //...
 
-function Input({ className, type, borderType, ...props }: InputProps) {
+function Input({
+  className,
+  type,
+  borderType,
+  id,
+  "aria-label": ariaLabel,
+
+  ...props
+}: InputProps) {
   return (
     <input
+      id={id}
       type={type}
+      aria-label={ariaLabel}
       data-slot="input"
       className={cn(
         "dark:bg-input/30 flex h-[34px] w-full min-w-0 ring-0",

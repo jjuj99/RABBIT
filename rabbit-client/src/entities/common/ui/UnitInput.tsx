@@ -9,6 +9,7 @@ interface UnitInputProps extends React.ComponentProps<"input"> {
   className?: string;
   label?: string; // 라벨 텍스트를 위한 prop 추가
   placeholder?: string;
+  ariaLabel?: string;
 }
 
 const unitInputContainerVariants = cva(
@@ -33,10 +34,12 @@ const UnitInput = ({
   unit,
   className,
   textAlign = "right",
+  "aria-label": ariaLabel,
 }: UnitInputProps) => {
   return (
     <div className={cn(unitInputContainerVariants({ borderType }))}>
       <input
+        aria-label={ariaLabel}
         type={type}
         className={cn(
           className,

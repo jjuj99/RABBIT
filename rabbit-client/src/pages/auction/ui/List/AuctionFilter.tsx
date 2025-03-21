@@ -60,7 +60,7 @@ const AuctionFilter = () => {
         <label className="text-base font-bold">수익률</label>
         <div className="flex flex-row gap-4 px-2">
           <div>
-            <Label id="minyield">최소 수익률</Label>
+            <Label htmlFor="minyield">최소 수익률</Label>
             <UnitInput
               id="minyield"
               type="number"
@@ -70,7 +70,7 @@ const AuctionFilter = () => {
             />
           </div>
           <div>
-            <Label id="maxyield">최대 수익률</Label>
+            <Label htmlFor="maxyield">최대 수익률</Label>
             <UnitInput
               id="maxyield"
               type="number"

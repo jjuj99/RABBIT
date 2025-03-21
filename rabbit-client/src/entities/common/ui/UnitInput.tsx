@@ -29,6 +29,7 @@ const unitInputContainerVariants = cva(
 );
 
 const UnitInput = ({
+  id,
   type,
   borderType = "none",
   unit,
@@ -39,6 +40,7 @@ const UnitInput = ({
   return (
     <div className={cn(unitInputContainerVariants({ borderType }))}>
       <input
+        id={id}
         aria-label={ariaLabel}
         type={type}
         className={cn(

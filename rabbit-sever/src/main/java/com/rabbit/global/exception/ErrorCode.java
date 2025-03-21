@@ -28,7 +28,9 @@ public enum ErrorCode {
     // =========== Common Code ===========
     CODE_NOT_FOUND(HttpStatus.NOT_FOUND, "error.code.not.found", "코드를 찾을 수 없습니다: 타입={0}, 코드={1}"),
     CODE_ALREADY_EXISTS(HttpStatus.CONFLICT, "error.code.already.exists", "이미 존재하는 코드입니다: 타입={0}, 코드={1}"),
-    CODE_TYPE_INVALID(HttpStatus.BAD_REQUEST, "error.code.type.invalid", "유효하지 않은 코드 타입입니다: {0}");
+    CODE_TYPE_INVALID(HttpStatus.BAD_REQUEST, "error.code.type.invalid", "유효하지 않은 코드 타입입니다: {0}"),
+
+    ALREADY_EXISTS(HttpStatus.CONFLICT, "error.already.exists", "이미 존재하는 리소스입니다: {0}");
 
     private final HttpStatus status;
     private final String messageKey;

@@ -5,7 +5,7 @@ import { Input } from "@/shared/ui/input";
 import {
   useAuctionFilterErrorStore,
   useAuctionFilterStore,
-} from "../../../shared/lib/store/auctionFilterStore";
+} from "@/shared/lib/store/auctionFilterStore";
 
 interface MAT_DTSectionProps {
   triggerApi: () => void;

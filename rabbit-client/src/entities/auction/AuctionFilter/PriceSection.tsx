@@ -4,7 +4,7 @@ import UnitInput from "@/entities/common/ui/UnitInput";
 import {
   useAuctionFilterErrorStore,
   useAuctionFilterStore,
-} from "../../../shared/lib/store/auctionFilterStore";
+} from "@/shared/lib/store/auctionFilterStore";
 
 interface PriceSectionProps {
   triggerApi: () => void;

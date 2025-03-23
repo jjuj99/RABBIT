@@ -1,5 +1,5 @@
 import { Checkbox } from "@/shared/ui/checkbox";
-import { useAuctionFilterStore } from "../../../shared/lib/store/auctionFilterStore";
+import { useAuctionFilterStore } from "@/shared/lib/store/auctionFilterStore";
 
 const REPAY_TYPE = [
   { id: "EPIP", label: "원리금 균등 상환" },

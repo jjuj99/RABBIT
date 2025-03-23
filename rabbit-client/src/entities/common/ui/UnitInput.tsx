@@ -1,5 +1,6 @@
 import { cva } from "class-variance-authority";
 import { cn } from "@/shared/lib/utils";
+import { Input } from "@/shared/ui/input";
 
 interface UnitInputProps extends React.ComponentProps<"input"> {
   borderType?: "none" | "white";
@@ -11,6 +12,7 @@ interface UnitInputProps extends React.ComponentProps<"input"> {
   label?: string; // 라벨 텍스트를 위한 prop 추가
   placeholder?: string;
   ariaLabel?: string;
+  disabled?: boolean;
 }
 
 const unitInputContainerVariants = cva(
@@ -39,6 +41,8 @@ const UnitInput = ({
   className,
   textAlign = "right",
   "aria-label": ariaLabel,
+  disabled,
+  ...props
 }: UnitInputProps) => {
   return (
     <div
@@ -47,18 +51,27 @@ const UnitInput = ({
         wrapperClassName,
       )}
     >
-      <input
+      <Input
         id={id}
         aria-label={ariaLabel}
         type={type}
+        disabled={disabled}
         readOnly={readOnly}
         className={cn(
           className,
           "w-full [appearance:textfield] border-none bg-transparent py-1 pr-1 pl-3 text-right outline-none focus:ring-0 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
           textAlign && `text-${textAlign}`,
         )}
+        {...props}
       />
-      <span className="pr-3 whitespace-nowrap">{unit}</span>
+      <span
+        className={cn(
+          "pr-3 whitespace-nowrap",
+          disabled && "text-text-disabled",
+        )}
+      >
+        {unit}
+      </span>
     </div>
   );
 };

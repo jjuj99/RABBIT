@@ -39,7 +39,7 @@ function Input({
       aria-label={ariaLabel}
       data-slot="input"
       className={cn(
-        "dark:bg-input/30 flex h-[34px] w-full min-w-0 ring-0",
+        "dark:bg-input/30 flex h-[34px] ring-0",
         "rounded-sm bg-gray-600 px-3 text-base shadow-xs transition-[color,box-shadow] outline-none",
         "font-light file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium",
         "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-base",

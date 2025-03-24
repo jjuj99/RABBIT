@@ -11,7 +11,7 @@ const SubNav = () => {
     return null;
   }
   return (
-    <nav className="flex gap-4 p-3">
+    <nav className="mb-6 flex gap-4 p-3">
       {subNav.map((item) => {
         return (
           <NavItem

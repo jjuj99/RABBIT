@@ -1,10 +1,16 @@
-import Auctionbidpanel from "@/features/auction/ui/AuctionBidPanel/AuctionBidPanel";
+import AuctionBidList from "@/features/auction/ui/auctionBidList";
+import AuctionBidPanel from "@/features/auction/ui/AuctionBidPanel";
 
 const AuctionDetail = () => {
   return (
-    <div>
-      <Auctionbidpanel CBP={123123} amount={123132} />
-    </div>
+    <section>
+      <div>
+        <AuctionBidPanel CBP={123123} amount={123132} />
+      </div>
+      <div>
+        <AuctionBidList></AuctionBidList>
+      </div>
+    </section>
   );
 };
 

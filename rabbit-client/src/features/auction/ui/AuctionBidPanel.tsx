@@ -2,12 +2,12 @@ import UnitInput from "@/entities/common/ui/UnitInput";
 import { Button } from "@/shared/ui/button";
 import { useState } from "react";
 
-interface AuctionbidpanelProps {
+interface AuctionBidPanelProps {
   CBP: number;
   amount: number;
 }
 
-const Auctionbidpanel = ({ CBP, amount }: AuctionbidpanelProps) => {
+const AuctionBidPanel = ({ CBP, amount }: AuctionBidPanelProps) => {
   const [bidPrice, setBidPrice] = useState(CBP);
 
   // 금액 단위 (예: 1만 = 10,000)
@@ -99,4 +99,4 @@ const Auctionbidpanel = ({ CBP, amount }: AuctionbidpanelProps) => {
   );
 };
 
-export default Auctionbidpanel;
+export default AuctionBidPanel;

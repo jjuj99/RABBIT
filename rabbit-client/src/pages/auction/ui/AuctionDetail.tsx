@@ -1,9 +1,9 @@
-import BidCard from "@/features/auction/ui/BidCard/BidCard";
+import Auctionbidpanel from "@/features/auction/ui/AuctionBidPanel/AuctionBidPanel";
 
 const AuctionDetail = () => {
   return (
     <div>
-      <BidCard CBP={123123} amount={123132} />
+      <Auctionbidpanel CBP={123123} amount={123132} />
     </div>
   );
 };

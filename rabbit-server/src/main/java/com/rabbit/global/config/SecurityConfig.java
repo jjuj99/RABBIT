@@ -53,7 +53,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("https://localhost:8080", "http://localhost:8080", "https://j12a604.p.ssafy.io")); // 허용할 도메인
+        configuration.setAllowedOrigins(List.of("https://localhost:8080", "http://localhost:8080", "https://j12a604.p.ssafy.io", "http://localhost:5173")); // 허용할 도메인
+//        configuration.setAllowedOrigins(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE")); // 허용할 HTTP 메소드
         configuration.setAllowedHeaders(List.of("*")); // 모든 헤더 허용
         configuration.setAllowCredentials(true); // JWT 인증을 위한 쿠키 허용

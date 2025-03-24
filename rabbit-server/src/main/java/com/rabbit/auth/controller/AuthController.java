@@ -1,52 +1,71 @@
 package com.rabbit.auth.controller;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import com.rabbit.auth.controller.swagger.AuthControllerSwagger;
+import com.rabbit.auth.domain.dto.request.*;
+import com.rabbit.auth.domain.dto.response.*;
+import com.rabbit.auth.service.AuthService;
+import com.rabbit.auth.service.dto.LoginServiceResult;
+import com.rabbit.global.exception.BusinessException;
+import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.response.CustomApiResponse;
-import com.rabbit.global.response.MessageResponse;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Tag(name = "Auth", description = "인증 관련 API")
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Slf4j
 public class AuthController {
 
-//	private final AuthService authService;
-//	private final JwtTokenUtil jwtTokenUtil;
-//	private final StringUtil stringUtil;
+    private final AuthService authService;
 
-    @GetMapping("/login")
-    public ResponseEntity<CustomApiResponse<MessageResponse>> login(HttpServletResponse response) {
-		log.debug("[로그인 요청 전체] request: {}", "hi");
-//        TokenResponse tokenResponse = authService.login(request, response);
-        return ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("hi")));
+    @AuthControllerSwagger.nonceApi
+    @PostMapping("/nonce")
+    public ResponseEntity<CustomApiResponse<NonceResponseDTO>> nonce(@RequestBody @Valid NonceRequestDTO request,
+                                                                     BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getFieldErrors().get(0).getDefaultMessage();
+            throw new BusinessException(ErrorCode.INVALID_TYPE_VALUE, errorMessage);
+        }
+
+        NonceResponseDTO response = authService.nonce(request);
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
     }
-	
+
+    @AuthControllerSwagger.loginApi
+    @PostMapping("/login")
+    public ResponseEntity<CustomApiResponse<LoginResponseDTO>> login(@RequestBody @Valid LoginRequestDTO request,
+                                                                     HttpServletResponse httpResponse,BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getFieldErrors().get(0).getDefaultMessage();
+            throw new BusinessException(ErrorCode.INVALID_TYPE_VALUE, errorMessage);
+        }
+
+        LoginServiceResult result = authService.login(request);
+
+        LoginResponseDTO response = LoginResponseDTO.builder()
+                .nickname(result.getNickname())
+                .accessToken(result.getAccessToken())
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", result.getRefreshToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(60 * 60 * 24 * 7)
+                .sameSite("Strict")
+                .build();
+
+        httpResponse.addHeader("Set-Cookie", refreshCookie.toString());
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
 }

@@ -1,13 +1,11 @@
 import { useCallback } from "react";
-import {
-  useAuctionFilterErrorStore,
-  useAuctionFilterStore,
-} from "../../../shared/lib/store/auctionFilterStore";
+import { useAuctionFilterStore } from "@/shared/lib/store/auctionFilterStore";
 import { MenubarSeparator } from "@/shared/ui/menubar";
-import IRSection from "../../../entities/auction/AuctionFilter/IRSection";
-import REPAY_TYPESection from "../../../entities/auction/AuctionFilter/REPAY_TYPESection";
-import MAT_DTSection from "../../../entities/auction/AuctionFilter/MAT_DTSection";
-import PriceSection from "../../../entities/auction/AuctionFilter/PriceSection";
+import IRSection from "@/entities/auction/AuctionFilter/IRSection";
+import REPAY_TYPESection from "@/entities/auction/AuctionFilter/REPAY_TYPESection";
+import MAT_DTSection from "@/entities/auction/AuctionFilter/MAT_DTSection";
+import PriceSection from "@/entities/auction/AuctionFilter/PriceSection";
+import { useAuctionFilterErrorStore } from "@/shared/lib/store/auctionFilterErrorStore";
 
 const AuctionFilter = () => {
   const triggerApi = useCallback(() => {
@@ -31,7 +29,7 @@ const AuctionFilter = () => {
         : ""
     }`;
     console.log(query);
-    // 실제 API 호출 로직 추가...
+    // 실제 API 호출 로직 추가.....
   }, []);
 
   return (

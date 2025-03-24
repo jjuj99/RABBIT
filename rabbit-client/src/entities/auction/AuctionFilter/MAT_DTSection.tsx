@@ -2,10 +2,8 @@ import { useEffect, useState } from "react";
 import { Label } from "@/shared/ui/label";
 import { BarRadio, BarRadioItem } from "@/shared/ui/BarRadio";
 import { Input } from "@/shared/ui/input";
-import {
-  useAuctionFilterErrorStore,
-  useAuctionFilterStore,
-} from "@/shared/lib/store/auctionFilterStore";
+import { useAuctionFilterStore } from "@/shared/lib/store/auctionFilterStore";
+import { useAuctionFilterErrorStore } from "./../../../shared/lib/store/auctionFilterErrorStore";
 
 interface MAT_DTSectionProps {
   triggerApi: () => void;

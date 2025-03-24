@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { Label } from "@/shared/ui/label";
 import UnitInput from "@/entities/common/ui/UnitInput";
-import {
-  useAuctionFilterErrorStore,
-  useAuctionFilterStore,
-} from "@/shared/lib/store/auctionFilterStore";
+import { useAuctionFilterStore } from "@/shared/lib/store/auctionFilterStore";
+import { useAuctionFilterErrorStore } from "@/shared/lib/store/auctionFilterErrorStore";
 
 interface IRSectionProps {
   triggerApi: () => void;

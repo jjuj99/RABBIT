@@ -18,17 +18,6 @@ interface AuctionFilterState {
   setStartDate: (value: string) => void;
   setEndDate: (value: string) => void;
 }
-interface AuctionFilterErrorStore {
-  errors: {
-    price: string;
-    ir: string;
-    matDt: string;
-  };
-  setError: (
-    key: keyof AuctionFilterErrorStore["errors"],
-    error: string,
-  ) => void;
-}
 
 export const useAuctionFilterStore = create<AuctionFilterState>((set) => ({
   minPrice: "",
@@ -48,15 +37,3 @@ export const useAuctionFilterStore = create<AuctionFilterState>((set) => ({
   setStartDate: (startDate) => set({ startDate }),
   setEndDate: (endDate) => set({ endDate }),
 }));
-
-export const useAuctionFilterErrorStore = create<AuctionFilterErrorStore>(
-  (set) => ({
-    errors: {
-      price: "",
-      ir: "",
-      matDt: "",
-    },
-    setError: (key, error) =>
-      set((state) => ({ errors: { ...state.errors, [key]: error } })),
-  }),
-);

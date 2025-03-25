@@ -1,8 +1,19 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useAuthUser } from "@/entities/auth/hooks/useAuth";
+import useWalletConnection from "@/entities/auth/hooks/useWalletConnection";
+import { useState } from "react";
 
 const useContractForm = () => {
+  const { user } = useAuthUser();
+  const { data: walletData } = useWalletConnection();
+  const [passUserName, setPassUserName] = useState("");
+  const [passPhoneNumber, setPassPhoneNumber] = useState("");
+  const [isPassDialogOpen, setIsPassDialogOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState("");
+
   const contractSchema = z.object({
     DR_PHONE: z.string().min(1, { message: "전화번호를 입력해주세요" }),
     DR_NAME: z.string().min(1, { message: "이름을 입력해주세요" }),
@@ -13,9 +24,7 @@ const useContractForm = () => {
       .email({ message: "올바른 이메일 형식이 아닙니다" }),
     CR_NAME: z.string().min(1, { message: "이름을 입력해주세요" }),
     CR_WALLET: z.string().min(1, { message: "지갑 주소를 입력해주세요" }),
-    LA: z
-      .number()
-      .min(1000000, { message: "대출 금액은 100,000원 이상이어야 합니다" }),
+    LA: z.number().min(1000000, { message: "100,000원 이상" }),
     IR: z
       .number()
       .min(0, { message: "이자율은 0% 이상이어야 합니다" })
@@ -56,21 +65,22 @@ const useContractForm = () => {
     ADD_TERMS: z.string().optional(),
     MESSAGE: z.string().optional(),
   });
+
   const form = useForm<z.infer<typeof contractSchema>>({
     resolver: zodResolver(contractSchema),
     defaultValues: {
       DR_PHONE: "",
-      DR_NAME: "",
-      DR_WALLET: "",
+      DR_NAME: user?.nickname,
+      DR_WALLET: walletData?.address,
       CR_EMAIL: "",
       CR_NAME: "",
       CR_WALLET: "",
-      LA: 0,
-      IR: 0,
-      LT: 0,
+      // LA: 0,
+      // IR: 0,
+      // LT: 0,
       REPAY_TYPE: "",
-      MP_DT: 0,
-      DIR: 0,
+      // MP_DT: 0,
+      // DIR: 0,
       DEF_CNT: 0,
       PN_TRANS: false,
       EARLYPAY: false,
@@ -79,20 +89,54 @@ const useContractForm = () => {
       MESSAGE: "",
     },
   });
+
   const onSubmit = (data: z.infer<typeof contractSchema>) => {
+    // if (!data.DR_NAME) {
+    //   setDialogMessage("계약자 이름을 입력해주세요.");
+    //   setDialogOpen(true);
+    //   return;
+    // }
+
+    if (!data.DR_PHONE) {
+      setDialogMessage("휴대폰 번호를 인증해주세요.");
+      console.log("여기");
+
+      setDialogOpen(true);
+      return;
+    }
+
     console.log(data);
   };
-  const handlePhoneCertification = () => {
-    console.log("certification");
+
+  const handlePassComplete = (phoneNumber: string, name: string) => {
+    const loggedInUserName = form.getValues("DR_NAME");
+
+    if (loggedInUserName && name !== loggedInUserName) {
+      alert("인증하신 이름이 회원정보와 일치하지 않습니다.");
+      return false;
+    }
+
+    form.setValue("DR_PHONE", phoneNumber);
+    setIsPassDialogOpen(false);
+    return true;
   };
-  const handleSearchUser = () => {
-    console.log("search user");
-  };
+
   return {
     form,
     onSubmit,
-    handlePhoneCertification,
-    handleSearchUser,
+
+    passUserName,
+    passPhoneNumber,
+    isPassDialogOpen,
+    setPassUserName,
+    setPassPhoneNumber,
+    setIsPassDialogOpen,
+    handlePassComplete,
+    dialogOpen,
+    setDialogOpen,
+    dialogMessage,
+    setDialogMessage,
   };
 };
+
 export default useContractForm;

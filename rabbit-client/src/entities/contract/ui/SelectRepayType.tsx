@@ -1,4 +1,4 @@
-import { FormItem, FormLabel, FormMessage } from "@/shared/ui/form";
+import { FormItem, FormLabel } from "@/shared/ui/form";
 import {
   Select,
   SelectContent,
@@ -12,7 +12,7 @@ const SelectRepayType = ({ ...props }) => {
     <FormItem>
       <div className="flex items-center justify-between">
         <FormLabel className="text-xl">상환방식</FormLabel>
-        <FormMessage />
+        {/* <FormMessage /> */}
       </div>
       <Select name="REPAY_TYPE" {...props}>
         <SelectTrigger className="w-full bg-gray-600 text-base">

@@ -10,10 +10,12 @@ import {
 import RAB from "@/shared/ui/RAB";
 
 const RabbitButton = () => {
-  const { user } = useAuthUser();
+  const { user, logout } = useAuthUser();
+
   const handleLogout = () => {
-    // 추후 옵션 모달 활상화 버튼
     console.log("로그아웃");
+    logout();
+    // 월렛 관련 쿼리 캐시 제거
   };
   return (
     <Menubar className="bg-transparent p-0">

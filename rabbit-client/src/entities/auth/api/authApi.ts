@@ -56,7 +56,7 @@ export const LoginAPI = async ({
 export const LogoutAPI = async (): Promise<ApiResponse<LogoutResponse>> => {
   const res = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/auth/logout`,
-    fetchOption("POST"),
+    fetchOption("POST", undefined, "access"),
   );
   const data = await res.json();
   return data;

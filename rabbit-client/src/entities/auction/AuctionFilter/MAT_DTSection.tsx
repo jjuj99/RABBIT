@@ -38,7 +38,7 @@ const MAT_DTSection: React.FC<MAT_DTSectionProps> = ({ triggerApi }) => {
 
   return (
     <div className="flex h-fit w-full flex-col gap-3">
-      <h1 className="text-base font-bold">만기일</h1>
+      <h2 className="text-base font-bold">만기일</h2>
       <div>
         <BarRadio
           value={maturity}

@@ -117,7 +117,7 @@
   body {
     font-family: "Pretendard", sans-serif;
     background-image: var(--gradient-radial-lg);
-    height: 100%;
+    /* height: 100%; */
     color: white !important; /* 강제로 흰색 텍스트 적용 */
   }
 

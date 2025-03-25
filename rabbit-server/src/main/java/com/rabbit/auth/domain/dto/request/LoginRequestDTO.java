@@ -19,7 +19,7 @@ public class LoginRequestDTO {
     @NotBlank(message = "서명을 입력하지 않았습니다.")
     private String signature;
 
-    @Schema(description = "난수 데이터", example = "0xdddd")
-    @NotBlank(message = "난수 정보가 누락되었습니다.")
+    @Schema(description = "Nonce 데이터", example = "0xdddd")
+    @NotBlank(message = "Nonce 정보가 누락되었습니다.")
     private String nonce;
 }

@@ -2,13 +2,11 @@ package com.rabbit.user.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.DynamicInsert;
 
 import java.time.ZonedDateTime;
 
 @Table(name = "users")
 @Entity
-@DynamicInsert
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -38,5 +36,5 @@ public class User {
     private ZonedDateTime updatedAt;
 
     @Column(nullable = false)
-    private boolean withdrawn_flag;
+    private boolean withdrawnFlag;
 }

@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
  * AuthController의 Swagger 문서화를 위한 인터페이스
  * 이 인터페이스는 AuthController의 API 메서드에 대한 Swagger 문서화 정보만 포함합니다.
  */
-@Tag(name = "Auth", description = "인증 API - 인증 데이터 작업을 수행합니다")
+@Tag(name = "Auth", description = "계정 API - 회원 인증 및 회원 가입을 수행합니다")
 public interface AuthControllerSwagger {
 
     @Target({ElementType.METHOD})
@@ -125,5 +125,68 @@ public interface AuthControllerSwagger {
             }
     )
     @interface loginApi {
+    }
+
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Operation(
+            summary = "회원가입",
+            description = "이메일, 이름, 닉네임, 은행 정보, 메타마스크 지갑 주소를 포함한 회원가입을 수행합니다.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "201",
+                            description = "회원가입 요청",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "로그인 성공",
+                                                    summary = "로그인 성공",
+                                                    value = """
+                                                            {
+                                                              "status": "SUCCESS",
+                                                              "data": {
+                                                                "message": "회원가입에 성공했습니다."
+                                                              },
+                                                              "error": null
+                                                            }"""
+                                            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "잘못된 요청 - 유효하지 않은 데이터",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "잘못된 요청 예시",
+                                                    summary = "이메일 형식 오류",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 400,\n    \"message\": \"이메일을 입력하지 않았습니다.\"\n  }\n}"
+                                            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "409",
+                            description = "잘못된 요청 - 중복 데이터 존재",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "이메일 중복",
+                                                    summary = "이메일 중복",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 409,\n    \"message\": \"이미 등록된 이메일입니다.\"\n  }\n}"
+                                            )
+                                    }
+                            )
+                    )
+            }
+    )
+    @interface signupApi {
     }
 }

@@ -42,6 +42,7 @@ public class AuthController {
         LoginServiceResult result = authService.login(request);
 
         LoginResponseDTO response = LoginResponseDTO.builder()
+                .userName(result.getUserName())
                 .nickname(result.getNickname())
                 .accessToken(result.getAccessToken())
                 .build();

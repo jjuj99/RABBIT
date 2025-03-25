@@ -1,8 +1,6 @@
 package com.rabbit.global.util;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
@@ -35,21 +33,29 @@ public class JwtUtil {
     }
 
     public String createAccessToken(String userId) {
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + ACCESS_TOKEN_EXPIRE_MS);
+
         return Jwts.builder()
                 .subject(userId)
                 .claim("userId", userId)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRE_MS))
+                .claim("exp", exp)
+                .issuedAt(now)
+                .expiration(exp)
                 .signWith((SecretKey) key, Jwts.SIG.HS256)
                 .compact();
     }
 
     public String createRefreshToken(String userId) {
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + REFRESH_TOKEN_EXPIRE_MS);
+
         return Jwts.builder()
                 .subject(userId)
                 .claim("userId", userId)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRE_MS))
+                .claim("exp", exp)
+                .issuedAt(now)
+                .expiration(exp)
                 .signWith((SecretKey) key, Jwts.SIG.HS256)
                 .compact();
     }

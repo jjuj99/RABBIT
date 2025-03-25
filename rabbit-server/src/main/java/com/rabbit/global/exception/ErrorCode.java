@@ -21,6 +21,11 @@ public enum ErrorCode {
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "error.auth.unauthorized", "인증이 필요합니다"),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "error.auth.access.denied", "접근 권한이 없습니다"),
 
+    // =========== JWT ===========
+    JWT_EXPIRED(HttpStatus.UNAUTHORIZED, "error.jwt.expired", "토큰이 만료되었습니다"),
+    JWT_INVALID(HttpStatus.FORBIDDEN, "error.jwt.invalid", "유효하지 않은 토큰입니다"),
+    JWT_REQUIRED(HttpStatus.UNAUTHORIZED, "error.jwt.required", "로그인 후 이용해주세요"),
+
     // =========== Business ===========
     EXAMPLE_NOT_FOUND(HttpStatus.NOT_FOUND, "error.example.not.found", "예시 항목을 찾을 수 없습니다"),
     INVALID_PAGE_PARAMETERS(HttpStatus.BAD_REQUEST, "error.invalid.page", "유효하지 않은 페이지 파라미터입니다"),

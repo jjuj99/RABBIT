@@ -36,15 +36,14 @@ public class SecurityConfig {
                 .sessionManagement(session
                         -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 사용 비활성화
                 .authorizeHttpRequests(auth -> auth // API 접근 권한 설정
-                                .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**", "/favicon.ico").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/v1/test/users").permitAll()
-//                                .anyRequest().authenticated() // 모든 요청 인증 필요
-                                .anyRequest().permitAll()
+                                .anyRequest().authenticated() // 모든 요청 인증 필요
+//                                .anyRequest().permitAll()
                 )
                 .exceptionHandling(exception
                         -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint)) // 인증 실패 시 예워 처리
-//                .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
+                .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
                 .build();
     }
 
@@ -54,7 +53,6 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(List.of("https://localhost:8080", "http://localhost:8080", "https://j12a604.p.ssafy.io", "http://localhost:5173")); // 허용할 도메인
-//        configuration.setAllowedOrigins(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE")); // 허용할 HTTP 메소드
         configuration.setAllowedHeaders(List.of("*")); // 모든 헤더 허용
         configuration.setAllowCredentials(true); // JWT 인증을 위한 쿠키 허용

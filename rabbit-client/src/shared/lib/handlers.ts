@@ -1,10 +1,3 @@
-import { http, HttpResponse } from "msw";
+import { authHandlers } from "@/entities/auth/mock/handler";
 
-export const handlers = [
-  http.get("/api/users", () => {
-    return HttpResponse.json([
-      { id: 1, name: "사용자1" },
-      { id: 2, name: "사용자2" },
-    ]);
-  }),
-];
+export const handlers = [...authHandlers];

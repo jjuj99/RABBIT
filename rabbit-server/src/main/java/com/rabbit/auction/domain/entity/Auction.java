@@ -45,4 +45,9 @@ public class Auction {
 
     @Column(nullable = false)
     private ZonedDateTime createdAt;
+
+    public void updatePriceAndBidder(Long price, Integer bidderId) {
+        this.price = price;
+        this.winningBidder = bidderId;
+    }
 }

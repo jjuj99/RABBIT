@@ -2,6 +2,10 @@ package com.rabbit.auction.controller;
 
 import com.rabbit.auction.controller.swagger.AuctionControllerSwagger;
 import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
+import com.rabbit.auction.domain.dto.request.BidRequestDTO;
+import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
+import com.rabbit.auction.domain.entity.Auction;
+import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
 import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
 import com.rabbit.auction.service.AuctionService;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
@@ -75,5 +79,18 @@ public class AuctionController {
         PageResponseDTO<AuctionResponseDTO> result = auctionService.searchAuctions(searchRequest, pageable);
 
         return ResponseEntity.ok(CustomApiResponse.success(result));
+    }
+
+    @AuctionControllerSwagger.AddBidApi
+    @PostMapping("/{auctionId}/bid")
+    public ResponseEntity<CustomApiResponse<?>> addBid(@Valid @RequestBody BidRequestDTO bidRequest,
+                                                       @PathVariable("auctionId") Integer auctionId) {
+        // JWT로 변경해야함
+        Integer userId=3;
+
+        auctionService.addBid(bidRequest, auctionId, userId);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(CustomApiResponse.success(MessageResponse.of("입찰 성공했습니다.")));
     }
 }

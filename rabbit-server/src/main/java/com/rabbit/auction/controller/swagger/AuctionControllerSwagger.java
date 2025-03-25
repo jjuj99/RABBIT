@@ -1,6 +1,7 @@
 package com.rabbit.auction.controller.swagger;
 
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
+import com.rabbit.auction.domain.dto.request.BidRequestDTO;
 import com.rabbit.global.response.CustomApiResponse;
 import com.rabbit.global.response.PageResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -173,5 +174,97 @@ public interface AuctionControllerSwagger {
             }
     )
     @interface SearchAuctionApi {}
+
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Operation(
+            summary = "경매 입찰",
+            description = "특정 경매에 대해 입찰을 진행합니다. 입찰 금액은 현재 경매가보다 커야 합니다.",
+            security = {@SecurityRequirement(name = "bearerAuth")},
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "입찰 요청 정보",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = BidRequestDTO.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "입찰 요청 예시",
+                                            summary = "정상적인 입찰 요청",
+                                            value = "{\n  \"bidAmount\": 50000\n}"
+                                    )
+                            }
+                    )
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "201",
+                            description = "입찰 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "성공 응답",
+                                                    summary = "입찰 성공",
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": { \"message\": \"입찰 성공했습니다.\" },\n  \"error\": null\n}"
+                                            )
+                                    }
+                            ),
+                            headers = {
+                                    @Header(name = "Location", description = "입찰 성공 후 리소스 URI", schema = @Schema(type = "string"))
+                            }
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "경매 없음",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "에러 - 경매 없음",
+                                                    summary = "경매 ID로 조회 실패",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": { \"statusCode\": 404, \"message\": \"경매를 찾을 수 없습니다.\" }\n}"
+                                            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "422",
+                            description = "비즈니스 로직 위반",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "에러 - 경매 마감",
+                                                    summary = "마감된 경매",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": { \"statusCode\": 422, \"message\": \"이미 마감된 경매입니다.\" }\n}"
+                                            ),
+                                            @ExampleObject(
+                                                    name = "에러 - 입찰 금액 부족",
+                                                    summary = "입찰 금액이 낮음",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": { \"statusCode\": 422, \"message\": \"입찰 금액이 현재 경매가보다 낮습니다.\" }\n}"
+                                            )
+                                    }
+                            )
+                    )
+            }
+    )
+    @interface AddBidApi {
+    }
+
+    @Target({ElementType.PARAMETER})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Parameter(
+            name = "auctionId",
+            description = "입찰할 경매 ID",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int32")
+    )
+    @interface AuctionIdParam {
+    }
 
 }

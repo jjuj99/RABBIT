@@ -13,7 +13,7 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
     hibernate:
-      ddl-auto: update  # 로컬 환경에서는 validate 권장
+      ddl-auto: none  # 로컬 환경에서는 validate 권장
     properties:
       hibernate:
         format_sql: true

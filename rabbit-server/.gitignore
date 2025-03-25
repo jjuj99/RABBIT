@@ -9,7 +9,7 @@ logs/**
 
 # 환경설정 파일
 .env
-.env.local
+.env
 .env.*
 !.env.example
 

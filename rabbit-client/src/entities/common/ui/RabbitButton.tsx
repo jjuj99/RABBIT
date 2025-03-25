@@ -1,3 +1,4 @@
+import { useAuthUser } from "@/entities/auth/hooks/useAuth";
 import {
   Menubar,
   MenubarContent,
@@ -9,6 +10,7 @@ import {
 import RAB from "@/shared/ui/RAB";
 
 const RabbitButton = () => {
+  const { user } = useAuthUser();
   const handleLogout = () => {
     // 추후 옵션 모달 활상화 버튼
     console.log("로그아웃");
@@ -21,7 +23,7 @@ const RabbitButton = () => {
         </MenubarTrigger>
         <MenubarContent>
           <div className="px-2 py-1.5">
-            <span className="font-bit">clapsheep</span>
+            <span className="font-bit">{user?.nickname}</span>
             <span className="font-bit text-xs">님</span>
           </div>
           <MenubarSeparator />

@@ -12,7 +12,7 @@ function Label({
       data-slot="label"
       className={cn(
         // 기본 스타일
-        "mb-2 flex items-center gap-2 text-sm leading-none font-normal text-white select-none",
+        "mb-2 flex items-center gap-2 text-sm leading-none font-light text-gray-100 select-none",
 
         // 비활성화 상태 (group-data와 peer 기반)
         "group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50",

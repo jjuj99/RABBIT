@@ -17,7 +17,7 @@ const ContractCreate = () => {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex w-full flex-col items-center gap-9"
+          className="flex w-full flex-col items-center gap-9 bg-gray-900 px-4 py-9 md:px-11"
         >
           <div className="flex w-full flex-col items-center gap-2">
             <h2 className="text-3xl">신규 차용증 작성</h2>

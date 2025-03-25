@@ -8,7 +8,7 @@ interface InputProps extends React.ComponentProps<"input"> {
 }
 
 const inputVariants = cva(
-  "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground",
+  "file:text-foreground w-full placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground",
   {
     variants: {
       borderType: {

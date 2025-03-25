@@ -1,8 +1,13 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useAuthUser } from "@/entities/auth/hooks/useAuth";
+import useWalletConnection from "@/entities/auth/hooks/useWalletConnection";
 
 const useContractForm = () => {
+  const { user } = useAuthUser();
+  const { data: walletData } = useWalletConnection();
+
   const contractSchema = z.object({
     DR_PHONE: z.string().min(1, { message: "전화번호를 입력해주세요" }),
     DR_NAME: z.string().min(1, { message: "이름을 입력해주세요" }),
@@ -56,12 +61,13 @@ const useContractForm = () => {
     ADD_TERMS: z.string().optional(),
     MESSAGE: z.string().optional(),
   });
+
   const form = useForm<z.infer<typeof contractSchema>>({
     resolver: zodResolver(contractSchema),
     defaultValues: {
       DR_PHONE: "",
-      DR_NAME: "",
-      DR_WALLET: "",
+      DR_NAME: user?.nickname,
+      DR_WALLET: walletData?.address,
       CR_EMAIL: "",
       CR_NAME: "",
       CR_WALLET: "",

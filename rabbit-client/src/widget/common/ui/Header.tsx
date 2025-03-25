@@ -8,7 +8,6 @@ import { Link } from "react-router";
 
 const Header = () => {
   const { isAuthenticated } = useAuthUser();
-  console.log(isAuthenticated);
 
   return (
     <>

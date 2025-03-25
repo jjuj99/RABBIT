@@ -30,6 +30,8 @@ public enum ErrorCode {
     CODE_ALREADY_EXISTS(HttpStatus.CONFLICT, "error.code.already.exists", "이미 존재하는 코드입니다: 타입={0}, 코드={1}"),
     CODE_TYPE_INVALID(HttpStatus.BAD_REQUEST, "error.code.type.invalid", "유효하지 않은 코드 타입입니다: {0}"),
 
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "error.method.not.allowed", "지원하지 않는 HTTP 메소드입니다"),
+
     ALREADY_EXISTS(HttpStatus.CONFLICT, "error.already.exists", "이미 존재하는 리소스입니다: {0}");
 
     private final HttpStatus status;

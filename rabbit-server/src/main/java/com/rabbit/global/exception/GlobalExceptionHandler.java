@@ -221,7 +221,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(CustomApiResponse.error(
                         HttpStatus.BAD_REQUEST.value(),
-                        e.getBindingResult().getAllErrors().get(0).getDefaultMessage()
+                        e.getBindingResult().getAllErrors().get(0).getDefaultMessage() // 추후 양식에 맞게 수정 예정
                 ));
     }
 
@@ -233,7 +233,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(CustomApiResponse.error(
                         HttpStatus.BAD_REQUEST.value(),
-                        e.getBindingResult().getAllErrors().get(0).getDefaultMessage()
+                        e.getBindingResult().getAllErrors().get(0).getDefaultMessage() // 추후 양식에 맞게 수정 예정
                 ));
     }
 
@@ -241,11 +241,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     protected ResponseEntity<CustomApiResponse<Void>> handleConstraintViolationException(ConstraintViolationException e) {
         log.error("ConstraintViolationException", e);
+
+        ErrorCode errorCode = ErrorCode.INVALID_INPUT_VALUE;
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(errorCode.getStatus())
                 .body(CustomApiResponse.error(
-                        HttpStatus.BAD_REQUEST.value(),
-                        e.getMessage()
+                        errorCode.getStatus().value(),
+                        errorCode.getMessage(messageSource)
                 ));
     }
 
@@ -253,12 +255,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     protected ResponseEntity<CustomApiResponse<Void>> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
         log.error("MethodArgumentTypeMismatchException", e);
+        ErrorCode errorCode = ErrorCode.INVALID_TYPE_VALUE;
+
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(CustomApiResponse.error(
-                        HttpStatus.BAD_REQUEST.value(),
-                        e.getMessage()
-                ));
+                .status(errorCode.getStatus())
+                .body(CustomApiResponse.error(errorCode.getStatus().value(), errorCode.getMessage(messageSource)));
     }
 
     /**
@@ -271,11 +272,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     protected ResponseEntity<CustomApiResponse<Void>> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         log.error("HttpRequestMethodNotSupportedException", e);
+        ErrorCode errorCode = ErrorCode.METHOD_NOT_ALLOWED;
+
         return ResponseEntity
-                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .status(errorCode.getStatus())
                 .body(CustomApiResponse.error(
-                        HttpStatus.METHOD_NOT_ALLOWED.value(),
-                        e.getMessage()
+                        errorCode.getStatus().value(),
+                        errorCode.getMessage(messageSource)
                 ));
     }
 

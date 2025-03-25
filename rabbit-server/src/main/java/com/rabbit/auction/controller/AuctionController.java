@@ -1,18 +1,26 @@
 package com.rabbit.auction.controller;
 
 import com.rabbit.auction.controller.swagger.AuctionControllerSwagger;
+import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
+import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
 import com.rabbit.auction.service.AuctionService;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.response.CustomApiResponse;
 import com.rabbit.global.response.MessageResponse;
+import com.rabbit.global.response.PageResponseDTO;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.data.domain.Pageable;
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 @RestController
@@ -42,5 +50,30 @@ public class AuctionController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(CustomApiResponse.success(MessageResponse.of("경매 등록 성공했습니다.")));
+    }
+
+    @AuctionControllerSwagger.SearchAuctionApi
+    @GetMapping
+    public ResponseEntity<CustomApiResponse<?>> searchAuctions(
+            @Parameter(hidden = true) @Valid AuctionFilterRequestDTO searchRequest
+    ) {
+        if (searchRequest.getMinPrice() != null && searchRequest.getMaxPrice() != null &&
+                searchRequest.getMinPrice() > searchRequest.getMaxPrice()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "최소 금액이 최대 금액보다 클 수 없습니다.");
+        }
+        if (searchRequest.getMinRr() != null && searchRequest.getMaxRr() != null &&
+                searchRequest.getMinRr().compareTo(searchRequest.getMaxRr()) > 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "최소 수익률이 최대 수익률보다 클 수 없습니다.");
+        }
+        if (searchRequest.getMatStart() != null && searchRequest.getMatEnd() != null &&
+                searchRequest.getMatStart().isAfter(searchRequest.getMatEnd())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "시작일이 종료일보다 늦을 수 없습니다.");
+        }
+
+        Pageable pageable = searchRequest.toPageable("createdAt", Sort.Direction.DESC);
+
+        PageResponseDTO<AuctionResponseDTO> result = auctionService.searchAuctions(searchRequest, pageable);
+
+        return ResponseEntity.ok(CustomApiResponse.success(result));
     }
 }

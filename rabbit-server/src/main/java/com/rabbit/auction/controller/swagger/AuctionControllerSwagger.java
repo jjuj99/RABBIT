@@ -2,7 +2,10 @@ package com.rabbit.auction.controller.swagger;
 
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
 import com.rabbit.global.response.CustomApiResponse;
+import com.rabbit.global.response.PageResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -96,4 +99,79 @@ public interface AuctionControllerSwagger {
             }
     )
     @interface InsertAuctionApi {}
+
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Operation(
+            summary = "경매 목록 검색",
+            description = "필터 조건 및 페이징 기준에 맞는 경매 목록을 검색합니다.",
+            security = {@SecurityRequirement(name = "bearerAuth")},
+            parameters = {
+                    // 페이지네이션 파라미터
+                    @Parameter(name = "pageNo", description = "페이지 번호 (0부터 시작)", in = ParameterIn.QUERY, schema = @Schema(type = "integer", defaultValue = "0")),
+                    @Parameter(name = "pageSize", description = "페이지당 항목 수", in = ParameterIn.QUERY, schema = @Schema(type = "integer", defaultValue = "10")),
+                    @Parameter(name = "sortBy", description = "정렬 필드", in = ParameterIn.QUERY, schema = @Schema(type = "string", defaultValue = "price")),
+                    @Parameter(name = "sortDirection", description = "정렬 방향 (ASC, DESC)", in = ParameterIn.QUERY, schema = @Schema(type = "string", defaultValue = "ASC")),
+
+                    // 검색 조건 파라미터
+                    @Parameter(name = "minPrice", description = "최소 금액", in = ParameterIn.QUERY, schema = @Schema(type = "integer", example = "10000")),
+                    @Parameter(name = "maxPrice", description = "최대 금액", in = ParameterIn.QUERY, schema = @Schema(type = "integer", example = "50000")),
+                    @Parameter(name = "minRr", description = "최소 수익률", in = ParameterIn.QUERY, schema = @Schema(type = "number", format = "double", example = "3.0")),
+                    @Parameter(name = "maxRr", description = "최대 수익률", in = ParameterIn.QUERY, schema = @Schema(type = "number", format = "double", example = "10.0")),
+                    @Parameter(name = "repayType", description = "상환 방식 (원리금 균등, 원금 균등, 만기 일시 상환)", in = ParameterIn.QUERY, schema = @Schema(type = "string", example = "원리금 균등")),
+                    @Parameter(name = "matTerm", description = "만기 조건 (1개월, 3개월, 6개월, 1년, custom)", in = ParameterIn.QUERY, schema = @Schema(type = "string", example = "3개월")),
+                    @Parameter(name = "matStart", description = "만기 시작일 (custom일 경우)", in = ParameterIn.QUERY, schema = @Schema(type = "string", format = "date-time", example = "2025-01-01T00:00:00Z")),
+                    @Parameter(name = "matEnd", description = "만기 종료일 (custom일 경우)", in = ParameterIn.QUERY, schema = @Schema(type = "string", format = "date-time", example = "2025-12-31T00:00:00Z"))
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "경매 목록 조회 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class, subTypes = {PageResponseDTO.class}),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "성공 응답",
+                                                    summary = "경매 목록 조회 성공",
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"content\": [\n      {\n        \"auctionId\": 1,\n        \"price\": 15000,\n        \"endDate\": \"2025-05-01T12:00:00\",\n        \"ir\": 5.5,\n        \"createdAt\": \"2025-03-22T10:00:00\",\n        \"repayType\": \"원리금 균등\",\n        \"matAmt\": 1000000,\n        \"matDt\": \"2025-12-31T14:30:00\",\n        \"dir\": \"1.05\",\n        \"earlypayFee\": 10000,\n        \"creditScore\": 800,\n        \"defCnt\": 0\n      }\n    ],\n    \"pageNo\": 0,\n    \"pageSize\": 10,\n    \"totalElements\": 1,\n    \"totalPages\": 1,\n    \"first\": true,\n    \"last\": true,\n    \"empty\": false\n  },\n  \"error\": null\n}"
+                                            ),
+                                            @ExampleObject(
+                                                    name = "빈 응답",
+                                                    summary = "검색 결과 없음",
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"content\": [],\n    \"pageNo\": 0,\n    \"pageSize\": 10,\n    \"totalElements\": 0,\n    \"totalPages\": 0,\n    \"first\": true,\n    \"last\": true,\n    \"empty\": true\n  },\n  \"error\": null\n}"
+                                            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "잘못된 요청 (금액/수익률/날짜 범위 오류)",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "실패 응답 - 금액 범위 오류",
+                                                    summary = "최소 금액이 최대 금액보다 큼",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 400,\n    \"message\": \"최소 금액이 최대 금액보다 클 수 없습니다.\"\n  }\n}"
+                                            ),
+                                            @ExampleObject(
+                                                    name = "실패 응답 - 수익률 범위 오류",
+                                                    summary = "최소 수익률이 최대 수익률보다 큼",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 400,\n    \"message\": \"최소 수익률이 최대 수익률보다 클 수 없습니다.\"\n  }\n}"
+                                            ),
+                                            @ExampleObject(
+                                                    name = "실패 응답 - 날짜 범위 오류",
+                                                    summary = "시작일이 종료일보다 늦음",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 400,\n    \"message\": \"시작일이 종료일보다 늦을 수 없습니다.\"\n  }\n}"
+                                            )
+                                    }
+                            )
+                    )
+
+            }
+    )
+    @interface SearchAuctionApi {}
+
 }

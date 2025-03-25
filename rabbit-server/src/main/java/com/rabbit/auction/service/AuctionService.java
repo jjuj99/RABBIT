@@ -1,14 +1,20 @@
 package com.rabbit.auction.service;
 
+import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
+import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
 import com.rabbit.auction.repository.AuctionRepository;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
 import com.rabbit.auction.domain.entity.Auction;
 import com.rabbit.auction.domain.enums.AuctionStatus;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
+import com.rabbit.global.response.PageResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+
+import org.springframework.data.domain.Pageable;
 
 import java.time.ZonedDateTime;
 
@@ -36,5 +42,18 @@ public class AuctionService {
                 .build();
 
         auctionRepository.save(auction);
+    }
+
+    public PageResponseDTO<AuctionResponseDTO> searchAuctions(AuctionFilterRequestDTO request, Pageable pageable) {
+        Page<AuctionResponseDTO> result = auctionRepository.searchAuctions(request, pageable);
+
+        //블록체인 읽어와 다른 조건 필터링 구현 필요
+
+        return PageResponseDTO.<AuctionResponseDTO>builder()
+                .content(result.getContent())
+                .pageNo(result.getNumber())
+                .pageSize(result.getSize())
+                .totalElements(result.getTotalElements())
+                .build();
     }
 }

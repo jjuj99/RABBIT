@@ -16,7 +16,7 @@ import java.time.ZonedDateTime;
 public class Auction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Integer auctionId;
 
     @Column(nullable = false)
 //    @JoinColumn(name="user_id")

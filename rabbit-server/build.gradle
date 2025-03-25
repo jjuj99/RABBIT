@@ -87,8 +87,15 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    //QueryDSL
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+    annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
+    annotationProcessor 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+    annotationProcessor 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+
     // Web3j
     implementation 'org.web3j:core:4.9.8'
+
 }
 
 tasks.named('test') {
@@ -114,4 +121,14 @@ test {
         html.required = true    // HTML 형식의 테스트 리포트 생성
         junitXml.required = true  // JUnit XML 리포트 생성
     }
+}
+
+def querydslDir = "$buildDir/generated/querydsl"
+
+sourceSets {
+    main.java.srcDir querydslDir
+}
+
+tasks.withType(JavaCompile) {
+    options.annotationProcessorGeneratedSourcesDirectory = file(querydslDir)
 }

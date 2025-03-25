@@ -83,8 +83,8 @@ const AuctionBidList = () => {
 
   return (
     <div className="w-full rounded-sm bg-gray-900 px-4 py-4 sm:px-6">
-      <h2 className="mb-4 text-lg font-medium sm:text-xl">입찰 내역</h2>
-      <ScrollArea className="h-[300px] w-full">
+      <h2 className="mb-4 text-lg font-semibold sm:text-2xl">입찰 내역</h2>
+      <ScrollArea className="h-[316px] w-full">
         <ScrollAreaViewport className="h-full w-full">
           <div className="flex flex-col gap-4">{BidList}</div>
         </ScrollAreaViewport>

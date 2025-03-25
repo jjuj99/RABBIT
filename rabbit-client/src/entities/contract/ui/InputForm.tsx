@@ -2,12 +2,7 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 
 import { cn } from "@/shared/lib/utils";
-import {
-  FormControl,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/shared/ui/form";
+import { FormControl, FormItem, FormLabel } from "@/shared/ui/form";
 import { UnitInput } from "@/entities/common";
 
 interface InputFormProps {
@@ -22,6 +17,7 @@ interface InputFormProps {
   buttonText?: string;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onInputClick?: (e: React.MouseEvent<HTMLInputElement>) => void;
+  asChild?: boolean;
 }
 
 const InputForm = ({
@@ -36,6 +32,7 @@ const InputForm = ({
   onClick,
   onInputClick,
   buttonText,
+  asChild = false,
   ...props
 }: InputFormProps) => {
   return (
@@ -44,12 +41,18 @@ const InputForm = ({
         <FormLabel className="text-xl" htmlFor={id}>
           {label}
         </FormLabel>
-        <FormMessage />
+        {/* <FormMessage /> */}
       </div>
       <FormControl>
         <div className="flex gap-3">
           {unit ? (
-            <UnitInput unit={unit} type={type} id={id} {...props} />
+            <UnitInput
+              unit={unit}
+              type={type}
+              id={id}
+              placeholder={placeholder}
+              {...props}
+            />
           ) : (
             <Input
               min={min}
@@ -63,8 +66,13 @@ const InputForm = ({
           )}
 
           {onClick && (
-            <Button type="button" variant="gradient" onClick={onClick}>
-              {buttonText}
+            <Button
+              type="button"
+              variant="gradient"
+              onClick={onClick}
+              asChild={asChild}
+            >
+              {asChild ? <div>{buttonText}</div> : buttonText}
             </Button>
           )}
         </div>

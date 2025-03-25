@@ -1,8 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { jwtDecode } from "jwt-decode";
-import { getAccessToken, refreshAccessToken } from "../utils/authUtils";
+import {
+  clearAccessToken,
+  getAccessToken,
+  refreshAccessToken,
+} from "../utils/authUtils";
 import { useAuthContext } from "./useAuthContext";
-import { GetUserAPI } from "../api/authApi";
+import { GetUserAPI, LogoutAPI } from "../api/authApi";
+import useWalletConnection from "./useWalletConnection";
 
 // 인증 상태를 확인하는 훅
 export const useAuth = () => {
@@ -70,15 +75,40 @@ export const useUser = () => {
     staleTime: 5 * 60 * 1000, // 5분 동안 캐시 유지
   });
 };
+export const useLogout = () => {
+  const queryClient = useQueryClient();
+  const { mutate: logout } = useMutation({
+    mutationFn: async () => {
+      await LogoutAPI();
+    },
+    onSuccess: () => {
+      clearAccessToken();
+
+      // 상태 업데이트만 수행
+      queryClient.setQueryData(["auth", "status"], {
+        isAuthenticated: false,
+      });
+      queryClient.setQueryData(["auth", "user"], { nickname: null });
+      queryClient.setQueryData(["wallet"], { address: null });
+    },
+    onError: (error) => {
+      console.error("로그아웃 실패:", error);
+    },
+  });
+  return { logout };
+};
 
 // 인증 상태와 사용자 정보를 모두 제공하는 편의 훅
 export const useAuthUser = () => {
   const { data: authStatus, isLoading: isAuthLoading } = useAuth();
   const { data: user, isLoading: isUserLoading } = useUser();
-
+  const { data: walletData } = useWalletConnection();
+  const { logout } = useLogout();
   return {
+    walletAddress: walletData?.address,
     isAuthenticated: authStatus?.isAuthenticated || false,
     user: user || null,
     isLoading: isAuthLoading || isUserLoading,
+    logout,
   };
 };

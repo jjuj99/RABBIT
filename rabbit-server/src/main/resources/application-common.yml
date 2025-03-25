@@ -137,17 +137,16 @@ springdoc:
   packages-to-scan: com.rabbit
   #paths-to-match: /api/**
 
+logging:
+  level:
+    org.springframework.security: DEBUG
+
 # JWT 설정
 jwt:
   access-token-expiration-seconds: 1800
   refresh-token-expiration-seconds: 2419200
   access-token-refresh-threshold: 300000
   secret: ${JWT_SECRET}
-
-#dotenv:
-#  enabled: true
-#  system-properties: true
-#  override-existing-values: true
 
 # 파일 설정
 app:

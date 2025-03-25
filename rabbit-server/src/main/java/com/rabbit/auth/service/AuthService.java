@@ -51,7 +51,7 @@ public class AuthService {
         // 지갑 주소로 회원 정보 불러오기
         User user = metamaskWalletRepository.findByWalletAddress(request.getWalletAddress())
                 .map(MetamaskWallet::getUser)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TYPE_VALUE, "존재하지 않는 지갑 주소입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "존재하지 않는 지갑 주소입니다."));
 
         // 서명에서 주소 복원
         String recoverAddress = signatureUtil.recoverAddress(request.getSignature(), request.getNonce());
@@ -62,7 +62,7 @@ public class AuthService {
         }
 
         // JWT 토큰 생성
-        String accessToken = jwtUtil.createRefreshToken(String.valueOf(user.getUserId()));
+        String accessToken = jwtUtil.createAccessToken(String.valueOf(user.getUserId()));
         String refreshToken = jwtUtil.createRefreshToken(String.valueOf(user.getUserId()));
 
         UserToken userToken = UserToken.builder()
@@ -73,6 +73,7 @@ public class AuthService {
         userTokenRepository.save(userToken);
 
         return LoginServiceResult.builder()
+                .userName(user.getUserName())
                 .nickname(user.getNickname())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -96,7 +97,7 @@ public class AuthService {
         // 유저 엔티티 생성
         User user = userRepository.save(User.builder()
                 .email(request.getEmail())
-                .name(request.getName())
+                .userName(request.getUserName())
                 .nickname(request.getNickname())
                 .passCode("Temp_Pass_Code") // 임시 데이터 저장
                 .createdAt(ZonedDateTime.now())

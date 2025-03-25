@@ -20,7 +20,7 @@ public class SignupRequestDTO {
     @Schema(description = "이름", example = "김싸피")
     @NotBlank(message = "이름을 입력하지 않았습니다.")
     @Size(max = 6, message = "이름은 6자 이하로 입력해야 합니다.")
-    private String name;
+    private String userName;
 
     @Schema(description = "닉네임", example = "열정두배")
     @NotBlank(message = "닉네임을 입력하지 않았습니다.")

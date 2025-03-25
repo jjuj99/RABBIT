@@ -11,7 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 public class LoginRequestDTO {
 
-    @Schema(description = "메타마스크 지갑 주소", example = "0xdb...f6b")
+    @Schema(description = "메타마스크 지갑 주소", example = "0x1234abcd5678efgh")
     @NotBlank(message = "지갑 주소를 입력하지 않았습니다.")
     private String walletAddress;
 

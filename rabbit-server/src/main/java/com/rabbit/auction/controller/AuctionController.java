@@ -4,9 +4,11 @@ import com.rabbit.auction.controller.swagger.AuctionControllerSwagger;
 import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
 import com.rabbit.auction.domain.dto.request.BidRequestDTO;
 import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
+import com.rabbit.auction.domain.entity.Auction;
+import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
+import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
 import com.rabbit.auction.service.AuctionService;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
-import com.rabbit.example.controller.swagger.ExampleControllerSwagger;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.response.CustomApiResponse;
@@ -15,7 +17,7 @@ import com.rabbit.global.response.PageResponseDTO;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +30,6 @@ import java.time.ZonedDateTime;
 @RestController
 @RequestMapping("/api/v1/auctions")
 @RequiredArgsConstructor
-@Slf4j
 public class AuctionController {
     private final AuctionService auctionService;
 
@@ -79,20 +80,6 @@ public class AuctionController {
 
         return ResponseEntity.ok(CustomApiResponse.success(result));
     }
-
-    @AuctionControllerSwagger.AddBidApi
-    @PostMapping("/{auctionId}/bid")
-    public ResponseEntity<CustomApiResponse<?>> addBid(@Valid @RequestBody BidRequestDTO bidRequest,
-                                                       @PathVariable("auctionId") Integer auctionId) {
-        // JWT로 변경해야함
-        Integer userId=3;
-
-        auctionService.addBid(bidRequest, auctionId, userId);
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(CustomApiResponse.success(MessageResponse.of("입찰 성공했습니다.")));
-    }
-
 
     @AuctionControllerSwagger.CancelAuctionApi
     @DeleteMapping("/{auctionId}")

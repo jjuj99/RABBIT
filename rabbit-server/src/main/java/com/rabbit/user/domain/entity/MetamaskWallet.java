@@ -1,16 +1,12 @@
 package com.rabbit.user.domain.entity;
 
 import jakarta.persistence.*;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.*;
-import org.hibernate.annotations.DynamicInsert;
 
 import java.time.ZonedDateTime;
 
 @Table(name = "metamask_wallets")
 @Entity
-@DynamicInsert
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor

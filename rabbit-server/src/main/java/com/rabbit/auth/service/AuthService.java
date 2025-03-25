@@ -10,7 +10,7 @@ import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.util.JwtUtil;
 import com.rabbit.global.util.SignatureUtil;
 import com.rabbit.user.domain.entity.*;
-import com.rabbit.user.repository.MetamaskWalletRepository;
+import com.rabbit.user.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,8 +23,10 @@ import java.time.ZonedDateTime;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final MetamaskWalletRepository metamaskWalletRepository;
+    private final UserRepository userRepository;
     private final UserTokenRepository userTokenRepository;
+    private final RefundAccountRepository refundAccountRepository;
+    private final MetamaskWalletRepository metamaskWalletRepository;
 
     private final SignatureUtil signatureUtil;
     private final JwtUtil jwtUtil;
@@ -75,5 +77,53 @@ public class AuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    @Transactional
+    public void signup(SignupRequestDTO request) {
+        // 이미 존재하는 이메일인지 확인
+        userRepository.findByEmail(request.getEmail())
+                .ifPresent(user -> {
+                    throw new BusinessException(ErrorCode.ALREADY_EXISTS, "이미 등록된 이메일입니다.");
+                });
+
+        // 이미 존재하는 지갑 주소인지 확인
+        metamaskWalletRepository.findByWalletAddress(request.getWalletAddress())
+                .ifPresent(metamaskWallet -> {
+                    throw new BusinessException(ErrorCode.ALREADY_EXISTS, "이미 등록된 지갑 주소입니다.");
+                });
+
+        // 유저 엔티티 생성
+        User user = userRepository.save(User.builder()
+                .email(request.getEmail())
+                .name(request.getName())
+                .nickname(request.getNickname())
+                .passCode("Temp_Pass_Code") // 임시 데이터 저장
+                .createdAt(ZonedDateTime.now())
+                .updatedAt(ZonedDateTime.now())
+                .withdrawnFlag(false)
+                .build()
+        );
+
+        // 환불 계좌 엔티티 생성
+        refundAccountRepository.save(RefundAccount.builder()
+                .userId(user.getUserId())
+                .bankId(request.getBankId())
+                .accountNumber(request.getRefundAccount())
+                .primaryFlag(true)
+                .createdAt(ZonedDateTime.now())
+                .updatedAt(ZonedDateTime.now())
+                .build()
+        );
+
+        // 메타마스크 지갑 엔티티 생성
+        metamaskWalletRepository.save(MetamaskWallet.builder()
+                .user(user)
+                .walletAddress(request.getWalletAddress())
+                .primaryFlag(true)
+                .createdAt(ZonedDateTime.now())
+                .updatedAt(ZonedDateTime.now())
+                .build()
+        );
     }
 }

@@ -255,6 +255,67 @@ public interface AuctionControllerSwagger {
     @interface AddBidApi {
     }
 
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Operation(
+            summary = "경매 취소",
+            description = "특정 경매를 취소 처리합니다. 단, 입찰자가 존재하면 취소할 수 없습니다.",
+            security = {@SecurityRequirement(name = "bearerAuth")},
+            parameters = {
+                    @Parameter(
+                            name = "auctionId",
+                            description = "취소할 경매 ID",
+                            required = true,
+                            in = ParameterIn.PATH,
+                            schema = @Schema(type = "integer", format = "int32")
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "경매 취소 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = @ExampleObject(
+                                            name = "성공 응답",
+                                            summary = "정상 취소 처리",
+                                            value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n \"message\": \"경매가 취소되었습니다.\"\n  },\n  \"error\": null\n}"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "경매를 찾을 수 없음",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = @ExampleObject(
+                                            name = "에러 응답 - 경매 없음",
+                                            summary = "존재하지 않는 경매 ID",
+                                            value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 404,\n    \"message\": \"해당 경매를 찾을 수 없습니다.\"\n  }\n}"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "422",
+                            description = "입찰자가 있어 취소 불가",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = @ExampleObject(
+                                            name = "에러 응답 - 입찰자 존재",
+                                            summary = "취소 불가",
+                                            value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 422,\n    \"message\": \"입찰자가 존재해 경매를 취소할 수 없습니다.\"\n  }\n}"
+                                    )
+                            )
+                    )
+            }
+    )
+    public @interface CancelAuctionApi {
+    }
+
+
     @Target({ElementType.PARAMETER})
     @Retention(RetentionPolicy.RUNTIME)
     @Parameter(

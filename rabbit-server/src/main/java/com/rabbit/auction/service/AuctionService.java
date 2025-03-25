@@ -98,4 +98,17 @@ public class AuctionService {
     }
 
 
+    public void cancelAuction(@Valid Integer auctionId) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
+
+        //입찰자 존재시 취소 불가
+        boolean hasBids=bidRepository.existsByAuction(auction);
+        if(hasBids){
+            throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "입찰자가 존재해 경매를 취소할 수 없습니다.");
+        }
+
+        //cancel로 상태 변경
+        auction.setAuctionStatus(AuctionStatus.CANCELLED);
+    }
 }

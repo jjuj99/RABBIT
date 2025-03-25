@@ -25,26 +25,31 @@ const AuctionBidPanel = ({ CBP, amount }: AuctionBidPanelProps) => {
   };
 
   return (
-    <div className="bg-radial-lg flex h-fit w-full flex-col gap-3 rounded-sm border border-white px-8 py-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-xl font-medium">현재 입찰가</h1>
+    <div className="bg-radial-lg flex h-fit w-full flex-col gap-1 rounded-sm border border-white px-4 py-4 sm:gap-3 sm:px-8 sm:py-6">
+      <div className="flex flex-col gap-0 sm:gap-2">
+        <h2 className="text-sm font-medium sm:text-xl">현재 입찰가</h2>
         <div>
-          <span className="font-partial text-brand-gradient text-4xl">
+          <span className="font-partial text-brand-gradient text-2xl sm:text-4xl">
             {CBP.toLocaleString()}
           </span>
-          <span className="font-pixel text-brand-gradient px-1 text-2xl">
+          <span className="font-pixel text-brand-gradient text px-1 sm:text-2xl">
             RAB
           </span>
         </div>
       </div>
-
-      <div className="flex flex-col gap-2">
-        <h3 className="flex gap-1 text-white">
-          <span className="font-normal">보유 금액</span>
-          <span className="font-semibold">{amount.toLocaleString()}</span>
-          <span className="font-pixel flex items-end text-sm">RAB</span>
+      <div className="item flex flex-col gap-2 sm:gap-4">
+        <h3 className="flex items-center gap-1 text-white">
+          <span className="text-sm font-normal sm:text-lg">보유 금액</span>
+          <div className="flex gap-0.5">
+            <span className="text-sm font-semibold sm:text-xl">
+              {amount.toLocaleString()}
+            </span>
+            <span className="font-pixel mb-[+1px] flex items-end text-xs sm:text-lg">
+              RAB
+            </span>
+          </div>
         </h3>
-        <div className="flex gap-2">
+        <div className="hidden flex-wrap gap-2 sm:flex">
           <Button
             variant="default"
             className="h-[28px] w-[102px] bg-black"
@@ -86,7 +91,7 @@ const AuctionBidPanel = ({ CBP, amount }: AuctionBidPanelProps) => {
             value={bidPrice}
             unit="원"
             type="number"
-            warraperclassName="w-full"
+            wrapperClassName="w-full"
             className="w-full bg-white"
             onChange={(e) => setBidPrice(Number(e.target.value))}
           />

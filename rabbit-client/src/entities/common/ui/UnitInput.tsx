@@ -59,7 +59,7 @@ const UnitInput = ({
         readOnly={readOnly}
         className={cn(
           className,
-          "w-full [appearance:textfield] border-none bg-transparent py-1 pr-1 pl-3 text-right outline-none focus:ring-0 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+          "w-full [appearance:textfield] border-none bg-transparent py-1 pr-1 pl-3 text-right outline-none hover:ring-0 focus:ring-0 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
           textAlign && `text-${textAlign}`,
         )}
         {...props}

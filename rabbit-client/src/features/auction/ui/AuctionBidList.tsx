@@ -62,25 +62,29 @@ const AuctionBidList = () => {
       <>
         <div
           key={bid.bid_id}
-          className="flex justify-between rounded-sm bg-gray-800 px-4 py-2"
+          className="flex w-full flex-col justify-between gap-2 rounded-sm bg-gray-800 px-4 py-2 sm:flex-row sm:gap-4"
         >
-          <div className="flex flex-row gap-2">
-            <span className="text-lg font-medium text-gray-100">{date}</span>
-            <span className="text-lg font-light text-gray-100">{time}</span>
+          <div className="flex flex-row gap-1 sm:gap-2">
+            <span className="text-sm font-medium text-gray-100 sm:text-lg">
+              {date}
+            </span>
+            <span className="text-sm font-light text-gray-100 sm:text-lg">
+              {time}
+            </span>
           </div>
           <span className="text-lg font-medium text-white">
             {bid.bid_amount.toLocaleString()} RAB
           </span>
         </div>
-        <MenubarSeparator className="h-[0.2px] bg-white" />
+        <MenubarSeparator className="h-[0.2px] bg-white opacity-50" />
       </>
     );
   });
 
   return (
-    <div className="w-[728px] rounded-sm bg-gray-900 px-6 py-6">
-      <h1 className="mb-4 text-2xl font-medium">입찰 내역</h1>
-      <ScrollArea className="h-[400px] w-full">
+    <div className="w-full rounded-sm bg-gray-900 px-4 py-4 sm:px-6">
+      <h2 className="mb-4 text-lg font-medium sm:text-xl">입찰 내역</h2>
+      <ScrollArea className="h-[300px] w-full">
         <ScrollAreaViewport className="h-full w-full">
           <div className="flex flex-col gap-4">{BidList}</div>
         </ScrollAreaViewport>

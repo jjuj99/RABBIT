@@ -37,7 +37,7 @@ const PriceSection = ({ triggerApi }: PriceSectionProps) => {
   return (
     <div className="flex h-fit w-full flex-col gap-3">
       <div>
-        <h1 className="text-base font-bold">가격</h1>
+        <h2 className="text-base font-bold">가격</h2>
         {errors && <div className="text-fail text-xs">{errors}</div>}
       </div>
       <div className="flex flex-col gap-4 px-2">

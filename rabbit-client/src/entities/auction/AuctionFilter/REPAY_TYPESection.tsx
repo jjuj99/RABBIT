@@ -28,7 +28,7 @@ const REPAY_TYPESection = ({ triggerApi }: REPAY_TYPEProps) => {
 
   return (
     <div className="flex h-fit w-full flex-col gap-3">
-      <h1 className="text-base font-bold">종류</h1>
+      <h2 className="text-base font-bold">종류</h2>
       <div className="flex flex-col gap-1">
         {REPAY_TYPE.map((item) => {
           const isChecked = paymentTypes.includes(item.id);

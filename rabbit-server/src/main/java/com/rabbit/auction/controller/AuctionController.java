@@ -2,29 +2,26 @@ package com.rabbit.auction.controller;
 
 import com.rabbit.auction.controller.swagger.AuctionControllerSwagger;
 import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
-import com.rabbit.auction.domain.dto.request.BidRequestDTO;
 import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
-import com.rabbit.auction.domain.entity.Auction;
-import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
-import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
+import com.rabbit.auction.domain.dto.response.MyAuctionResponseDTO;
 import com.rabbit.auction.service.AuctionService;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
+import com.rabbit.global.request.PageRequestDTO;
 import com.rabbit.global.response.CustomApiResponse;
 import com.rabbit.global.response.MessageResponse;
 import com.rabbit.global.response.PageResponseDTO;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Pageable;
-import java.math.BigDecimal;
+
 import java.time.ZonedDateTime;
 
 @RestController
@@ -89,5 +86,16 @@ public class AuctionController {
         auctionService.cancelAuction(auctionId);
 
         return  ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("경매가 취소되었습니다.")));
+    }
+
+    @GetMapping("/my-bids")
+    public ResponseEntity<CustomApiResponse<?>> getMyBidAuctions(@Valid PageRequestDTO pageRequest) {
+        Integer userId = 4;
+
+        Pageable pageable = pageRequest.toPageable("bidDate", Sort.Direction.DESC);
+
+        PageResponseDTO<MyAuctionResponseDTO> myBidList = auctionService.getMyBidAuctions(userId, pageable);
+
+        return ResponseEntity.ok(CustomApiResponse.success(myBidList));
     }
 }

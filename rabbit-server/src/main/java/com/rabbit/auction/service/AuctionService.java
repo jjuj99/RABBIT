@@ -1,9 +1,8 @@
 package com.rabbit.auction.service;
 
 import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
-import com.rabbit.auction.domain.dto.request.BidRequestDTO;
 import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
-import com.rabbit.auction.domain.entity.Bid;
+import com.rabbit.auction.domain.dto.response.MyAuctionResponseDTO;
 import com.rabbit.auction.repository.AuctionRepository;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
 import com.rabbit.auction.domain.entity.Auction;
@@ -12,7 +11,6 @@ import com.rabbit.auction.repository.BidRepository;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.response.PageResponseDTO;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 
 import java.time.ZonedDateTime;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -75,5 +72,16 @@ public class AuctionService {
 
         //cancel로 상태 변경
         auction.setAuctionStatus(AuctionStatus.CANCELLED);
+    }
+
+    public PageResponseDTO<MyAuctionResponseDTO> getMyBidAuctions(Integer userId, Pageable pageable) {
+        Page<MyAuctionResponseDTO> result = auctionRepository.getMyBidAuction(userId, pageable);
+
+        return PageResponseDTO.<MyAuctionResponseDTO>builder()
+                .content(result.getContent())
+                .pageNumber(result.getNumber())
+                .pageSize(result.getSize())
+                .totalElements(result.getTotalElements())
+                .build();
     }
 }

@@ -41,7 +41,7 @@ pipeline {
                 
                 stage('Deploy to S3') {
                     steps {
-                        withAWS(credentials: 'aws-credentials') {
+                        withAWS(credentials: 'clapsheepIAM') {
                             dir('rabbit-client/dist') {
                                 sh 'aws s3 sync . s3://rabbit-client/ --delete'
                             }
@@ -51,7 +51,7 @@ pipeline {
                 
                 stage('Invalidate CloudFront') {
                     steps {
-                        withAWS(credentials: 'aws-credentials') {
+                        withAWS(credentials: 'clapsheepIAM') {
                             sh 'aws cloudfront create-invalidation --distribution-id EZETHFN53S9JV --paths "/*"'
                         }
                     }

@@ -1,5 +1,24 @@
+import { AccountNav, CoinChargeForm, CoinStatus } from "@/entities/account";
+import AccountHistory from "@/features/account/ui/AccountHistory";
+import { useState } from "react";
+
 const CoinWithdraw = () => {
-  return <div>CoinWithdraw</div>;
+  const amountState = useState(0);
+
+  return (
+    <main className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="flex flex-col gap-6">
+        <CoinStatus />
+        {/* 충전 출금 네비게이션 */}
+        <AccountNav />
+
+        {/* 충전폼 */}
+        {/* <CoinChargeForm amountState={amountState} /> */}
+      </div>
+
+      <AccountHistory />
+    </main>
+  );
 };
 
 export default CoinWithdraw;

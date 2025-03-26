@@ -1,0 +1,168 @@
+# application-common.yml (공통 설정)
+# 서버 설정
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      force: true
+  tomcat:
+    max-swallow-size: -1
+    # 실패한 파일 업로드 요청의 남은 데이터를 계속 읽을지 결정
+    # -1: 제한없음, 양수: 바이트 단위 제한
+
+    max-http-form-post-size: 10MB
+    # POST 요청의 최대 허용 크기
+    # 파일 업로드나 폼 데이터의 크기 제한
+
+    connection-timeout: 20000     # 빠른 실패 처리
+    # 클라이언트 연결 수립 대기 시간
+    # 30초 후 타임아웃
+
+    accept-count: 25            # max-threads의 50%
+    # 모든 스레드가 사용 중일 때 대기열 크기
+    # 추가 요청에 대한 버퍼
+
+  tomcat.threads:
+    max: 50
+    min-spare: 10
+  forward-headers-strategy: native
+    # 프록시/로드밸런서 환경에서 
+    # 클라이언트 IP와 프로토콜 정보를 가져올 헤더 지정
+
+spring:
+  application:
+    name: ${APPLICATION_NAME:rabbit}
+  datasource:
+    hikari:
+      auto-commit: true
+#      connection-init-sql: SELECT 1
+      connection-timeout: 5000
+      idle-timeout: 600000
+      max-lifetime: 1200000
+      maximum-pool-size: 50
+      minimum-idle: 50
+      validation-timeout: 5000
+    mvc:
+#      static-path-pattern: /file/**
+      pathmatch:
+        matching-strategy: ant_path_matcher
+  data:
+    jpa:
+      repositories:
+        base-package: com.rabbit.**.repository
+  # Jackson 설정
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    #property-naming-strategy: SNAKE_CASE
+    property-naming-strategy: LOWER_CAMEL_CASE
+    serialization:
+      fail-on-empty-beans: false
+    time-zone: Asia/Seoul
+  jpa:
+    hibernate:
+      ddl-auto: update  # 운영 환경에서는 none 권장
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true  # 개발 환경에서만 사용
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false  # OSIV 설정 비활성화
+  servlet:
+    multipart:
+      enabled: true                   # multipart 업로드 활성화 (기본값: true)
+      max-file-size: 10MB            # 단일 파일의 최대 크기
+      max-request-size: 10MB         # 요청당 최대 파일 크기
+      file-size-threshold: 2KB       # 파일이 메모리에 기록되는 임계값
+      location: /tmp                 # 업로드된 파일의 임시 저장 경로
+      resolve-lazily: false          # 파일 리졸빙을 지연할지 여부 (기본값: false)
+    session:
+      timeout: 3600  # 세션 만료 시간 (초)
+    cookie:
+      http-only: true  # 보안 강화를 위해 HttpOnly 설정
+#  mail:
+#    host: smtp.gmail.com
+#    port: 587
+#    username: ${GMAIL_USERNAME}
+#    password: ${GMAIL_PASSWORD}
+#    properties:
+#      mail:
+#        smtp:
+#          auth: true
+#          starttls:
+#            enable: true
+#            required: true
+#          connectiontimeout: 5000
+#          timeout: 5000
+#          writetimeout: 5000
+  web:
+    resources:
+      static-path-pattern: /file/**
+      static-locations: file:${user.home}/Downloads/uploads/
+#        - classpath:/static/
+#        - classpath:/public/
+#        - classpath:/resources/
+#        - classpath:/META-INF/resources/
+
+file:
+  upload:
+    path: ${user.home}/Downloads/uploads/
+
+mail:
+  verification:
+    ttl: 5  # 인증 코드 유효 시간 (분)
+  password:
+    ttl: 1440  # 임시 비밀번호 유효 시간 (분) (24시간 = 60 * 24 = 1440)
+    
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    disable-swagger-default-url: true
+    # 기본 URL 설정
+    url: /v3/api-docs
+    # 정렬 설정
+    groups-order: DESC
+    operationsSorter: method
+    tagsSorter: alpha
+  group-configs:
+    - group: v1
+      paths-to-match: /api/v1/**
+#    - group: v2
+#      paths-to-match: /api/v2/**
+  packages-to-scan: com.rabbit
+  #paths-to-match: /api/**
+
+# JWT 설정
+jwt:
+  access-token-expiration-seconds: 1800
+  refresh-token-expiration-seconds: 2419200
+  access-token-refresh-threshold: 300000
+#  secret: ${JWT_SECRET}
+
+# 파일 설정
+app:
+  file:
+    upload-path: ${user.home}/Downloads/uploads
+    max-file-size: 10485760  # 10MB
+    allowed-extensions:
+      - jpg
+      - jpeg
+      - png
+      - gif
+      - pdf
+      - doc
+      - docx
+      - xls
+      - xlsx
+
+
+
+# 커스텀 설정
+
+# 404 에러 처리 설정 (현재 주석 처리됨)
+#    throw-exception-if-no-handler-found: true

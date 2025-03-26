@@ -1,23 +1,15 @@
 {
   "name": "rabbit-contract",
   "version": "1.0.0",
-  "description": "Rabbit Token Smart Contract",
+  "main": "truffle-config.js",
   "scripts": {
-    "compile": "hardhat compile",
-    "test": "hardhat test",
-    "deploy:local": "hardhat run scripts/2_deploy_rabbit_token.js --network localhost",
-    "node": "hardhat node",
-    "clean": "hardhat clean"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "description": "",
   "dependencies": {
     "@openzeppelin/contracts": "^5.2.0"
-  },
-  "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "dotenv": "^16.4.7",
-    "hardhat": "^2.20.1"
   }
 }

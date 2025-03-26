@@ -4,7 +4,6 @@ pipeline {
     tools {
         nodejs 'NodeJS'
     }
-
     stages {
         stage('Detect Changes') {
             steps {
@@ -45,18 +44,25 @@ pipeline {
                 
                 stage('Deploy to S3') {
                     steps {
-                        withAWS(credentials: 'clapsheepIAM') {
-                            dir('rabbit-client/dist') {
-                                sh 'aws s3 sync . s3://rabbit-client/ --delete'
-                            }
+                        withAWS(credentials: 'clapsheepIAM', region: 'ap-northeast-2') {
+                            s3Upload(
+                                bucket: 'rabbit-client',
+                                path: '/',
+                                workingDir: 'rabbit-client/dist',
+                                includePathPattern: '**/*',
+                                acl: 'PublicRead'
+                            )
                         }
                     }
                 }
                 
                 stage('Invalidate CloudFront') {
                     steps {
-                        withAWS(credentials: 'clapsheepIAM') {
-                            sh 'aws cloudfront create-invalidation --distribution-id EZETHFN53S9JV --paths "/*"'
+                        withAWS(credentials: 'clapsheepIAM', region: 'ap-northeast-2') {
+                            cfInvalidate(
+                                distribution: 'EZETHFN53S9JV',
+                                paths: ['/*']
+                            )
                         }
                     }
                 }

@@ -46,7 +46,7 @@ spring:
       validation-timeout: 5000
     mvc:
 #      static-path-pattern: /file/**
-      pathmatch:
+      path-match:
         matching-strategy: ant_path_matcher
   data:
     jpa:
@@ -93,9 +93,9 @@ spring:
 #          starttls:
 #            enable: true
 #            required: true
-#          connectiontimeout: 5000
+#          connection-timeout: 5000
 #          timeout: 5000
-#          writetimeout: 5000
+#          write-timeout: 5000
   web:
     resources:
       static-path-pattern: /file/**
@@ -137,9 +137,15 @@ springdoc:
   packages-to-scan: com.rabbit
   #paths-to-match: /api/**
 
+# 공통 로깅 설정
 logging:
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
+    file: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
   level:
-    org.springframework.security: DEBUG
+    com.rabbit: INFO
+    org.springframework: INFO
+    org.hibernate: INFO
 
 # JWT 설정
 jwt:

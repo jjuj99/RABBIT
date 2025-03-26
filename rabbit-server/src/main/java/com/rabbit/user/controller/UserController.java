@@ -1,7 +1,9 @@
 package com.rabbit.user.controller;
 
+import com.rabbit.auth.controller.swagger.AuthControllerSwagger;
 import com.rabbit.global.response.CustomApiResponse;
 import com.rabbit.global.response.MessageResponse;
+import com.rabbit.user.controller.swagger.UserControllerSwagger;
 import com.rabbit.user.domain.dto.response.LoginInfoResponseDTO;
 import com.rabbit.user.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +25,7 @@ public class UserController {
 
     private final UserService userService;
 
+    @UserControllerSwagger.getLoginInfoApi
     @GetMapping("/me")
     public ResponseEntity<CustomApiResponse<LoginInfoResponseDTO>> getLoginInfo(Authentication authentication) {
         String userId = (String) authentication.getPrincipal();

@@ -33,11 +33,19 @@ pipeline {
                     }
                 }
                 
+                stage('Setup Environment') {
+                    steps {
+                        withCredentials([file(credentialsId: 'rabbit-client-env', variable: 'ENV_FILE')]) {
+                            sh 'cp $ENV_FILE rabbit-client/.env.production'
+                        }
+                    }
+                }
+                
                 stage('Build') {
                     steps {
                         dir('rabbit-client') {
                             sh 'pnpm install'
-                            sh 'pnpm run build'
+                            sh 'pnpm run build:prod'
                         }
                     }
                 }
@@ -47,10 +55,9 @@ pipeline {
                         withAWS(credentials: 'clapsheepIAM', region: 'ap-northeast-2') {
                             s3Upload(
                                 bucket: 'rabbit-client',
-                                path: '/',
+                                path: '',
                                 workingDir: 'rabbit-client/dist',
                                 includePathPattern: '**/*',
-                                acl: 'PublicRead'
                             )
                         }
                     }

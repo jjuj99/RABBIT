@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- log4j2-spring.xml - 공통 설정 파일 -->
+<Configuration status="WARN">
+    <Properties>
+        <!-- 공통 로그 패턴 정의 -->
+        <Property name="DEFAULT_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Property>
+        <Property name="COLORED_PATTERN">%style{%d{HH:mm:ss.SSS}}{cyan} %highlight{[%t] %-5level %logger{36} - %msg%n}</Property>
+    </Properties>
+
+    <Appenders>
+        <!-- 콘솔 Appender -->
+        <Console name="LogToConsole" target="SYSTEM_OUT">
+            <PatternLayout pattern="${DEFAULT_PATTERN}"/>
+        </Console>
+
+        <!-- 기본 파일 Appender (로컬 개발용) -->
+        <RollingFile name="LogToRollingFile" fileName="logs/app.log"
+                     filePattern="logs/app-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="${DEFAULT_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="50MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+        <!-- SQL 로그 파일 Appender -->
+        <RollingFile name="SqlRollingFile" fileName="logs/sql.log"
+                     filePattern="logs/sql-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="${DEFAULT_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="50MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+
+        <!-- 에러 로그 파일 Appender -->
+        <RollingFile name="ErrorFile" fileName="logs/error.log"
+                     filePattern="logs/error-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="${DEFAULT_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="20MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!-- 애플리케이션 로거 -->
+        <Logger name="com.rabbit" level="INFO" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+            <AppenderRef ref="LogToRollingFile"/>
+            <AppenderRef ref="ErrorFile" level="ERROR"/>
+        </Logger>
+
+        <!-- 프레임워크 로거 -->
+        <Logger name="org.springframework" level="INFO" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+            <AppenderRef ref="LogToRollingFile"/>
+            <AppenderRef ref="ErrorFile" level="ERROR"/>
+        </Logger>
+
+        <!-- Spring Web 로거 -->
+        <Logger name="org.springframework.web" level="INFO" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+            <AppenderRef ref="LogToRollingFile"/>
+            <AppenderRef ref="ErrorFile" level="ERROR"/>
+        </Logger>
+
+        <!-- Spring Security 로거 -->
+        <Logger name="org.springframework.security" level="INFO" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+            <AppenderRef ref="LogToRollingFile"/>
+            <AppenderRef ref="ErrorFile" level="ERROR"/>
+        </Logger>
+
+        <!-- JPA/Hibernate SQL 로거 -->
+        <Logger name="org.hibernate.SQL" level="INFO" additivity="false">
+            <AppenderRef ref="SqlRollingFile"/>
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+
+        <Logger name="org.hibernate.type.descriptor.sql" level="INFO" additivity="false">
+            <AppenderRef ref="SqlRollingFile"/>
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+
+        <!-- Spring Data JPA 트랜잭션 로거 -->
+        <Logger name="org.springframework.orm.jpa" level="INFO" additivity="false">
+            <AppenderRef ref="SqlRollingFile"/>
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+
+        <Logger name="org.springframework.transaction" level="INFO" additivity="false">
+            <AppenderRef ref="SqlRollingFile"/>
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+
+        <!-- Connection Pool 로거 -->
+        <Logger name="com.zaxxer.hikari" level="INFO" additivity="false">
+            <AppenderRef ref="LogToRollingFile"/>
+            <AppenderRef ref="ErrorFile" level="WARN"/>
+        </Logger>
+
+        <!-- 기본 로거 설정 -->
+        <Root level="INFO">
+            <AppenderRef ref="LogToConsole"/>
+            <AppenderRef ref="LogToRollingFile"/>
+            <AppenderRef ref="ErrorFile" level="ERROR"/>
+        </Root>
+    </Loggers>
+</Configuration>

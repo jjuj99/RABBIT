@@ -24,19 +24,16 @@ logging:
   config: classpath:log4j2-dev.xml
   level:
     root: INFO
+    com.rabbit: DEBUG
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
-    com.antswer: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: DEBUG
     com.zaxxer.hikari.pool: INFO
     sun.rmi: WARN
-    jdbc.sqlonly: DEBUG
-    jdbc.sqltiming: DEBUG
-    jdbc.resultsettable: INFO
-    jdbc.audit: WARN
-    jdbc.resultset: WARN
-  pattern:
-    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
-    file: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
+    jdbc.sql-only: DEBUG
+    jdbc.sql-timing: DEBUG
+    jdbc.result-settable: INFO
 
 app:
   domain: ${DEV_BACKEND_URL}

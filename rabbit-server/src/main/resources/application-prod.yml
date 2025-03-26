@@ -35,18 +35,14 @@ logging:
   config: classpath:log4j2-prod.xml
   level:
     root: WARN
+    com.rabbit: INFO
     org.springframework.web: INFO
     org.springframework.security: INFO
-    com.antswer: INFO  # 패키지명 변경
-    com.zaxxer.hikari.pool: WARN
-    # JPA 로깅 설정
     org.hibernate.SQL: WARN
     org.hibernate.type.descriptor.sql: WARN
     org.springframework.orm.jpa: WARN
     org.springframework.transaction: WARN
-  pattern:
-    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
-    file: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
+    com.zaxxer.hikari.pool: WARN
 
 app:
   domain: ${PROD_BACKEND_URL}

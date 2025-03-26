@@ -16,7 +16,7 @@ public class UserService {
 
     public LoginInfoResponseDTO getLoginInfo(int userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "존재하지 않는 회원입니다"));
 
         return LoginInfoResponseDTO.builder()
                 .userName(user.getUserName())

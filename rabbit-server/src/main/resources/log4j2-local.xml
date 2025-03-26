@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- log4j2-local.xml - 로컬 개발 환경용 로깅 설정 -->
+<Configuration status="WARN">
+    <Properties>
+        <!-- 공통 로그 패턴 정의 -->
+        <Property name="DEFAULT_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Property>
+        <Property name="COLORED_PATTERN">%style{%d{HH:mm:ss.SSS}}{cyan} %highlight{[%t] %-5level %logger{36} - %msg%n}{FATAL=red, ERROR=red, WARN=yellow, INFO=green, DEBUG=green, TRACE=blue}</Property>
+
+        <Property name="LOG_PATTERN">${COLORED_PATTERN}</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="LogToConsole" target="SYSTEM_OUT">
+            <PatternLayout disableAnsi="false" pattern="${LOG_PATTERN}"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <!-- Application Loggers -->
+        <Logger name="com.rabbit" level="DEBUG" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+
+        <!-- Framework Loggers -->
+        <Logger name="org.springframework" level="DEBUG" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+        <Logger name="org.springframework.web" level="DEBUG" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+        <Logger name="org.springframework.security" level="DEBUG" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+
+        <!-- JPA/Hibernate SQL 로깅 -->
+        <Logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+        <Logger name="org.hibernate.type.descriptor.sql" level="TRACE" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+
+        <!-- Spring Data JPA 트랜잭션 로깅 -->
+        <Logger name="org.springframework.orm.jpa" level="DEBUG" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+        <Logger name="org.springframework.transaction" level="DEBUG" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+
+        <!-- Connection Pool -->
+        <Logger name="com.zaxxer.hikari" level="INFO" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+
+        <Root level="INFO">
+            <AppenderRef ref="LogToConsole"/>
+        </Root>
+    </Loggers>
+</Configuration>

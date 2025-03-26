@@ -57,7 +57,7 @@ public class AuctionService {
 
         return PageResponseDTO.<AuctionResponseDTO>builder()
                 .content(result.getContent())
-                .pageNo(result.getNumber())
+                .pageNumber(result.getNumber())
                 .pageSize(result.getSize())
                 .totalElements(result.getTotalElements())
                 .build();

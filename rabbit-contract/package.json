@@ -13,7 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@openzeppelin/contracts": "^5.2.0"
+    "@openzeppelin/contracts": "^5.2.0",
+    "rabbit-contract": "file:"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",

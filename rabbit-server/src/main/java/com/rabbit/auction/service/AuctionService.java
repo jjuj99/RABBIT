@@ -71,7 +71,7 @@ public class AuctionService {
         }
 
         //cancel로 상태 변경
-        auction.setAuctionStatus(AuctionStatus.CANCELLED);
+        auction.setAuctionStatus(AuctionStatus.CANCELED);
     }
 
     public PageResponseDTO<MyAuctionResponseDTO> getMyBidAuctions(Integer userId, Pageable pageable) {

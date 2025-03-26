@@ -117,7 +117,7 @@
   body {
     font-family: "Pretendard", sans-serif;
     background-image: var(--gradient-radial-lg);
-    /* height: 100%; */
+    height: 100%;
     color: white !important; /* 강제로 흰색 텍스트 적용 */
   }
 
@@ -221,8 +221,8 @@
   /* 그라데이션 */
   --gradient-brand: linear-gradient(94deg, #00ff37 -15.54%, #f6ff00 111.18%);
   --gradient-border:
-    linear-gradient(277deg, rgba(0, 0, 0, 0) 30%, #fff 100%),
-    linear-gradient(277deg, #fff 0%, #000 70%);
+    linear-gradient(277deg, rgba(0, 0, 0, 0) 0%, #fff 100%),
+    linear-gradient(277deg, #fff 0%, #000 100%);
   --gradient-radial-lg: radial-gradient(
     126.48% 117.29% at 46.91% 0%,
     #000 0%,
@@ -323,30 +323,11 @@
     color: transparent;
   }
 
-  .input-border-gradient {
-    background:
-      linear-gradient(var(--background), var(--background)) padding-box,
-      var(--gradient-border) border-box;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    transition: box-shadow 0.2s ease;
-  }
-
-  .input-border-gradient:hover {
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  }
-
-  .input-border-gradient:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--color-ring);
-  }
   /* 테두리 관련 유틸리티 클래스 */
   .border-gradient {
     position: relative;
-    border-radius: 4px;
     box-sizing: border-box;
     isolation: isolate;
-    border: none;
     transition:
       transform 0.2s ease,
       box-shadow 0.2s ease;
@@ -356,7 +337,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    padding: 1px;
+    padding: 2px;
     border-radius: inherit;
     background-image: var(--gradient-border);
     -webkit-mask:
@@ -372,6 +353,7 @@
   }
 
   .border-gradient:hover {
+    transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   }
 
@@ -406,19 +388,26 @@
     -webkit-backdrop-filter: blur(var(--blur-custom));
   }
 
-  .bg-glass {
+  /* 버튼 스타일 */
+  .btn-glass {
+    border-radius: 4px;
+    border: 1px solid var(--color-white);
     background: rgba(255, 255, 255, 0.1);
     box-shadow: 0px 0px 12px 0px rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(8.991399765014648px);
     -webkit-backdrop-filter: blur(8.991399765014648px);
+    transition: all 0.2s ease;
+    cursor: pointer;
   }
 
-  .bg-glass:hover {
+  .btn-glass:hover {
     background: rgba(255, 255, 255, 0.2);
     box-shadow: 0px 0px 16px 0px rgba(255, 255, 255, 0.7);
+    transform: translateY(-2px);
   }
 
-  .bg-glass:active {
+  .btn-glass:active {
+    transform: translateY(1px);
     box-shadow: 0px 0px 8px 0px rgba(255, 255, 255, 0.4);
   }
 

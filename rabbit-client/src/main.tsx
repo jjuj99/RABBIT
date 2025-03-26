@@ -6,7 +6,6 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
 import App from "./app/App.tsx";
 import "./index.css";
-import { AuthProvider } from "./entities/auth/provider/AuthProvider.tsx";
 
 Sentry.init({
   dsn: "https://2e097efb394a743c3037123fca3b4f36@o4508969411084288.ingest.de.sentry.io/4508969412591696",
@@ -28,11 +27,9 @@ enableMocking().then(() => {
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
-        </AuthProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
         {/* 개발 환경에서만 DevTools 표시 */}
         {import.meta.env.DEV && <ReactQueryDevtools />}
       </QueryClientProvider>

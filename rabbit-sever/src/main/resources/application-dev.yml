@@ -1,0 +1,45 @@
+# application-dev.yml (서버 개발 설정)
+# 개발 서버 환경 설정
+spring:
+  data:
+  # MySQL 설정
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DEV_DB_HOST}:${DEV_DB_PORT:3306}/${DEV_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUniCode=yes&characterEncoding=UTF-8
+    username: ${DEV_DB_USERNAME}
+    password: ${DEV_DB_PASSWORD}
+  # JPA 설정 추가
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+# 개발 환경 로깅 설정
+logging:
+  config: classpath:log4j2-dev.xml
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    com.antswer: DEBUG
+    com.zaxxer.hikari.pool: INFO
+    sun.rmi: WARN
+    jdbc.sqlonly: DEBUG
+    jdbc.sqltiming: DEBUG
+    jdbc.resultsettable: INFO
+    jdbc.audit: WARN
+    jdbc.resultset: WARN
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
+    file: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
+
+app:
+  domain: ${DEV_BACKEND_URL}
+  frontend-url: ${DEV_FRONTEND_URL}
+  invitation:
+    expiry-hours: 48  # 초대장 유효 시간 (시간)

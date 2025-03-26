@@ -6,8 +6,13 @@ import REPAY_TYPESection from "@/entities/auction/AuctionFilter/REPAY_TYPESectio
 import MAT_DTSection from "@/entities/auction/AuctionFilter/MAT_DTSection";
 import PriceSection from "@/entities/auction/AuctionFilter/PriceSection";
 import { useAuctionFilterErrorStore } from "@/shared/lib/store/auctionFilterErrorStore";
+import { cn } from "@/shared/lib/utils";
 
-const AuctionFilter = () => {
+interface AuctionFilterProps {
+  className?: string;
+}
+
+const AuctionFilter = ({ className }: AuctionFilterProps) => {
   const triggerApi = useCallback(() => {
     // 전역 에러 스토어에서 모든 에러를 가져옴
     const { errors } = useAuctionFilterErrorStore.getState();
@@ -33,7 +38,12 @@ const AuctionFilter = () => {
   }, []);
 
   return (
-    <div className="flex h-fit w-[278px] flex-col gap-5 rounded-sm border border-white bg-gray-900 px-5 py-6">
+    <div
+      className={cn(
+        "flex h-fit w-[278px] flex-col gap-5 rounded-sm border border-white bg-gray-900 px-5 py-6",
+        className,
+      )}
+    >
       <PriceSection triggerApi={triggerApi} />
       <MenubarSeparator className="h-[0.2px] bg-white" />
       <IRSection triggerApi={triggerApi} />

@@ -18,7 +18,16 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        response.getWriter().write("{\"error\": \"Unauthorized - Please login\"}");
+        response.getWriter().write("""
+                {
+                  "status": "ERROR",
+                  "data": null,
+                  "error": {
+                    "statusCode": 401,
+                    "message": "로그인 후 이용해주세요"
+                  }
+                }
+                """);
     }
 
 }

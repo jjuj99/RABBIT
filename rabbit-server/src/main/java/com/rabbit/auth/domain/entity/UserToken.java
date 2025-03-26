@@ -1,5 +1,6 @@
 package com.rabbit.auth.domain.entity;
 
+import com.rabbit.user.domain.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,14 +11,16 @@ import java.time.ZonedDateTime;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@Getter
 public class UserToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer tokenId;
 
-    @Column(nullable = false)
-    private Integer userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(nullable = false)
     private String refreshToken;

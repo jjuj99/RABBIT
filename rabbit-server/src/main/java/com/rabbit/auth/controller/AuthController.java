@@ -9,6 +9,8 @@ import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.response.CustomApiResponse;
 import com.rabbit.global.response.MessageResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -19,6 +21,9 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Arrays;
+import java.util.Optional;
 
 @Tag(name = "Auth", description = "계정 관련 API")
 @RestController
@@ -67,6 +72,26 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(CustomApiResponse.success(MessageResponse.of("회원가입에 성공했습니다.")));
+    }
+
+    @AuthControllerSwagger.refreshApi
+    @PostMapping("/refresh")
+    public ResponseEntity<CustomApiResponse<?>> refresh(HttpServletRequest request) {
+        String refreshToken = getRefreshTokenFromCookie(request)
+                .orElseThrow(() -> new BusinessException(ErrorCode.JWT_REQUIRED));
+
+        RefreshResponseDTO response = authService.refresh(refreshToken);
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
+
+    private Optional<String> getRefreshTokenFromCookie(HttpServletRequest request) {
+        if (request.getCookies() == null) return Optional.empty();
+
+        return Arrays.stream(request.getCookies())
+                .filter(cookie -> "refreshToken".equals(cookie.getName()))
+                .map(Cookie::getValue)
+                .findFirst();
     }
 
 }

@@ -62,8 +62,8 @@ public class AuctionController {
                 searchRequest.getMinPrice() > searchRequest.getMaxPrice()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "최소 금액이 최대 금액보다 클 수 없습니다.");
         }
-        if (searchRequest.getMinRr() != null && searchRequest.getMaxRr() != null &&
-                searchRequest.getMinRr().compareTo(searchRequest.getMaxRr()) > 0) {
+        if (searchRequest.getMinIr() != null && searchRequest.getMaxIr() != null &&
+                searchRequest.getMinIr().compareTo(searchRequest.getMaxIr()) > 0) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "최소 수익률이 최대 수익률보다 클 수 없습니다.");
         }
         if (searchRequest.getMatStart() != null && searchRequest.getMatEnd() != null &&

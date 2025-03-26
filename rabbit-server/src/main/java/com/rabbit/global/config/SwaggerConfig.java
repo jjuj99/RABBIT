@@ -43,9 +43,9 @@ public class SwaggerConfig {
                         .license(new License()
                                 .name("Apache 2.0")
                                 .url("http://springdoc.org")))
-                .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()
-                        .addSecuritySchemes("Bearer Authentication", createAPIKeyScheme()));
+                        .addSecuritySchemes("bearerAuth", createAPIKeyScheme()));
     }
 
     private SecurityScheme createAPIKeyScheme() {

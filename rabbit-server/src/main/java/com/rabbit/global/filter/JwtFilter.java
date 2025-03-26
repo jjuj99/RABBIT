@@ -47,6 +47,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // 헤더 확인
         String authHeader = request.getHeader("Authorization");
+        System.out.println("Authorization header: {}" + authHeader);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             sendErrorResponse(response, ErrorCode.JWT_REQUIRED);

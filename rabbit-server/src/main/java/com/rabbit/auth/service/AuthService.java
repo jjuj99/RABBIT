@@ -11,6 +11,8 @@ import com.rabbit.global.util.JwtUtil;
 import com.rabbit.global.util.SignatureUtil;
 import com.rabbit.user.domain.entity.*;
 import com.rabbit.user.repository.*;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.time.ZonedDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -54,19 +57,19 @@ public class AuthService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "존재하지 않는 지갑 주소입니다."));
 
         // 서명에서 주소 복원
-        String recoverAddress = signatureUtil.recoverAddress(request.getSignature(), request.getNonce());
-
-        // 서명 검증
-        if (!request.getWalletAddress().equalsIgnoreCase(recoverAddress)) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED, "서명이 일치하지 않습니다.");
-        }
+//        String recoverAddress = signatureUtil.recoverAddress(request.getSignature(), request.getNonce());
+//
+//        // 서명 검증
+//        if (!request.getWalletAddress().equalsIgnoreCase(recoverAddress)) {
+//            throw new BusinessException(ErrorCode.UNAUTHORIZED, "서명이 일치하지 않습니다.");
+//        }
 
         // JWT 토큰 생성
         String accessToken = jwtUtil.createAccessToken(String.valueOf(user.getUserId()));
         String refreshToken = jwtUtil.createRefreshToken(String.valueOf(user.getUserId()));
 
         UserToken userToken = UserToken.builder()
-                .userId(user.getUserId())
+                .user(user)
                 .refreshToken(refreshToken)
                 .createdAt(ZonedDateTime.now())
                 .build();
@@ -126,5 +129,38 @@ public class AuthService {
                 .updatedAt(ZonedDateTime.now())
                 .build()
         );
+    }
+
+    @Transactional
+    public RefreshResponseDTO refresh(String refreshToken) {
+        String userId = parseUserId(refreshToken);
+
+        UserToken userToken = userTokenRepository.findByUser_UserId(Integer.parseInt(userId))
+                .orElseThrow(() -> new BusinessException(ErrorCode.JWT_INVALID));
+
+        if (!refreshToken.equals(userToken.getRefreshToken())) {
+            throw new BusinessException(ErrorCode.JWT_INVALID);
+        }
+
+        User user = userToken.getUser();
+        String accessToken = jwtUtil.createAccessToken(String.valueOf(user.getUserId()));
+
+        return RefreshResponseDTO.builder()
+                .userName(user.getUserName())
+                .nickname(user.getNickname())
+                .accessToken(accessToken)
+                .build();
+    }
+
+    private String parseUserId(String token) {
+        try {
+            return jwtUtil.getUserIdFromToken(token);
+        } catch (ExpiredJwtException e) {
+            // 토큰이 만료된 경우
+            throw  new BusinessException(ErrorCode.JWT_EXPIRED);
+        } catch (SecurityException | MalformedJwtException | IllegalArgumentException e) {
+            // 유효하지 않은 토큰 (구조 오류, 서명 오류 등)
+            throw  new BusinessException(ErrorCode.JWT_INVALID);
+        }
     }
 }

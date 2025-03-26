@@ -146,6 +146,7 @@
     --primary-foreground: #000000;
     --secondary: #333333;
     --secondary-foreground: #ffffff;
+    --success-dark: #223322;
     --muted: #282828;
     --muted-foreground: #c0c0c0;
     --accent: #333333;
@@ -171,6 +172,7 @@
   --primary-foreground: #000000;
   --secondary: #333333;
   --secondary-foreground: #ffffff;
+  --success-dark: #223322;
   --muted: #282828;
   --muted-foreground: #c0c0c0;
   --accent: #333333;
@@ -210,7 +212,7 @@
   --color-text-disabled: #848484;
   --color-text-secondary: #aaaaaa;
   --color-brand-primary: #00ff66;
-
+  --color-success-dark: #223322;
   --color-black-half-overlay: rgba(48, 48, 48, 0.5);
 
   /* 투명 효과 색상 */
@@ -251,6 +253,7 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-success-dark: var(--success-dark);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);

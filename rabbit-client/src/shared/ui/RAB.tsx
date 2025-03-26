@@ -4,18 +4,20 @@ const RAB = ({
   isColored = true,
 }: {
   amount: number;
-  size?: "lg" | "sm" | "md";
+  size?: "lg" | "sm" | "md" | "xl";
   isColored?: boolean;
 }) => {
   const formattedAmount = amount.toLocaleString();
 
   const amountSize = {
+    xl: "text-2xl",
     lg: "text-xl",
     md: "text-lg",
     sm: "text-base",
   }[size];
 
   const rabSize = {
+    xl: "text-lg",
     lg: "text-sm",
     md: "text-xs",
     sm: "text-xs",

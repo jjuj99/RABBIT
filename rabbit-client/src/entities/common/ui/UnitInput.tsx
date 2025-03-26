@@ -13,6 +13,7 @@ interface UnitInputProps extends React.ComponentProps<"input"> {
   placeholder?: string;
   ariaLabel?: string;
   disabled?: boolean;
+  unitColor?: string;
 }
 
 const unitInputContainerVariants = cva(
@@ -42,6 +43,7 @@ const UnitInput = ({
   textAlign = "right",
   "aria-label": ariaLabel,
   disabled,
+  unitColor,
   ...props
 }: UnitInputProps) => {
   return (
@@ -68,6 +70,7 @@ const UnitInput = ({
         className={cn(
           "pr-3 whitespace-nowrap",
           disabled && "text-text-disabled",
+          unitColor && `text-${unitColor} font-pixel`,
         )}
       >
         {unit}

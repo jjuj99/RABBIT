@@ -177,7 +177,7 @@ public class ExampleController {
         ExampleSearchDTO searchCondition = searchRequest.getSearchCondition();
 
         log.debug("[예시 목록 조회 요청] pageNo: {}, pageSize: {}, sortBy: {}, sortDirection: {}, keyword: {}, categoryCode: {}, isActive: {}, startDate: {}, endDate: {}",
-                searchRequest.getPageNo(),
+                searchRequest.getPageNumber(),
                 searchRequest.getPageSize(),
                 searchRequest.getSortBy(),
                 searchRequest.getSortDirection(),
@@ -212,7 +212,7 @@ public class ExampleController {
         // 페이지 응답 객체 생성
         PageResponseDTO<ExampleResponseDTO> pageResponse = PageResponseDTO.<ExampleResponseDTO>builder()
                 .content(examples)
-                .pageNo(searchRequest.getPageNo())
+                .pageNumber(searchRequest.getPageNumber())
                 .pageSize(searchRequest.getPageSize())
                 .totalElements(totalElements)
                 .build();

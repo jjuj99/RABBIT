@@ -20,13 +20,13 @@ public class ExampleSearchRequestDTO extends PageRequestDTO {
     }
 
     // 페이지 정보만 설정하는 생성자
-    public ExampleSearchRequestDTO(int pageNo, int pageSize) {
-        super(pageNo, pageSize);
+    public ExampleSearchRequestDTO(int pageNumber, int pageSize) {
+        super(pageNumber, pageSize);
     }
 
     // 페이지 정보와 정렬 정보를 설정하는 생성자
-    public ExampleSearchRequestDTO(int pageNo, int pageSize, String sortBy, String sortDirection) {
-        super(pageNo, pageSize, sortBy, sortDirection);
+    public ExampleSearchRequestDTO(int pageNumber, int pageSize, String sortBy, String sortDirection) {
+        super(pageNumber, pageSize, sortBy, sortDirection);
     }
 
 }

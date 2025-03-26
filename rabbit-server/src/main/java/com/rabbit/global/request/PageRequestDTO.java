@@ -17,7 +17,7 @@ public class PageRequestDTO {
 
 	@Schema(description = "페이지 번호 (0부터 시작)", example = "0", defaultValue = "0", minimum = "0")
 	@Min(value = 0, message = "페이지 번호는 0 이상이어야 합니다")
-	private int pageNo = 0;
+	private int pageNumber = 0;
 
 	@Schema(description = "페이지 크기", example = "10", defaultValue = "10", minimum = "1", maximum = "100")
 	@Min(value = 1, message = "페이지 크기는 1 이상이어야 합니다")
@@ -35,13 +35,13 @@ public class PageRequestDTO {
 	public PageRequestDTO() {
 	}
 
-	public PageRequestDTO(int pageNo, int pageSize) {
-		this.pageNo = pageNo;
+	public PageRequestDTO(int pageNumber, int pageSize) {
+		this.pageNumber = pageNumber;
 		this.pageSize = pageSize;
 	}
 
-	public PageRequestDTO(int pageNo, int pageSize, String sortBy, String sortDirection) {
-		this.pageNo = pageNo;
+	public PageRequestDTO(int pageNumber, int pageSize, String sortBy, String sortDirection) {
+		this.pageNumber = pageNumber;
 		this.pageSize = pageSize;
 		this.sortBy = sortBy;
 		this.sortDirection = sortDirection;
@@ -56,9 +56,9 @@ public class PageRequestDTO {
 		if (sortBy != null && !sortBy.isEmpty()) {
 			Sort.Direction direction = sortDirection.equals("ASC") ?
 					Sort.Direction.ASC : Sort.Direction.DESC;
-			return PageRequest.of(pageNo, pageSize, direction, sortBy);
+			return PageRequest.of(pageNumber, pageSize, direction, sortBy);
 		}
-		return PageRequest.of(pageNo, pageSize);
+		return PageRequest.of(pageNumber, pageSize);
 	}
 
 	/**
@@ -72,11 +72,11 @@ public class PageRequestDTO {
 		if (sortBy != null && !sortBy.isEmpty()) {
 			Sort.Direction direction = sortDirection.equals("ASC") ?
 					Sort.Direction.ASC : Sort.Direction.DESC;
-			return PageRequest.of(pageNo, pageSize, direction, sortBy);
+			return PageRequest.of(pageNumber, pageSize, direction, sortBy);
 		} else if (defaultSortBy != null && !defaultSortBy.isEmpty()) {
-			return PageRequest.of(pageNo, pageSize, defaultDirection, defaultSortBy);
+			return PageRequest.of(pageNumber, pageSize, defaultDirection, defaultSortBy);
 		}
-		return PageRequest.of(pageNo, pageSize);
+		return PageRequest.of(pageNumber, pageSize);
 	}
 
 	/**
@@ -89,11 +89,11 @@ public class PageRequestDTO {
 		if (sortBy != null && !sortBy.isEmpty()) {
 			Sort.Direction direction = sortDirection.equals("ASC") ?
 					Sort.Direction.ASC : Sort.Direction.DESC;
-			return PageRequest.of(pageNo, pageSize, direction, sortBy);
+			return PageRequest.of(pageNumber, pageSize, direction, sortBy);
 		} else if (orders != null && orders.length > 0) {
-			return PageRequest.of(pageNo, pageSize, Sort.by(orders));
+			return PageRequest.of(pageNumber, pageSize, Sort.by(orders));
 		}
-		return PageRequest.of(pageNo, pageSize);
+		return PageRequest.of(pageNumber, pageSize);
 	}
 
 	/**
@@ -102,7 +102,7 @@ public class PageRequestDTO {
 	 */
 	@Schema(hidden = true)
 	public PageRequestDTO next() {
-		return new PageRequestDTO(pageNo + 1, pageSize, sortBy, sortDirection);
+		return new PageRequestDTO(pageNumber + 1, pageSize, sortBy, sortDirection);
 	}
 
 	/**
@@ -111,7 +111,7 @@ public class PageRequestDTO {
 	 */
 	@Schema(hidden = true)
 	public PageRequestDTO previous() {
-		return new PageRequestDTO(Math.max(0, pageNo - 1), pageSize, sortBy, sortDirection);
+		return new PageRequestDTO(Math.max(0, pageNumber - 1), pageSize, sortBy, sortDirection);
 	}
 
 	/**
@@ -130,7 +130,7 @@ public class PageRequestDTO {
 	 */
 	@Schema(hidden = true)
 	public int getOffset() {
-		return pageNo * pageSize;
+		return pageNumber * pageSize;
 	}
 
 	/**

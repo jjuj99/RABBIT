@@ -35,6 +35,9 @@ pipeline {
                 
                 stage('Setup Environment') {
                     steps {
+                        sh 'mkdir -p rabbit-client'
+                        sh 'chmod -R 777 rabbit-client'
+                        
                         withCredentials([file(credentialsId: 'rabbit-client-env', variable: 'ENV_FILE')]) {
                             sh 'cp $ENV_FILE rabbit-client/.env.production'
                         }

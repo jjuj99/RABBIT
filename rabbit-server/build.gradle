@@ -1,0 +1,134 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'idea'  // Intellij IDEA 플러그인
+    // id 'checkstyle'  // 코드 스타일 검사
+    id 'io.freefair.lombok' version '8.6'  // Lombok 플러그인
+}
+
+group = 'com.rabbit'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+    // log4j2 충돌 방지
+    all*.exclude module: 'spring-boot-starter-logging'
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    jjwtVersion = '0.12.6'
+}
+
+dependencies {
+    // Spring Boot Core
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'  // Email 발송
+    implementation 'org.springframework.boot:spring-boot-starter-validation'    // Validation
+
+    // Dev Tools
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // Database
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    implementation 'org.postgresql:postgresql:42.6.0'
+
+    // JWT
+    implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
+
+    // Security
+     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+     implementation 'org.springframework.boot:spring-boot-starter-security'
+    // testImplementation 'org.springframework.security:spring-security-test'
+
+    // Swagger
+//    implementation group: 'io.springfox', name: 'springfox-swagger2', version: '3.0.0'
+//    implementation group: 'io.springfox', name: 'springfox-swagger-ui', version: '3.0.0'
+
+    // Swagger OpenAPI
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+
+    // Logging
+    implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+
+    // AWS
+//    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.778'
+
+    // Utils
+    implementation 'commons-io:commons-io:2.18.0'
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.28'
+    annotationProcessor 'org.projectlombok:lombok:1.18.28'
+
+    // Configuration Processor
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    //QueryDSL
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+    annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
+    annotationProcessor 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+    annotationProcessor 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+
+    // Web3j
+    implementation 'org.web3j:core:4.9.8'
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+idea {
+    module {
+        downloadJavadoc = true  // 자바독 다운로드
+        downloadSources = true  // 소스 다운로드
+    }
+}
+
+// Intellij에서 애노테이션 프로세싱 활성화
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-parameters'
+    options.encoding = 'UTF-8'  // 소스 파일 인코딩을 UTF-8로 강제
+}
+
+// 빌드 시 테스트 리포트 생성
+test {
+    reports {
+        html.required = true    // HTML 형식의 테스트 리포트 생성
+        junitXml.required = true  // JUnit XML 리포트 생성
+    }
+}
+
+def querydslDir = "$buildDir/generated/querydsl"
+
+sourceSets {
+    main.java.srcDir querydslDir
+}
+
+tasks.withType(JavaCompile) {
+    options.annotationProcessorGeneratedSourcesDirectory = file(querydslDir)
+}

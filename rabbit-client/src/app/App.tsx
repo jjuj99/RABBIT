@@ -10,6 +10,7 @@ import { NotFound } from "@/pages/common";
 import Header from "@/widget/common/ui/Header";
 import useMediaQuery from "@/shared/hooks/useMediaQuery";
 import SubNav from "@/features/common/ui/SubNav";
+import AddTokenDialog from "@/widget/common/ui/AddTokenDialog";
 
 const Home = lazy(() => import("@/pages/common/ui/Home"));
 
@@ -17,6 +18,7 @@ function App() {
   const isDesktop = useMediaQuery("md");
   return (
     <div className="mx-auto max-w-[1440px] px-4 pb-20 sm:px-8">
+      <AddTokenDialog />
       {isDesktop && <Header />}
       {isDesktop && <SubNav />}
       <Routes>

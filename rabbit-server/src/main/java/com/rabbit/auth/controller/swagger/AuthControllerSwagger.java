@@ -197,6 +197,82 @@ public interface AuthControllerSwagger {
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
     @Operation(
+            summary = "닉네임 중복 확인",
+            description = "입력한 닉네임이 중복되었는지 여부를 확인합니다.",
+            security = {@SecurityRequirement(name = "bearerAuth")},
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "중복 확인할 닉네임",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "닉네임 중복 아님",
+                                                    summary = "닉네임 중복 아님",
+                                                    value = """
+                                                            {
+                                                              "status": "SUCCESS",
+                                                              "data": {
+                                                                "duplicated": false
+                                                              },
+                                                              "error": null
+                                                            }"""
+                                            ),
+                                            @ExampleObject(
+                                                    name = "닉네임 중복임",
+                                                    summary = "닉네임 중복임",
+                                                    value = """
+                                                            {
+                                                              "status": "SUCCESS",
+                                                              "data": {
+                                                                "duplicated": true
+                                                              },
+                                                              "error": null
+                                                            }"""
+                                            ),
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "잘못된 요청 - 유효하지 않은 데이터",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "닉네임 미입력",
+                                                    value = "{\n" +
+                                                            "  \"status\": \"ERROR\",\n" +
+                                                            "  \"data\": null,\n" +
+                                                            "  \"error\": {\n" +
+                                                            "    \"statusCode\": 400,\n" +
+                                                            "    \"message\": \"닉네임을 입력하지 않았습니다.\"\n" +
+                                                            "  }\n}"
+                                            ),
+                                            @ExampleObject(
+                                                    name = "닉네임 길이 초과",
+                                                    value = "{\n" +
+                                                            "  \"status\": \"ERROR\",\n" +
+                                                            "  \"data\": null,\n" +
+                                                            "  \"error\": {\n" +
+                                                            "    \"statusCode\": 400,\n" +
+                                                            "    \"message\": \"닉네임은 12자 이하로 입력해야 합니다.\"\n" +
+                                                            "  }\n}"
+                                            )
+                                    }
+                            )
+                    )
+            }
+    )
+    @interface checkNicknameApi {
+    }
+
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Operation(
             summary = "Access Token 갱신",
             description = "Refresh Token을 통해 Access Token을 갱신합니다.",
             security = {@SecurityRequirement(name = "bearerAuth")},

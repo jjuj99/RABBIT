@@ -12,7 +12,7 @@ import java.time.ZonedDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuctionResponseDTO {
+public class AuctionDetailResponseDTO {
     private Integer auctionId;          // 경매 ID
     private Long price;              // 금액
     private ZonedDateTime endDate;   // 경매 종료일
@@ -28,4 +28,3 @@ public class AuctionResponseDTO {
     private Integer creditScore;     // 신용점수
     private Integer defCnt;          // 연체 횟수
 }
-

@@ -91,7 +91,7 @@ pipeline {
                     steps {
                         dir('rabbit-server') {
                             sh 'chmod +x ./gradlew'
-                            sh './gradlew clean bootJar'
+                            sh './gradlew --no-daemon clean bootJar'
                         }
                     }
                 }

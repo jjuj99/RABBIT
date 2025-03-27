@@ -14,11 +14,11 @@ public class HelloController {
 
     @GetMapping
     public String test() {
-        return "Test Jenkins!";
+        return "Test Jenkins! !";
     }
 
     @GetMapping
-    public String web() {
-        return "Test Web hook!";
+    public String hook() {
+        return "Test Web hook! !";
     }
 }

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class HelloController {
 
-    @GetMapping
+    @GetMapping("/test")
     public String test() {
         return "Test Jenkins! !";
     }

@@ -1,107 +1,164 @@
-import { useState } from "react";
-import { LoginAPI } from "@/entities/auth/api/authApi";
 import useGetNonce from "@/entities/auth/hooks/useGetNonce";
-import useWalletConnection from "@/entities/auth/hooks/useWalletConnection";
+import { useState, useEffect } from "react";
+
+import { cn } from "@/shared/lib/utils";
+import { useMetaMaskInstalled } from "@/entities/wallet/hooks/useMetaMaskInstalled";
+import { toast } from "sonner";
+import ensureCorrectNetwork from "@/entities/wallet/utils/ensureCorrectNetwork";
+import getMetaMaskProvider from "@/entities/wallet/utils/getMetaMaskProvider";
+import connectWallet from "@/entities/wallet/utils/connectWallet";
+import generateSignature from "@/entities/wallet/utils/generateSignature";
+
 import { setAccessToken } from "@/entities/auth/utils/authUtils";
+import { LOGIN_MESSAGE } from "@/entities/wallet/constant";
+import { LoginAPI } from "@/entities/auth/api/authApi";
 import { useQueryClient } from "@tanstack/react-query";
 
 const LoginButton = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const walletQuery = useWalletConnection();
+
+  const {
+    isInstalled,
+    isLoading: isMetaMaskLoading,
+    error: metaMaskError,
+  } = useMetaMaskInstalled();
+
+  useEffect(() => {
+    if (metaMaskError === "NOT_INSTALLED") {
+      toast.error("메타마스크가 설치되어 있지 않습니다.");
+    } else if (metaMaskError === "CHECK_FAILED") {
+      toast.error("메타마스크 상태 확인에 실패했습니다.");
+    }
+  }, [metaMaskError]);
+
   const nonceMutation = useGetNonce();
   const queryClient = useQueryClient();
 
-  // 로그인 프로세스 : 지갑연결 -> 지갑주소 전송 -> 난수 생성 -> 시그니처 생성 -> 시그니처 전송 -> 백엔드에서 시그니처 검증 -> 로그인 성공 -> 유저 정보 받아옴
   const handleLogin = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
 
-      // 1. 지갑 연결 및 주소 가져오기
-      const { data: walletData } = await walletQuery.refetch();
-      if (!walletData?.address) {
-        setError("지갑 연결에 실패했습니다. 다시 시도해주세요.");
-        return;
+    // 1. 메타마스크 설치 여부 체크 - 없으면 예외 처리 toast 띄우기
+    if (!isInstalled) {
+      return;
+    }
+
+    // 2. 네트워크 체크 -> Sepolia 네트워크 여부 체크 - 아니면 예외 처리 toast 띄우기
+    const { success, error: networkError } = await ensureCorrectNetwork();
+    if (!success) {
+      switch (networkError) {
+        case "USER_REJECTED_SWITCH":
+          toast.error(
+            "네트워크 전환이 필요합니다. Sepolia 테스트넷으로 전환해주세요.",
+          );
+          break;
+        case "USER_REJECTED_ADD":
+          toast.error("Sepolia 테스트넷 추가가 필요합니다.");
+          break;
+        case "NETWORK_ERROR":
+          toast.error("네트워크 연결에 실패했습니다.");
+          break;
       }
-
-      // 2. 난수(nonce) 요청
-      const { data: nonceResponse } = await nonceMutation.mutateAsync(
-        walletData.address,
-      );
-
-      // 3. 회원가입이 필요한 경우 처리
-      if (!nonceResponse) {
-        console.log("회원가입이 필요합니다.");
-        return;
-      }
-
-      // 4. 메시지 서명 요청
-      if (window.ethereum) {
-        // 서명할 메시지 생성
-        const message = `Rabbit에 오신 것을 환영합니다!
-안전한 계정 로그인을 위해 이 메시지에 서명해 주세요.
-이 서명은 블록체인 트랜잭션을 발생시키거나 가스 비용이 들지 않습니다.
-
-지갑 주소: ${walletData.address}
-Nonce: ${nonceResponse.nonce}
-타임스탬프: ${new Date().toISOString()}`;
-
-        // 지갑에 서명 요청
-        const signature = await window.ethereum.request({
-          method: "personal_sign",
-          params: [message, walletData.address],
-        });
-
-        // 5. 로그인 API 호출
-        const loginRes = await LoginAPI({
-          walletAddress: walletData.address,
-          signature: signature as string,
-          nonce: nonceResponse.nonce,
-        });
-
-        // 6. 로그인 성공 처리
-        if (loginRes.status === "SUCCESS" && loginRes.data) {
-          // 액세스 토큰 저장
-          setAccessToken(loginRes.data.accessToken);
-
-          // 인증 상태와 사용자 정보를 분리하여 저장
-
-          // 1. 인증 상태만 저장 (isAuthenticated: true)
-          queryClient.setQueryData(["auth", "status"], {
-            isAuthenticated: true,
-          });
-
-          // 2. 사용자 정보 저장
-          queryClient.setQueryData(["auth", "user"], loginRes.data.user);
-
-          console.log("로그인 성공!");
-        } else {
-          setError("로그인에 실패했습니다. 다시 시도해주세요.");
-        }
-      } else {
-        setError("Ethereum 지원 브라우저가 필요합니다.");
-      }
-    } catch (error: unknown) {
-      console.error("로그인 오류:", error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : "로그인 중 오류가 발생했습니다.",
-      );
-    } finally {
       setIsLoading(false);
+      return;
+    }
+    // 3. 지갑 연결 요청 - 예외 처리 toast 띄우기, 지갑 연결을 거부했을 때?
+    // 4. 지갑 주소 반환 - 예외 처리 toast 띄우기
+    const provider = await getMetaMaskProvider();
+    if (!provider) {
+      toast.error("메타마스크 프로바이더를 찾을 수 없습니다.");
+      setIsLoading(false);
+      return;
+    }
+    const { address, error: connectError } = await connectWallet({ provider });
+    if (!address) {
+      switch (connectError) {
+        case "PROVIDER_NOT_FOUND":
+          toast.error("메타마스크 프로바이더를 찾을 수 없습니다.");
+          break;
+        case "USER_REJECTED":
+          toast.error("지갑 연결을 거부했습니다.");
+          break;
+        case "CONNECTION_ERROR":
+          toast.error("지갑 연결에 실패했습니다.");
+          break;
+      }
+      setIsLoading(false);
+      return;
+    }
+
+    // 6. 난수 요청
+
+    const { data: nonce } = await nonceMutation.mutateAsync(address);
+    if (!nonce) {
+      toast.error("난수 요청에 실패했습니다.");
+      setIsLoading(false);
+      return;
+    }
+
+    // 7. 시그니처 생성
+    const { signature, error: signatureError } = await generateSignature(
+      address,
+      LOGIN_MESSAGE(address, nonce.nonce),
+    );
+    if (!signature) {
+      switch (signatureError) {
+        case "PROVIDER_NOT_FOUND":
+          toast.error("메타마스크 프로바이더를 찾을 수 없습니다.");
+          break;
+        case "USER_REJECTED":
+          toast.error("서명을 거부했습니다.");
+          break;
+        case "SIGNATURE_FAILED":
+          toast.error("서명 생성에 실패했습니다.");
+          break;
+      }
+      setIsLoading(false);
+      return;
+    }
+    // 8. 시그니처 전송 - 백엔드에서 시그니처 검증
+    try {
+      const loginRes = await LoginAPI({
+        walletAddress: address,
+        signature,
+        nonce: nonce.nonce,
+      });
+
+      if (loginRes.status === "SUCCESS" && loginRes.data) {
+        toast.success("로그인에 성공했습니다.");
+        setAccessToken(loginRes.data.accessToken);
+        queryClient.setQueryData(["user"], {
+          isAuthenticated: true,
+          user: loginRes.data.user,
+        });
+        setIsLoading(false);
+        return;
+      } else {
+        // 회원가입
+      }
+    } catch {
+      toast.error("로그인에 실패했습니다.");
+      setIsLoading(false);
+      return;
     }
   };
 
+  if (isMetaMaskLoading) {
+    return <div>확인 중...</div>;
+  }
+
   return (
-    <button
-      className={`cursor-pointer ${isLoading ? "opacity-50" : ""}`}
-      onClick={handleLogin}
-      disabled={isLoading}
-    >
-      {isLoading ? "로그인 중..." : "로그인"}
-    </button>
+    <div className="flex flex-col items-center">
+      <button
+        className={cn(
+          "cursor-pointer rounded-md px-4 py-2",
+          isLoading ? "opacity-50" : "",
+        )}
+        onClick={handleLogin}
+        disabled={isLoading}
+      >
+        {isLoading ? "로그인 중..." : "로그인"}
+      </button>
+    </div>
   );
 };
 

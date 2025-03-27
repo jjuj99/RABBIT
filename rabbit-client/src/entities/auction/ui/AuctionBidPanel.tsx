@@ -1,14 +1,17 @@
 import UnitInput from "@/entities/common/ui/UnitInput";
+import { SubmitAuctionBidAPI } from "@/features/auction/api/auctionApi";
 import { Button } from "@/shared/ui/button";
 import { useState } from "react";
+import { useParams } from "react-router";
 
 interface AuctionBidPanelProps {
-  CBP: number;
-  amount: number;
+  CBP?: number;
+  amount?: number;
 }
 
-const AuctionBidPanel = ({ CBP, amount }: AuctionBidPanelProps) => {
+const AuctionBidPanel = ({ CBP = 0, amount = 0 }: AuctionBidPanelProps) => {
   const [bidPrice, setBidPrice] = useState(CBP);
+  const { auctionId } = useParams<{ auctionId: string }>();
 
   // 금액 단위 (예: 1만 = 10,000)
   const increments = {
@@ -20,8 +23,16 @@ const AuctionBidPanel = ({ CBP, amount }: AuctionBidPanelProps) => {
 
   // bidPrice를 API에 전달하는 함수
   const handleBidSubmit = async () => {
-    // API 호출
-    alert(`입찰가: ${bidPrice}`);
+    try {
+      const response = await SubmitAuctionBidAPI(Number(auctionId), bidPrice);
+      if (response.status === "ERROR") {
+        alert(response.error?.message || "입찰에 실패했습니다.");
+        return;
+      }
+      alert(response.data?.message || "입찰이 완료되었습니다.");
+    } catch {
+      alert("입찰 중 오류가 발생했습니다.");
+    }
   };
 
   return (

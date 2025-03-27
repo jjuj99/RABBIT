@@ -3,22 +3,21 @@ import { Label } from "@/shared/ui/label";
 import { BarRadio, BarRadioItem } from "@/shared/ui/BarRadio";
 import { Input } from "@/shared/ui/input";
 import { useAuctionFilterStore } from "@/shared/lib/store/auctionFilterStore";
-import { useAuctionFilterErrorStore } from "./../../../shared/lib/store/auctionFilterErrorStore";
+import { useAuctionFilterErrorStore } from "../../../shared/lib/store/auctionFilterErrorStore";
 
 interface MAT_DTSectionProps {
   triggerApi: () => void;
 }
 
 const MAT_DTSection: React.FC<MAT_DTSectionProps> = ({ triggerApi }) => {
-  const maturity = useAuctionFilterStore((state) => state.maturity);
-  const setMaturity = useAuctionFilterStore((state) => state.setMaturity);
-  const startDate = useAuctionFilterStore((state) => state.startDate);
-  const endDate = useAuctionFilterStore((state) => state.endDate);
-  const setStartDate = useAuctionFilterStore((state) => state.setStartDate);
-  const setEndDate = useAuctionFilterStore((state) => state.setEndDate);
+  const maturity = useAuctionFilterStore((state) => state.mat_term);
+  const setMaturity = useAuctionFilterStore((state) => state.setMatTerm);
+  const startDate = useAuctionFilterStore((state) => state.mat_start);
+  const endDate = useAuctionFilterStore((state) => state.mat_end);
+  const setStartDate = useAuctionFilterStore((state) => state.setMatStart);
+  const setEndDate = useAuctionFilterStore((state) => state.setMatEnd);
 
   const { setError } = useAuctionFilterErrorStore();
-
   const [dateError, setDateError] = useState<string>("");
 
   useEffect(() => {
@@ -36,6 +35,18 @@ const MAT_DTSection: React.FC<MAT_DTSectionProps> = ({ triggerApi }) => {
     setError("matDt", errorMessage);
   }, [maturity, startDate, endDate, setError]);
 
+  const handleMaturityChange = (value: string) => {
+    setMaturity(value);
+  };
+
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStartDate(e.target.value);
+  };
+
+  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEndDate(e.target.value);
+  };
+
   return (
     <div className="flex h-fit w-full flex-col gap-3">
       <h2 className="text-base font-bold">만기일</h2>
@@ -43,20 +54,20 @@ const MAT_DTSection: React.FC<MAT_DTSectionProps> = ({ triggerApi }) => {
         <BarRadio
           value={maturity}
           onValueChange={(value) => {
-            setMaturity(value);
+            handleMaturityChange(value);
             triggerApi();
           }}
         >
-          <BarRadioItem id="oneMonth" value="oneMonth">
+          <BarRadioItem id="oneMonth" value="1">
             1개월이내
           </BarRadioItem>
-          <BarRadioItem id="threeMonths" value="threeMonths">
+          <BarRadioItem id="threeMonths" value="3">
             3개월이내
           </BarRadioItem>
-          <BarRadioItem id="sixMonths" value="sixMonths">
+          <BarRadioItem id="sixMonths" value="6">
             6개월이내
           </BarRadioItem>
-          <BarRadioItem id="oneYear" value="oneYear">
+          <BarRadioItem id="oneYear" value="12">
             1년이내
           </BarRadioItem>
           <BarRadioItem id="directSelect" value="directSelect">
@@ -76,7 +87,7 @@ const MAT_DTSection: React.FC<MAT_DTSectionProps> = ({ triggerApi }) => {
                   type="date"
                   borderType="white"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={handleStartDateChange}
                   onBlur={triggerApi}
                 />
               </div>
@@ -88,7 +99,7 @@ const MAT_DTSection: React.FC<MAT_DTSectionProps> = ({ triggerApi }) => {
                 type="date"
                 borderType="white"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={handleEndDateChange}
                 onBlur={triggerApi}
               />
             </div>

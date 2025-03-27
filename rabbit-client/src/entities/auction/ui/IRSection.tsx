@@ -9,10 +9,10 @@ interface IRSectionProps {
 }
 
 const IRSection = ({ triggerApi }: IRSectionProps) => {
-  const minIR = useAuctionFilterStore((state) => state.minIR);
-  const maxIR = useAuctionFilterStore((state) => state.maxIR);
-  const setMinIR = useAuctionFilterStore((state) => state.setMinIR);
-  const setMaxIR = useAuctionFilterStore((state) => state.setMaxIR);
+  const minIR = useAuctionFilterStore((state) => state.min_ir);
+  const maxIR = useAuctionFilterStore((state) => state.max_ir);
+  const setMinIR = useAuctionFilterStore((state) => state.setMinIr);
+  const setMaxIR = useAuctionFilterStore((state) => state.setMaxIr);
 
   const [errors, setErrors] = useState<string>("");
   const { setError } = useAuctionFilterErrorStore();
@@ -32,6 +32,14 @@ const IRSection = ({ triggerApi }: IRSectionProps) => {
     setErrors(errorMessage);
   }, [minIR, maxIR, setError]);
 
+  const handleMinIRChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMinIR(e.target.value);
+  };
+
+  const handleMaxIRChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMaxIR(e.target.value);
+  };
+
   return (
     <div className="flex h-fit w-full flex-col gap-3">
       <div>
@@ -47,7 +55,7 @@ const IRSection = ({ triggerApi }: IRSectionProps) => {
             unit="%"
             borderType="white"
             value={minIR}
-            onChange={(e) => setMinIR(e.target.value)}
+            onChange={handleMinIRChange}
             onBlur={triggerApi}
           />
         </div>
@@ -59,7 +67,7 @@ const IRSection = ({ triggerApi }: IRSectionProps) => {
             unit="%"
             borderType="white"
             value={maxIR}
-            onChange={(e) => setMaxIR(e.target.value)}
+            onChange={handleMaxIRChange}
             onBlur={triggerApi}
           />
         </div>

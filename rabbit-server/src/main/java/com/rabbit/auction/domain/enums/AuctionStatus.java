@@ -1,5 +1,5 @@
 package com.rabbit.auction.domain.enums;
 
 public enum AuctionStatus {
-    ING, COMPLETED, FAILED, CANCELLED
+    ING, COMPLETED, FAILED, CANCELED
 }

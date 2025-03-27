@@ -21,4 +21,7 @@ public class HelloController {
     public String hook() {
         return "Test Web hook! !";
     }
+
+    @GetMapping("/push/main")
+    public String push() { return "Push Main hook!"; }
 }

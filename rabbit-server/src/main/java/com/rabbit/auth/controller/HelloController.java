@@ -17,8 +17,8 @@ public class HelloController {
         return "Test Jenkins! !";
     }
 
-    @GetMapping("/hoot")
+    @GetMapping("/hello")
     public String hook() {
-        return "Test Web hook! !";
+        return "Hello World! !";
     }
 }

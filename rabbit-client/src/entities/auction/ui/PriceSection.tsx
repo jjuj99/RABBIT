@@ -9,8 +9,8 @@ interface PriceSectionProps {
 }
 
 const PriceSection = ({ triggerApi }: PriceSectionProps) => {
-  const minPrice = useAuctionFilterStore((state) => state.minPrice);
-  const maxPrice = useAuctionFilterStore((state) => state.maxPrice);
+  const minPrice = useAuctionFilterStore((state) => state.min_price);
+  const maxPrice = useAuctionFilterStore((state) => state.max_price);
   const setMinPrice = useAuctionFilterStore((state) => state.setMinPrice);
   const setMaxPrice = useAuctionFilterStore((state) => state.setMaxPrice);
 
@@ -34,6 +34,14 @@ const PriceSection = ({ triggerApi }: PriceSectionProps) => {
     setErrors(errorMessage);
   }, [minPrice, maxPrice, setError]);
 
+  const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMinPrice(e.target.value);
+  };
+
+  const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMaxPrice(e.target.value);
+  };
+
   return (
     <div className="flex h-fit w-full flex-col gap-3">
       <div>
@@ -49,7 +57,7 @@ const PriceSection = ({ triggerApi }: PriceSectionProps) => {
             unit="원"
             borderType="white"
             value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
+            onChange={handleMinPriceChange}
             onBlur={triggerApi}
           />
         </div>
@@ -61,7 +69,7 @@ const PriceSection = ({ triggerApi }: PriceSectionProps) => {
             unit="원"
             borderType="white"
             value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
+            onChange={handleMaxPriceChange}
             onBlur={triggerApi}
           />
         </div>

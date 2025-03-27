@@ -57,12 +57,12 @@ public class AuthService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "존재하지 않는 지갑 주소입니다."));
 
         // 서명에서 주소 복원
-//        String recoverAddress = signatureUtil.recoverAddress(request.getSignature(), request.getNonce());
-//
-//        // 서명 검증
-//        if (!request.getWalletAddress().equalsIgnoreCase(recoverAddress)) {
-//            throw new BusinessException(ErrorCode.UNAUTHORIZED, "서명이 일치하지 않습니다.");
-//        }
+        String recoverAddress = signatureUtil.recoverAddress(request.getSignature(), request.getNonce());
+
+        // 서명 검증
+        if (!request.getWalletAddress().equalsIgnoreCase(recoverAddress)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "서명이 일치하지 않습니다.");
+        }
 
         // JWT 토큰 생성
         String accessToken = jwtUtil.createAccessToken(String.valueOf(user.getUserId()));
@@ -89,6 +89,12 @@ public class AuthService {
         userRepository.findByEmail(request.getEmail())
                 .ifPresent(user -> {
                     throw new BusinessException(ErrorCode.ALREADY_EXISTS, "이미 등록된 이메일입니다.");
+                });
+
+        // 이미 존재하는 닉네임인지 확인
+        userRepository.findByNickname(request.getNickname())
+                .ifPresent(user -> {
+                    throw new BusinessException(ErrorCode.ALREADY_EXISTS, "이미 등록된 닉네임입니다.");
                 });
 
         // 이미 존재하는 지갑 주소인지 확인
@@ -129,6 +135,15 @@ public class AuthService {
                 .updatedAt(ZonedDateTime.now())
                 .build()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public CheckNicknameResponseDTO checkNickname(String nickname) {
+        boolean duplicated = userRepository.existsByNickname(nickname);
+
+        return CheckNicknameResponseDTO.builder()
+                .duplicated(duplicated)
+                .build();
     }
 
     @Transactional

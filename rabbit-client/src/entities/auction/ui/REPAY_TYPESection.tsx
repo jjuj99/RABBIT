@@ -2,9 +2,9 @@ import { Checkbox } from "@/shared/ui/checkbox";
 import { useAuctionFilterStore } from "@/shared/lib/store/auctionFilterStore";
 
 const REPAY_TYPE = [
-  { id: "EPIP", label: "원리금 균등 상환" },
-  { id: "EPP", label: "원금 균등 상환" },
-  { id: "BP", label: "만기 일시 상환" },
+  { id: "1", label: "원리금 균등 상환" },
+  { id: "2", label: "원금 균등 상환" },
+  { id: "3", label: "만기 일시 상환" },
 ];
 
 interface REPAY_TYPEProps {
@@ -12,18 +12,14 @@ interface REPAY_TYPEProps {
 }
 
 const REPAY_TYPESection = ({ triggerApi }: REPAY_TYPEProps) => {
-  const paymentTypes = useAuctionFilterStore((state) => state.paymentTypes);
-  const setPaymentTypes = useAuctionFilterStore(
-    (state) => state.setPaymentTypes,
-  );
+  const paymentTypes = useAuctionFilterStore((state) => state.repay_type);
+  const setPaymentTypes = useAuctionFilterStore((state) => state.setRepayType);
 
-  const togglePaymentType = (id: string) => {
-    if (paymentTypes.includes(id)) {
-      setPaymentTypes(paymentTypes.filter((v) => v !== id));
-    } else {
-      setPaymentTypes([...paymentTypes, id]);
-    }
-    triggerApi();
+  const handlePaymentTypeChange = (id: string) => {
+    const newPaymentTypes = paymentTypes.includes(id)
+      ? paymentTypes.filter((v) => v !== id)
+      : [...paymentTypes, id];
+    setPaymentTypes(newPaymentTypes);
   };
 
   return (
@@ -41,7 +37,10 @@ const REPAY_TYPESection = ({ triggerApi }: REPAY_TYPEProps) => {
               <Checkbox
                 checkboxType="default"
                 checked={isChecked}
-                onCheckedChange={() => togglePaymentType(item.id)}
+                onCheckedChange={() => {
+                  handlePaymentTypeChange(item.id);
+                  triggerApi();
+                }}
                 onClick={(e) => e.stopPropagation()}
               />
             </div>

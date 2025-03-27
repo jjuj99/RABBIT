@@ -1,6 +1,7 @@
 package com.rabbit.auction.service;
 
 import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
+import com.rabbit.auction.domain.dto.response.AuctionDetailResponseDTO;
 import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
 import com.rabbit.auction.domain.dto.response.MyAuctionResponseDTO;
 import com.rabbit.auction.repository.AuctionRepository;
@@ -82,6 +83,20 @@ public class AuctionService {
                 .pageNumber(result.getNumber())
                 .pageSize(result.getSize())
                 .totalElements(result.getTotalElements())
+                .build();
+    }
+
+    public AuctionDetailResponseDTO getAuctionDetail(Integer auctionId) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
+
+        //블록체인에서 직접 읽어온 값 추가 필요
+
+        return AuctionDetailResponseDTO.builder()
+                .auctionId(auction.getAuctionId())
+                .price(auction.getPrice())
+                .endDate(auction.getEndDate())
+                .createdAt(auction.getCreatedAt())
                 .build();
     }
 }

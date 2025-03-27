@@ -1,54 +1,46 @@
-import AuctionBidList from "@/features/auction/ui/AuctionBidList";
-import AuctionBidPanel from "@/features/auction/ui/AuctionBidPanel";
+import {
+  getBidListAPI,
+  getPNInfoListAPI,
+} from "@/features/auction/api/auctionApi";
+import AuctionBidList from "@/entities/auction/ui/AuctionBidList";
 import AuctionNFTEventList from "@/features/auction/ui/AuctionNFTEventList";
-import PNInfoList from "@/features/auction/ui/PNInfoList";
+import AuctionBidPanel from "@/entities/auction/ui/AuctionBidPanel";
 import {
   ScrollArea,
   ScrollAreaScrollbar,
   ScrollAreaThumb,
   ScrollAreaViewport,
 } from "@radix-ui/react-scroll-area";
-import { useEffect, useState } from "react";
-
-function CountdownTimer() {
-  const [time, setTime] = useState("10:10:10"); // 초기 시간
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTime((prevTime) => {
-        const [h, m, s] = prevTime.split(":").map(Number);
-        let totalSeconds = h * 3600 + m * 60 + s;
-
-        if (totalSeconds <= 0) {
-          clearInterval(timer);
-          return "00:00:00";
-        }
-
-        totalSeconds -= 1;
-        const newH = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-        const newM = String(Math.floor((totalSeconds % 3600) / 60)).padStart(
-          2,
-          "0",
-        );
-        const newS = String(totalSeconds % 60).padStart(2, "0");
-
-        return `${newH}:${newM}:${newS}`;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer); // 컴포넌트 언마운트 시 정리
-  }, []);
-
-  return (
-    <span className="sm-font-bold text-2xl font-bold sm:text-4xl">{time}</span>
-  );
-}
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router";
+import PNInfoList from "@/entities/auction/ui/PNInfoList";
+import CountdownTimer from "@/shared/ui/CountdownTimer";
 
 const AuctionDetail = () => {
+  const { auctionId } = useParams<{ auctionId: string }>();
+
+  const { data: PNInfo, isLoading: PNInfoLoading } = useQuery({
+    queryKey: ["PNInfoList", auctionId],
+    queryFn: () => getPNInfoListAPI(Number(auctionId)),
+  });
+
+  const { data: bidList, isLoading: bidListLoading } = useQuery({
+    queryKey: ["bidList", auctionId],
+    queryFn: () => getBidListAPI(Number(auctionId)),
+  });
+
+  if (PNInfoLoading || bidListLoading) {
+    return <div>로딩중...</div>;
+  }
+
+  if (!PNInfo?.data || !bidList?.data) {
+    return <div>데이터가 없습니다.</div>;
+  }
+
   return (
     <section className="flex h-full flex-col gap-4">
       <h2 className="font-bit h-fit w-full flex-col gap-4 rounded-xl bg-gray-900 px-4 py-4 text-xl sm:text-3xl">
-        "RABBIT #1"
+        {"RABBIT #" + auctionId}
       </h2>
       <div className="flex w-full flex-col gap-8">
         <div className="flex h-fit w-full flex-col items-center gap-6 lg:flex-row">
@@ -62,15 +54,16 @@ const AuctionDetail = () => {
           </div>
           {/* 오른쪽 영역 */}
           <div className="flex h-full w-full flex-1 flex-col gap-4">
-            <AuctionBidPanel CBP={123123} amount={123132} />
-            <AuctionBidList />
+            <AuctionBidPanel CBP={PNInfo?.data?.price} amount={123132} />
+
+            <AuctionBidList data={bidList?.data || []} />
           </div>
         </div>
 
         <div className="flex h-fit w-full items-center justify-center gap-4 rounded-sm bg-gray-600 py-4 sm:h-[82px]">
           <span className="font-medium sm:text-2xl">경매 종료까지</span>
           <span className="sm-font-bold w-[100px] text-2xl font-bold sm:text-4xl">
-            {CountdownTimer()}
+            <CountdownTimer endDate={PNInfo.data.end_date} />
           </span>
         </div>
         <div className="flex flex-col gap-4 rounded-lg sm:bg-gray-900 sm:p-4 sm:pt-4 sm:pb-6">
@@ -78,14 +71,18 @@ const AuctionDetail = () => {
             차용증 정보
           </h3>
           <div className="flex w-full justify-center">
-            <PNInfoList />
+            {PNInfoLoading ? (
+              <div>로딩중...</div>
+            ) : (
+              PNInfo?.data && <PNInfoList data={PNInfo.data} />
+            )}
           </div>
         </div>
         <div className="flex flex-col gap-4 rounded-lg sm:bg-gray-900 sm:p-4">
           <h3 className="bg-succecss px-3 text-lg font-semibold text-white sm:py-2 sm:text-2xl">
             차용증 기록
           </h3>
-          <ScrollArea className="h-[300px] w-full">
+          <ScrollArea className="h-[300px] w-full md:px-4">
             <ScrollAreaViewport className="h-full w-full">
               <AuctionNFTEventList />
             </ScrollAreaViewport>

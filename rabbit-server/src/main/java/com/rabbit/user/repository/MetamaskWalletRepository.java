@@ -8,5 +8,4 @@ import java.util.Optional;
 public interface MetamaskWalletRepository extends JpaRepository<MetamaskWallet, Integer> {
 
     Optional<MetamaskWallet> findByWalletAddress(String walletAddress);
-
 }

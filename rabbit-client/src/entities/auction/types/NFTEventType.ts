@@ -7,7 +7,7 @@ export type NFTEventType = {
   receiver: string;
   transactionDate: string;
 };
-//타입 만들고 있습니다. column에 들어갈 데이터를 정의하고있어요.
+
 export const columns: ColumnDef<NFTEventType>[] = [
   {
     accessorKey: "transactionType",

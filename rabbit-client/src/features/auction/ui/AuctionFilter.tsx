@@ -1,11 +1,11 @@
 import { useCallback } from "react";
-import { MenubarSeparator } from "@/shared/ui/menubar";
 import IRSection from "@/entities/auction/ui/IRSection";
 import REPAY_TYPESection from "@/entities/auction/ui/REPAY_TYPESection";
 import MAT_DTSection from "@/entities/auction/ui/MAT_DTSection";
 import PriceSection from "@/entities/auction/ui/PriceSection";
 import { useAuctionFilterErrorStore } from "@/shared/lib/store/auctionFilterErrorStore";
 import { cn } from "@/shared/lib/utils";
+import { Separator } from "@/shared/ui/Separator";
 
 interface AuctionFilterProps {
   className?: string;
@@ -36,11 +36,13 @@ const AuctionFilter = ({ className, onFilterChange }: AuctionFilterProps) => {
       )}
     >
       <PriceSection triggerApi={triggerApi} />
-      <MenubarSeparator className="h-[0.2px] bg-white" />
+      <Separator />
       <IRSection triggerApi={triggerApi} />
-      <MenubarSeparator className="h-[0.2px] bg-white" />
+      <Separator />
+
       <REPAY_TYPESection triggerApi={triggerApi} />
-      <MenubarSeparator className="h-[0.2px] bg-white" />
+      <Separator />
+
       <MAT_DTSection triggerApi={triggerApi} />
     </div>
   );

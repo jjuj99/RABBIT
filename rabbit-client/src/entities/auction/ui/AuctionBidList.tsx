@@ -1,4 +1,3 @@
-import { MenubarSeparator } from "@radix-ui/react-menubar";
 import {
   ScrollArea,
   ScrollAreaScrollbar,
@@ -6,6 +5,7 @@ import {
   ScrollAreaViewport,
 } from "@radix-ui/react-scroll-area";
 import { BidListResponse } from "@/features/auction/types/response";
+import { Separator } from "@/shared/ui/Separator";
 
 interface AuctionBidList {
   data: BidListResponse[];
@@ -44,7 +44,7 @@ const AuctionBidList = ({ data }: AuctionBidList) => {
             </div>
             {index < data.length - 1 && (
               <div className="my-4">
-                <MenubarSeparator className="h-[0.2px] bg-white opacity-50" />
+                <Separator />
               </div>
             )}
           </li>

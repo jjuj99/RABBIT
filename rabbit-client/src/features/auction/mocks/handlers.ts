@@ -9,6 +9,13 @@ import {
 } from "../types/response";
 import { mockAuctionList, mockBidList } from "./data";
 
+interface CreateAuctionRequest {
+  minimum_bid: number;
+  end_date: string;
+  token_id: string;
+  seller_sign: string;
+}
+
 const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 const VITE_API_VERSION = import.meta.env.VITE_API_VERSION || "v1";
 
@@ -183,6 +190,119 @@ export const handlers = [
       };
 
       return HttpResponse.json(response, { status: 200 });
+    },
+  ),
+
+  // 경매 생성 API
+  http.post(
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions`,
+    async ({ request }) => {
+      const body = (await request.json()) as CreateAuctionRequest;
+      const { minimum_bid, end_date, token_id, seller_sign } = body;
+
+      // 필수 파라미터 검증
+      if (!minimum_bid || !end_date || !token_id || !seller_sign) {
+        return HttpResponse.json(
+          {
+            status: "ERROR",
+            data: null,
+            error: {
+              statusCode: 400,
+              message: "필수 파라미터가 누락되었습니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      // 최소 입찰가 검증
+      if (minimum_bid <= 0) {
+        return HttpResponse.json(
+          {
+            status: "ERROR",
+            data: null,
+            error: {
+              statusCode: 400,
+              message: "최소 입찰가는 0보다 커야 합니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      // 경매 종료 시간 검증
+      const endDate = new Date(end_date);
+      const now = new Date();
+      if (endDate <= now) {
+        return HttpResponse.json(
+          {
+            status: "ERROR",
+            data: null,
+            error: {
+              statusCode: 400,
+              message: "경매 종료 시간은 현재 시간 이후여야 합니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      // NFT 존재 여부 검증 (임시로 token_id 형식으로 검증)
+      if (!token_id.match(/^0x[a-fA-F0-9]{40}$/)) {
+        return HttpResponse.json(
+          {
+            status: "ERROR",
+            data: null,
+            error: {
+              statusCode: 404,
+              message: "NFT를 찾을 수 없습니다. 올바른 NFT ID를 입력하세요.",
+            },
+          },
+          { status: 404 },
+        );
+      }
+
+      // 권한 검증 (임시로 seller_sign 길이로 검증)
+      if (seller_sign.length < 10) {
+        return HttpResponse.json(
+          {
+            status: "ERROR",
+            data: null,
+            error: {
+              statusCode: 403,
+              message: "해당 NFT에 대한 경매를 생성할 권한이 없습니다.",
+            },
+          },
+          { status: 403 },
+        );
+      }
+
+      // 이미 진행 중인 경매 검증 (임시로 token_id의 마지막 숫자로 검증)
+      if (parseInt(token_id.slice(-1)) % 2 === 0) {
+        return HttpResponse.json(
+          {
+            status: "ERROR",
+            data: null,
+            error: {
+              statusCode: 409,
+              message: "해당 NFT는 이미 경매가 진행 중입니다.",
+            },
+          },
+          { status: 409 },
+        );
+      }
+
+      // 성공 응답
+      return HttpResponse.json(
+        {
+          status: "SUCCESS",
+          data: {
+            message: "경매 등록 성공했습니다.",
+          },
+          error: null,
+        },
+        { status: 201 },
+      );
     },
   ),
 ];

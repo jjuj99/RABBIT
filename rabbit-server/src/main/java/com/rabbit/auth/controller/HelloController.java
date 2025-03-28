@@ -19,7 +19,7 @@ public class HelloController {
         return "Test Jenkins!";
     }
 
-    @GetMapping
+    @GetMapping("/hello")
     public String hello() {
         return "Hello world!";
     }

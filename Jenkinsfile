@@ -5,12 +5,6 @@ pipeline {
         nodejs 'NodeJS'
     }
 
-    environment {
-        EC2_NAME = "ubuntu"
-        EC2_HOST = "j12a604.p.ssafy.io"
-        DEPLOY_SCRIPT_PATH = "/home/ubuntu/rabbit-docker/deploy-rabbit.sh"
-    }
-
     stages {
         stage('Detect Changes') {
             steps {
@@ -101,14 +95,25 @@ pipeline {
                 stage('Docker Build & Push') {
                     steps {
                         dir('rabbit-server') {
-                            sh "docker build -t ${env.BACKEND_IMAGE} ."
-
-                            withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                                sh """
-                                    echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
-                                    docker push ${env.BACKEND_IMAGE}
-                                """
+                            withCredentials([
+                                string(credentialsId: 'docker-backend-image', variable: 'BACKEND_IMAGE'),
+                                usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS'
+                                )]) {
+                                    sh 'docker build -t "\$BACKEND_IMAGE" .'
+                                    sh 'echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin'
+                                    sh 'docker push \$BACKEND_IMAGE'
                             }
+                        }
+                    }
+                }
+
+                stage('Load Deployment Env') {
+                    steps {
+                        withCredentials([file(credentialsId: 'rabbit-server-env', variable: 'DEPLOY_ENV_FILE')]) {
+                            // .env 파일 로드해서 현재 쉘에 export
+                            sh 'set -a && source $DEPLOY_ENV_FILE && set +a'
+
+                            sh 'echo "[FILE] EC2_NAME=$EC2_NAME, EC2_HOST=$EC2_HOST, SCRIPT=$RABBIT_DEPLOY_SCRIPT"'
                         }
                     }
                 }

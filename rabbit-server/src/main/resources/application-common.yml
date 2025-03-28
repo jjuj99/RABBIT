@@ -6,6 +6,7 @@ server:
     context-path: /
     encoding:
       charset: UTF-8
+      enabled: true
       force: true
   tomcat:
     max-swallow-size: -1
@@ -153,6 +154,9 @@ jwt:
   refresh-token-expiration-seconds: 2419200
   access-token-refresh-threshold: 300000
   secret: ${JWT_SECRET}
+
+toss:
+  secret: ${TOSS_SECRET}
 
 # 파일 설정
 app:

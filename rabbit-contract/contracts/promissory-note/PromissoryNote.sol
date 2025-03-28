@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "./interfaces/IPromissoryNote.sol";
+import "./interfaces/IRepaymentScheduler.sol";
 import "../rabbit-coin/interfaces/ICustomERC20.sol";
 
 contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
@@ -15,14 +16,28 @@ contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
 
     mapping(uint256 => PromissoryMetadata) private tokenIdToMetadata; // IPromissoryNote의의 PromissoryMetadata 구조체 사용
     mapping(address => uint256) private nonces; // 트랜잭션 재사용 방지를 위한 논스
+    mapping(address => bool) private burnAuthorizedAddresses; // 소각 권한이 있는 주소 저장
 
     address public rabbitCoinAddress;
+    address public repaymentSchedulerAddress;
 
     bytes32 public constant TRANSFER_TYPEHASH = keccak256("Transfer(address from,address to,uint256 amount,uint256 nonce,uint256 deadline)");
 
     constructor(address _rabbitCoinAddress) ERC721("PromissoryNote", "PNFT") EIP712("PromissoryNote", "1") Ownable(msg.sender) {
         tokenIdCounter = 1;
         rabbitCoinAddress = _rabbitCoinAddress;
+    }
+
+    // RAB 토큰 주소 업데이트 함수
+    function setRabbitCoinAddress(address _rabbitCoinAddress) external onlyOwner {
+        require(_rabbitCoinAddress != address(0), "Invalid token address");
+        rabbitCoinAddress = _rabbitCoinAddress;
+    }
+
+    // RepaymentScheduler 주소 업데이트 함수 (RepaymentScheduler 생성 시 호출)
+    function setRepaymentSchedulerAddress(address _repaymentSchedulerAddress) external onlyOwner {
+        require(_repaymentSchedulerAddress != address(0), "Invalid address");
+        repaymentSchedulerAddress = _repaymentSchedulerAddress;
     }
 
     function _tokenExists(uint256 tokenId) internal view returns (bool) {
@@ -34,13 +49,19 @@ contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
         return nonces[user];
     }
 
-    // RAB 토큰 주소 업데이트 함수
-    function setRabbitCoinAddress(address _rabbitCoinAddress) external onlyOwner {
-        require(_rabbitCoinAddress != address(0), "Invalid token address");
-        rabbitCoinAddress = _rabbitCoinAddress;
+    // 메시지 해시 생성 (이체용)
+    function getTransferMessageHash(
+        address from,      // 채권자 (송금자)
+        address to,        // 채무자 (수신자)
+        uint256 amount,    // 이체 금액
+        uint256 nonce,     // 논스
+        uint256 deadline   // 유효기간
+    ) public view returns (bytes32) {
+        bytes32 structHash = keccak256(abi.encode(TRANSFER_TYPEHASH, from, to, amount, nonce, deadline));
+        return _hashTypedDataV4(structHash);
     }
 
-    // 메시지 서명으로 차용증 발행 및 코인 이체
+    // NFT 발행 함수
     function mintPromissoryNoteWithSignature(
         PromissoryMetadata memory metadata,
         bytes memory creditorSignature,
@@ -84,16 +105,51 @@ contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
         return newTokenId;
     }
 
-    // 메시지 해시 생성 (이체용)
-    function getTransferMessageHash(
-        address from,      // 채권자 (송금자)
-        address to,        // 채무자 (수신자)
-        uint256 amount,    // 이체 금액
-        uint256 nonce,     // 논스
-        uint256 deadline   // 유효기간
-    ) public view returns (bytes32) {
-        bytes32 structHash = keccak256(abi.encode(TRANSFER_TYPEHASH, from, to, amount, nonce, deadline));
-        return _hashTypedDataV4(structHash);
+    // 소각 권한이 있는 주소 추가 (RepaymentScheduler 등록용)
+    function addBurnAuthorizedAddress(address _address) external onlyOwner {
+        require(_address != address(0), "Invalid address");
+        burnAuthorizedAddresses[_address] = true;
+    }
+
+    // 소각 권한이 있는 주소 제거
+    function removeBurnAuthorizedAddress(address _address) external onlyOwner {
+        burnAuthorizedAddresses[_address] = false;
+    }
+
+    // 소각 권한 확인 함수
+    function isBurnAuthorized(address _address) external view returns (bool) {
+        return burnAuthorizedAddresses[_address];
+    }
+
+    // NFT 소각 함수 - 채권자(NFT 소유자)가 직접 소각하는 경우
+    function burnByOwner(uint256 tokenId) external {
+        require(_tokenExists(tokenId), "Token does not exist");
+        require(ownerOf(tokenId) == msg.sender, "Only token owner can burn");
+        
+        _burn(tokenId);
+        delete tokenIdToMetadata[tokenId];
+
+        if (repaymentSchedulerAddress != address(0)) {
+            IRepaymentScheduler(repaymentSchedulerAddress).cleanupRepaymentData(tokenId);
+        }
+
+        emit PromissoryNoteBurned(tokenId);
+    }
+
+    // NFT 소각 함수 - 상환 완료 시 시스템(RepaymentScheduler)에서 소각하는 경우
+    function burn(uint256 tokenId) external {
+        require(_tokenExists(tokenId), "Token does not exist");
+        
+        // 컨트랙트 오너 또는 권한이 부여된 주소(RepaymentScheduler)만 소각 가능
+        require(
+            owner() == msg.sender || 
+            burnAuthorizedAddresses[msg.sender], 
+            "Not authorized to burn this token"
+        );
+        
+        _burn(tokenId);
+        delete tokenIdToMetadata[tokenId];
+        emit PromissoryNoteBurned(tokenId);
     }
 
     // 차용증 메타데이터 원본 구조체 반환 - 프로그래밍 방식 처리용

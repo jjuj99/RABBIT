@@ -5,10 +5,6 @@ pipeline {
         nodejs 'NodeJS'
     }
 
-    environment {
-        BACKEND_IMAGE = 'yueonq/rabbit-server:latest'
-    }
-
     stages {
         stage('Detect Changes') {
             steps {
@@ -99,26 +95,39 @@ pipeline {
                 stage('Docker Build & Push') {
                     steps {
                         dir('rabbit-server') {
-                            sh "docker build -t ${env.BACKEND_IMAGE} ."
-
-                            withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                                sh """
-                                    echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
-                                    docker push ${env.BACKEND_IMAGE}
-                                """
+                            withCredentials([
+                                string(credentialsId: 'docker-backend-image', variable: 'BACKEND_IMAGE'),
+                                usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS'
+                                )]) {
+                                    sh 'docker build -t "\$BACKEND_IMAGE" .'
+                                    sh 'echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin'
+                                    sh 'docker push \$BACKEND_IMAGE'
                             }
                         }
                     }
                 }
 
-                stage('Restart Rabbit Server (compose based)') {
+                stage('Load Deployment Env') {
                     steps {
-                        sh "docker pull ${env.BACKEND_IMAGE}"
-                        sh "docker stop rabbit-server || true"
-                        sh "docker rm rabbit-server || true"
+                        withCredentials([file(credentialsId: 'rabbit-server-env', variable: 'DEPLOY_ENV_FILE')]) {
+                            // .env 파일 로드해서 현재 쉘에 export
+                            sh 'set -a && source $DEPLOY_ENV_FILE && set +a'
 
-                        dir('/home/ubuntu/rabbit-docker') {
-                            sh "docker compose up -d rabbit-server"
+                            sh 'echo "[FILE] EC2_NAME=$EC2_NAME, EC2_HOST=$EC2_HOST, SCRIPT=$RABBIT_DEPLOY_SCRIPT"'
+                        }
+                    }
+                }
+
+                stage ('Deploy to S3 & Restart Rabbit Server') {
+                    steps {
+                        sshagent(credentials: ['rabbit-ec2-key']) {
+                            sh """
+                                echo '[JENKINS] EC2에 원격 접속하여 배포 스크립트를 실행합니다...'
+
+                                ssh -o StrictHostKeyChecking=no ${EC2_NAME}@${EC2_HOST} '
+                                    bash ${DEPLOY_SCRIPT_PATH}
+                                '
+                            """
                         }
                     }
                 }

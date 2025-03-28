@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../libs/BokkyPooBahsDateTimeLibrary.sol";
 import "./interfaces/IPromissoryNote.sol";
+import "./interfaces/IRepaymentScheduler.sol";
 import "../rabbit-coin/interfaces/ICustomERC20.sol";
 
 /**
@@ -13,25 +14,7 @@ import "../rabbit-coin/interfaces/ICustomERC20.sol";
  * @dev 차용증 NFT의 자동 이자 상환을 관리하는 컨트랙트
  * Chainlink Keeper와 통합하여 정해진 시간에 자동으로 상환을 처리
  */
-contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
-
-    enum RepaymentType { EPIP, EPP, BP } // 원리금균등상환, 원금균등상환, 만기일시상환
-
-    // 상환 정보 구조체
-    struct RepaymentInfo {
-        uint256 tokenId;            // 차용증 NFT 토큰 ID
-        uint256 initialPrincipal;   // 초기 원금
-        uint256 remainingPrincipal; // 남은 원금
-        uint256 ir;                 // 연이자율 (1% = 100)  
-        uint256 mpDt;               // 월 납부일
-        uint256 nextMpDt;           // 다음 납부일
-        uint256 totalPayments;      // 총 납부 횟수
-        uint256 remainingPayments;  // 남은 납부 횟수
-        uint256 fixedPaymentAmount; // EPIP 시 고정 납부액
-        RepaymentType repayType;    // 상환 방식
-        address drWalletAddress;    // 채무자 주소
-        bool activeFlag;            // 활성 상태 여부
-    }
+contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibleInterface {
 
     address public promissoryNoteAddress;
     address public rabbitCoinAddress;
@@ -41,33 +24,25 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
     
     // 활성화된 상환 목록 (Chainlink Keeper가 확인할 목록)
     uint256[] public activeRepayments;
-
-    event RepaymentScheduleCreated(uint256 tokenId, uint256 remainingPrincipal, uint256 nextMpDt);
-    event RepaymentProcessed(uint256 tokenId, uint256 amount, uint256 remainingPrincipal, uint256 nextMpDt);
-    event RepaymentCompleted(uint256 tokenId);
     
     constructor(address _promissoryNoteAddress, address _rabbitCoinAddress) Ownable(msg.sender) {
         promissoryNoteAddress = _promissoryNoteAddress;
         rabbitCoinAddress = _rabbitCoinAddress;
     }
-    
-    /**
-     * @dev 차용증 NFT 생성 후 상환 일정 등록
-     * @param tokenId 차용증 NFT 토큰 ID
-     */
+
+    // 차용증 NFT 생성 후 상환 일정 등록
     function registerRepaymentSchedule(uint256 tokenId) external onlyOwner {
         // 차용증 NFT 컨트랙트에서 메타데이터 조회
         IPromissoryNote promissoryNote = IPromissoryNote(promissoryNoteAddress);
         IPromissoryNote.PromissoryMetadata memory metadata = promissoryNote.getPromissoryMetadata(tokenId);
         
-        // 상환 방식 결정
         RepaymentType repayType;
         if (keccak256(bytes(metadata.repayType)) == keccak256(bytes("EPIP"))) {
-            repayType = RepaymentType.EPIP; // 원리금 균등 상환
+            repayType = RepaymentType.EPIP;
         } else if (keccak256(bytes(metadata.repayType)) == keccak256(bytes("EPP"))) {
-            repayType = RepaymentType.EPP;  // 원금 균등 상환
+            repayType = RepaymentType.EPP;
         } else if (keccak256(bytes(metadata.repayType)) == keccak256(bytes("BP"))){
-            repayType = RepaymentType.BP;   // 만기 일시 상환
+            repayType = RepaymentType.BP;
         }
         
         uint256 nextPaymentDate = calculateNextPaymentDate(metadata.mpDt);
@@ -100,11 +75,7 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
         emit RepaymentScheduleCreated(tokenId, metadata.la, nextPaymentDate);
     }
     
-    /**
-     * @dev Chainlink Keeper checkUpkeep 함수 - 납부일이 도래한 상환건 확인
-     * @return upkeepNeeded 상환 처리 필요 여부
-     * @return performData 처리할 토큰 ID 목록 (바이트 형태)
-     */
+    // Chainlink Keeper checkUpkeep 함수 - 납부일이 도래한 상환건 확인
     function checkUpkeep(bytes calldata) 
         external 
         view 
@@ -138,10 +109,7 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
         return (count > 0, performData);
     }
     
-    /**
-     * @dev Chainlink Keeper performUpkeep 함수 - 상환 처리 실행
-     * @param performData 처리할 토큰 ID 목록 (바이트 형태)
-     */
+    // Chainlink Keeper performUpkeep 함수 - 상환 처리 실행
     function performUpkeep(bytes calldata performData) external override {
         uint256[] memory tokensToProcess = abi.decode(performData, (uint256[]));
         
@@ -150,10 +118,7 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
         }
     }
     
-    /**
-     * @dev 상환 처리 함수
-     * @param tokenId 처리할 차용증 NFT 토큰 ID
-     */
+    // 상환 처리 함수
     function processRepayment(uint256 tokenId) public {
         RepaymentInfo storage info = repaymentSchedules[tokenId];
         require(info.activeFlag, "Repayment is not active");
@@ -182,10 +147,15 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
             paymentAmount = calculatePaymentAmount(info);
         }
 
-        
-        // 자금 이체 (채무자 -> 채권자)
         ICustomERC20 rabCoin = ICustomERC20(rabbitCoinAddress);
         
+        // 채무자 잔액 부족 시 이벤트 발행
+        if (rabCoin.balanceOf(info.drWalletAddress) < paymentAmount) {
+            emit InsufficientBalance(tokenId, info.drWalletAddress, paymentAmount, rabCoin.balanceOf(info.drWalletAddress));
+            return; // 함수 종료, 트랜잭션은 성공으로 처리됨
+        }
+
+        // 자금 이체 (채무자 -> 채권자)
         bool transferSuccess = rabCoin.transferFrom(
             info.drWalletAddress,
             currentOwner,
@@ -193,7 +163,7 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
         );
         
         require(transferSuccess, "RAB token transfer failed");
-        
+
         // 남은 원금 업데이트
         // 마지막 납부일인 경우 원금을 0으로 설정
         if (info.remainingPayments == 1) { 
@@ -211,22 +181,21 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
         
         // 남은 납부 횟수 감소
         info.remainingPayments--;
-        
-        // 다음 납부일 업데이트
-        info.nextMpDt = calculateNextPaymentDateFromCurrent(info.nextMpDt, info.mpDt);
+
+        // 마지막 납부가 아닌 경우에만 다음 납부일 업데이트
+        if (info.remainingPayments > 0) {
+            info.nextMpDt = calculateNextPaymentDateFromCurrent(info.nextMpDt, info.mpDt);
+        }
         
         emit RepaymentProcessed(tokenId, paymentAmount, info.remainingPrincipal, info.nextMpDt);
         
-        // 상환 완료 여부 확인
+        // 상환 완료 NFT 처리
         if (info.remainingPrincipal == 0 || info.remainingPayments == 0) {
             completeRepayment(tokenId);
         }
     }
     
-    /**
-     * @dev 상환 완료 처리 함수
-     * @param tokenId 완료 처리할 차용증 NFT 토큰 ID
-     */
+    // 상환 완료 처리 함수
     function completeRepayment(uint256 tokenId) internal {
         // 상환 정보 비활성화
         repaymentSchedules[tokenId].activeFlag = false;
@@ -234,19 +203,34 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
         // 활성 상환 목록에서 제거
         removeFromActiveRepayments(tokenId);
         
-        // NFT 소각
-        IPromissoryNote promissoryNote = IPromissoryNote(promissoryNoteAddress);
-        
-        // 소각 로직 여기에 추가 (NFT 컨트랙트에 burn 함수가 있다고 가정)
-        // promissoryNote.burn(tokenId);
-        
-        emit RepaymentCompleted(tokenId);
+        // NFT 소각 (실패하면 오류 발생 - 권한이 없거나 NFT가 이미 소각된 경우)
+        try IPromissoryNote(promissoryNoteAddress).burn(tokenId) {
+            emit RepaymentCompleted(tokenId);
+        } catch Error(string memory reason) {
+            emit RepaymentCompleted(tokenId);
+            emit BurnFailed(tokenId, reason);
+        } catch {
+            emit RepaymentCompleted(tokenId);
+            emit BurnFailed(tokenId, "Unknown error");
+        }
+    }
+
+    // 상환 관련 데이터 정리 함수 (채권자가 직접 NFT를 소각한 경우)
+    function cleanupRepaymentData(uint256 tokenId) external {
+        // NFT가 이미 소각되었는지 확인
+        try IPromissoryNote(promissoryNoteAddress).ownerOf(tokenId) returns (address) {
+            revert("NFT still exists");
+        } catch {
+            // NFT가 소각된 경우 상환 관련 데이터 정리
+            if (repaymentSchedules[tokenId].activeFlag) {
+                repaymentSchedules[tokenId].activeFlag = false;
+                removeFromActiveRepayments(tokenId);
+                emit RepaymentCompleted(tokenId);
+            }
+        }
     }
     
-    /**
-     * @dev 활성 상환 목록에서 토큰 ID 제거
-     * @param tokenId 제거할 토큰 ID
-     */
+    // 활성 상환 목록에서 토큰 ID 제거
     function removeFromActiveRepayments(uint256 tokenId) internal {
         uint256 length = activeRepayments.length;
         uint256 index = length;
@@ -267,11 +251,7 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
         }
     }
     
-    /**
-     * @dev 상환 금액 계산 함수
-     * @param info 상환 정보 구조체
-     * @return 이번 회차 상환 금액
-     */
+    // 상환 금액 계산 함수
     function calculatePaymentAmount(RepaymentInfo memory info) internal pure returns (uint256) {
         // 원리금 균등 상환 (PMT 공식)
         if (info.repayType == RepaymentType.EPIP) {
@@ -293,6 +273,7 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
         return 0;
     }
 
+    // PMT 계산 함수
     function calculateFixedPaymentForEPIP(
         uint256 principal, 
         uint256 annualRate, 
@@ -307,9 +288,7 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
         return numerator / denominator;
     }
 
-    /**
-    * @dev 지수 계산 함수 (base^exponent)
-    */
+    // 지수 계산 함수
     function calculatePower(uint256 base, uint256 exponent, uint256 precision) internal pure returns (uint256) {
         if (exponent == 0) {
             return precision;
@@ -326,21 +305,12 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
         return result;
     }
     
-    /**
-     * @dev 이자 금액 계산 함수
-     * @param info 상환 정보 구조체
-     * @return 이번 회차 이자 금액
-     */
+     // 이자 금액 계산 함수
     function calculateInterestAmount(RepaymentInfo memory info) internal pure returns (uint256) {
-        // 월 이자 = 남은 원금 * 연이자율 / 12
         return (info.remainingPrincipal * info.ir) / (12 * 10000);
     }
     
-    /**
-    * @dev 다음 납부일 계산 함수 (초기 등록용)
-    * @param dayOfMonth 매월 납부일
-    * @return 다음 납부일 타임스탬프
-    */
+    // 다음 납부일 계산 함수 (초기 등록용)
     function calculateNextPaymentDate(uint256 dayOfMonth) internal view returns (uint256) {
         require(dayOfMonth > 0 && dayOfMonth <= 31, "Invalid day of month");
         
@@ -373,12 +343,7 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
         return BokkyPooBahsDateTimeLibrary.timestampFromDate(nextYear, nextMonth, validDay);
     }
 
-    /**
-    * @dev 현재 납부일로부터 다음 납부일 계산 함수
-    * @param currentPaymentDate 현재 납부일 타임스탬프
-    * @param dayOfMonth 매월 납부일
-    * @return 다음 납부일 타임스탬프
-    */
+    // 현재 납부일로부터 다음 납부일 계산 함수
     function calculateNextPaymentDateFromCurrent(uint256 currentPaymentDate, uint256 dayOfMonth) internal pure returns (uint256) {
         require(dayOfMonth > 0 && dayOfMonth <= 31, "Invalid day of month");
         
@@ -406,30 +371,17 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
         return BokkyPooBahsDateTimeLibrary.timestampFromDate(nextYear, nextMonth, validDay);
     }
     
-    /**
-     * @dev 상환 정보 조회 함수
-     * @param tokenId 조회할 토큰 ID
-     * @return 상환 정보
-     */
+    // 상환 정보 조회 함수
     function getRepaymentInfo(uint256 tokenId) external view returns (RepaymentInfo memory) {
         return repaymentSchedules[tokenId];
     }
     
-    /**
-     * @dev 활성화된 상환 목록 조회 함수
-     * @return 활성화된 상환 목록 (토큰 ID 배열)
-     */
+    // 활성화된 상환 목록 조회 함수
     function getActiveRepayments() external view returns (uint256[] memory) {
         return activeRepayments;
     }
     
-    /**
-     * @dev 상환 정보 수동 업데이트 함수 (관리자 전용)
-     * @param tokenId 업데이트할 토큰 ID
-     * @param remainingPrincipal 변경한 남은 원금
-     * @param remainingPayments 변경한 남은 납부 횟수
-     * @param nextPaymentDate 변경한 다음 납부일
-     */
+    // 상환 정보 수동 업데이트 함수 (관리자 전용)
     function updateRepaymentInfo(
         uint256 tokenId, 
         uint256 remainingPrincipal, 
@@ -446,11 +398,7 @@ contract RepaymentScheduler is Ownable, AutomationCompatibleInterface {
         emit RepaymentScheduleCreated(tokenId, remainingPrincipal, nextPaymentDate);
     }
     
-    /**
-     * @dev 컨트랙트 주소 업데이트 함수 (관리자 전용)
-     * @param _promissoryNoteAddress 새 차용증 NFT 컨트랙트 주소
-     * @param _rabbitCoinAddress 새 RABBIT 코인 컨트랙트 주소
-     */
+    // 컨트랙트 주소 업데이트 함수 (관리자 전용)
     function updateContractAddresses(address _promissoryNoteAddress, address _rabbitCoinAddress) external onlyOwner {
         promissoryNoteAddress = _promissoryNoteAddress;
         rabbitCoinAddress = _rabbitCoinAddress;

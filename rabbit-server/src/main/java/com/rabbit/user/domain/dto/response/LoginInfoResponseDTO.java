@@ -1,10 +1,7 @@
 package com.rabbit.user.domain.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Schema(description = "로그인한 회원 간단 정보 DTO")
 @Data

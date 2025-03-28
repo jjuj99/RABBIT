@@ -40,7 +40,7 @@ const AuctionBidPanel = ({ CBP = 0, amount = 0 }: AuctionBidPanelProps) => {
       <div className="flex flex-col gap-0 sm:gap-2">
         <h2 className="text-sm font-medium sm:text-xl">현재 입찰가</h2>
         <div>
-          <span className="font-partial text-brand-gradient text-2xl sm:text-4xl">
+          <span className="font-partial text-brand-gradient text-lg sm:text-4xl">
             {CBP.toLocaleString()}
           </span>
           <span className="font-pixel text-brand-gradient text px-1 sm:text-2xl">

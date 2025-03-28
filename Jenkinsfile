@@ -119,12 +119,12 @@ pipeline {
                                 def props = readProperties file: env.DEPLOY_ENV_FILE
                                 env.EC2_NAME = props.EC2_NAME
                                 env.EC2_HOST = props.EC2_HOST
-                                env.DEPLOY_SCRIPT_PATH = props.DEPLOY_SCRIPT_PATH
+                                env.RABBIT_DEPLOY_SCRITP = props.RABBIT_DEPLOY_SCRITP
                             }
                             echo "[FILE] env 파일을 설정했습니다..."
                             echo "[FILE] Debug - EC2_NAME: ${env.EC2_NAME}"
                             echo "[FILE] Debug - EC2_HOST: ${env.EC2_HOST}"
-                            echo "[FILE] Debug - DEPLOY_SCRIPT_PATH: ${env.DEPLOY_SCRIPT_PATH}"
+                            echo "[FILE] Debug - DEPLOY_SCRIPT_PATH: ${env.RABBIT_DEPLOY_SCRITP}"
                         }
                     }
                 }
@@ -133,7 +133,7 @@ pipeline {
                     steps {
                         sshagent(credentials: ['rabbit-ec2-key']) {
                             sh 'echo "[SERVER] EC2에 원격 접속하여 배포 스크립트를 실행합니다..."'
-                            sh "ssh -o StrictHostKeyChecking=no ${env.EC2_NAME}@${env.EC2_HOST} 'bash ${env.DEPLOY_SCRIPT_PATH}'"
+                            sh "ssh -o StrictHostKeyChecking=no ${env.EC2_NAME}@${env.EC2_HOST} 'bash ${env.RABBIT_DEPLOY_SCRITP}'"
                         }
                     }
                 }

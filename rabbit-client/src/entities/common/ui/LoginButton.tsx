@@ -39,6 +39,7 @@ const LoginButton = () => {
 
     // 1. 메타마스크 설치 여부 체크 - 없으면 예외 처리 toast 띄우기
     if (!isInstalled) {
+      setIsLoading(false);
       return;
     }
 

@@ -2,7 +2,10 @@ package com.rabbit.auth.domain.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Schema(description = "회원가입 요청 DTO")
 @Data

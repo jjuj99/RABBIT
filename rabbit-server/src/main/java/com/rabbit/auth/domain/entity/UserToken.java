@@ -1,8 +1,13 @@
 package com.rabbit.auth.domain.entity;
 
 import com.rabbit.user.domain.entity.User;
+
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.Getter;
 
 import java.time.ZonedDateTime;
 

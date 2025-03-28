@@ -6,7 +6,9 @@ pipeline {
     }
 
     environment {
-        BACKEND_IMAGE = 'yueonq/rabbit-server:latest'
+        EC2_NAME = "ubuntu"
+        EC2_HOST = "j12a604.p.ssafy.io"
+        DEPLOY_SCRIPT_PATH = "/home/ubuntu/rabbit-docker/deploy-rabbit.sh"
     }
 
     stages {
@@ -111,14 +113,16 @@ pipeline {
                     }
                 }
 
-                stage('Restart Rabbit Server (compose based)') {
+                stage ('Deploy to S3 & Restart Rabbit Server') {
                     steps {
-                        sh "docker pull ${env.BACKEND_IMAGE}"
-                        sh "docker stop rabbit-server || true"
-                        sh "docker rm rabbit-server || true"
+                        sshagent(credentials: ['rabbit-ec2-key']) {
+                            sh """
+                                echo '[JENKINS] EC2에 원격 접속하여 배포 스크립트를 실행합니다...'
 
-                        dir('/home/ubuntu/rabbit-docker') {
-                            sh "docker compose up -d rabbit-server"
+                                ssh -o StrictHostKeyChecking=no ${EC2_NAME}@${EC2_HOST} '
+                                    bash ${DEPLOY_SCRIPT_PATH}
+                                '
+                            """
                         }
                     }
                 }

@@ -36,6 +36,9 @@ interface IRepaymentScheduler {
     // NFT 소각 실패 이벤트
     event BurnFailed(uint256 tokenId, string reason);
 
+    // 채무자 잔액 부족 이벤트
+    event InsufficientBalance(uint256 tokenId, address debtor, uint256 requiredAmount, uint256 currentBalance);
+
     /**
      * @dev 차용증 NFT 생성 후 상환 일정 등록
      * @param tokenId 차용증 NFT 토큰 ID

@@ -93,15 +93,21 @@ pipeline {
                 }
 
                 stage('Docker Build & Push') {
+                    agent {
+                        docker {
+                            image 'docker:dind'
+                            args '-v /var/run/docker.sock:/var/run/docker.sock'
+                        }
+                    }
                     steps {
                         dir('rabbit-server') {
-                            withCredentials([
-                                string(credentialsId: 'docker-backend-image', variable: 'BACKEND_IMAGE'),
-                                usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS'
-                                )]) {
-                                    sh 'docker build -t "\$BACKEND_IMAGE" .'
-                                    sh 'echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin'
-                                    sh 'docker push \$BACKEND_IMAGE'
+                            withCredentials([string(credentialsId: 'docker-backend-image', variable: 'BACKEND_IMAGE')]) {  
+                                script {
+                                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-creds') {
+                                        def image = docker.build(BACKEND_IMAGE)
+                                        image.push()
+                                    }
+                                }   
                             }
                         }
                     }
@@ -110,10 +116,14 @@ pipeline {
                 stage('Load Deployment Env') {
                     steps {
                         withCredentials([file(credentialsId: 'rabbit-server-env', variable: 'DEPLOY_ENV_FILE')]) {
-                            // .env 파일 로드해서 현재 쉘에 export
-                            sh 'set -a && source $DEPLOY_ENV_FILE && set +a'
-
-                            sh 'echo "[FILE] EC2_NAME=$EC2_NAME, EC2_HOST=$EC2_HOST, SCRIPT=$RABBIT_DEPLOY_SCRIPT"'
+                            // env 파일에서 필요한 변수들을 Jenkins 환경 변수로 설정
+                            script {
+                                def props = readProperties file: env.DEPLOY_ENV_FILE
+                                env.EC2_NAME = props.EC2_NAME
+                                env.EC2_HOST = props.EC2_HOST
+                                env.RABBIT_DEPLOY_SCRIPT = props.RABBIT_DEPLOY_SCRIPT
+                            }
+                            sh '[FILE] env 파일을 설정했습니다...'
                         }
                     }
                 }
@@ -121,13 +131,8 @@ pipeline {
                 stage ('Deploy to S3 & Restart Rabbit Server') {
                     steps {
                         sshagent(credentials: ['rabbit-ec2-key']) {
-                            sh """
-                                echo '[JENKINS] EC2에 원격 접속하여 배포 스크립트를 실행합니다...'
-
-                                ssh -o StrictHostKeyChecking=no ${EC2_NAME}@${EC2_HOST} '
-                                    bash ${DEPLOY_SCRIPT_PATH}
-                                '
-                            """
+                            sh 'echo "[SERVER] EC2에 원격 접속하여 배포 스크립트를 실행합니다..."'
+                            sh "ssh -o StrictHostKeyChecking=no ${env.EC2_NAME}@${env.EC2_HOST} 'bash ${env.RABBIT_DEPLOY_SCRIPT}'"
                         }
                     }
                 }

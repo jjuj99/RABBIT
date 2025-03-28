@@ -37,8 +37,7 @@ export const GetNonceAPI = async (
     `${VITE_API_URL}/${VITE_API_VERSION}/auth/nonce`,
     fetchOption("POST", { walletAddress }, "access"),
   );
-  const data = await res.json();
-  return data;
+  return await res.json();
 };
 export const LoginAPI = async ({
   walletAddress,

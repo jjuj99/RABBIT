@@ -1,8 +1,9 @@
 import { useAuthUser } from "@/entities/auth/hooks/useAuth";
+import { LoginButton } from "@/entities/common";
 
 import AlarmButton from "@/entities/common/ui/AlramButton";
-import LoginButton from "@/entities/common/ui/LoginButton";
 import RabbitButton from "@/entities/common/ui/RabbitButton";
+
 import MainNav from "@/features/common/ui/MainNav";
 import { Link } from "react-router";
 

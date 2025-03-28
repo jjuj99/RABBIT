@@ -1,20 +1,21 @@
-import { Route, Routes } from "react-router";
+import SubNav from "@/features/common/ui/SubNav";
+import { NotFound } from "@/pages/common";
+import useMediaQuery from "@/shared/hooks/useMediaQuery";
+import Header from "@/widget/common/ui/Header";
 import { lazy, Suspense } from "react";
+import { Route, Routes } from "react-router";
 import {
-  LoanRoutes,
+  AccountRoutes,
   AuctionRoutes,
   ContractRoutes,
-  AccountRoutes,
+  LoanRoutes,
 } from "./routes";
-import { NotFound } from "@/pages/common";
-import Header from "@/widget/common/ui/Header";
-import useMediaQuery from "@/shared/hooks/useMediaQuery";
-import SubNav from "@/features/common/ui/SubNav";
 
 const Home = lazy(() => import("@/pages/common/ui/Home"));
 
 function App() {
   const isDesktop = useMediaQuery("md");
+
   return (
     <div className="mx-auto max-w-[1440px] px-4 pb-20 sm:px-8">
       {isDesktop && <Header />}

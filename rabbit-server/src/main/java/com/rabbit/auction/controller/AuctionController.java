@@ -2,6 +2,7 @@ package com.rabbit.auction.controller;
 
 import com.rabbit.auction.controller.swagger.AuctionControllerSwagger;
 import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
+import com.rabbit.auction.domain.dto.response.AuctionDetailResponseDTO;
 import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
 import com.rabbit.auction.domain.dto.response.MyAuctionResponseDTO;
 import com.rabbit.auction.service.AuctionService;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
 @RestController
@@ -88,6 +90,7 @@ public class AuctionController {
         return  ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("경매가 취소되었습니다.")));
     }
 
+    @AuctionControllerSwagger.GetMyBidAuctionsApi
     @GetMapping("/my-bids")
     public ResponseEntity<CustomApiResponse<?>> getMyBidAuctions(@Valid PageRequestDTO pageRequest) {
         Integer userId = 4;
@@ -97,5 +100,15 @@ public class AuctionController {
         PageResponseDTO<MyAuctionResponseDTO> myBidList = auctionService.getMyBidAuctions(userId, pageable);
 
         return ResponseEntity.ok(CustomApiResponse.success(myBidList));
+    }
+
+    @AuctionControllerSwagger.GetAuctionDetailApi
+    @GetMapping("/{auctionId}")
+    public ResponseEntity<CustomApiResponse<AuctionDetailResponseDTO>> getAuctionDetail(
+            @PathVariable("auctionId") Integer auctionId) {
+
+        AuctionDetailResponseDTO auctionDetailResponse = auctionService.getAuctionDetail(auctionId);
+
+        return ResponseEntity.ok(CustomApiResponse.success(auctionDetailResponse));
     }
 }

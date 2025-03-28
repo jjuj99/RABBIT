@@ -9,4 +9,5 @@ public interface MetamaskWalletRepository extends JpaRepository<MetamaskWallet, 
 
     Optional<MetamaskWallet> findByWalletAddress(String walletAddress);
 
+    Optional<MetamaskWallet> findByUserUserIdAndPrimaryFlagTrue(Integer userId);
 }

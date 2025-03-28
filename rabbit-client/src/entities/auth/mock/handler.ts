@@ -32,12 +32,10 @@ export const authHandlers = [
     `${VITE_API_URL}/${VITE_API_VERSION}/auth/login`,
     async ({ request }) => {
       const body = (await request.json()) as LoginRequest;
-      console.log(
-        body.walletAddress === "0x8c30721af30c6f7508303055c20afe73fca5dd26",
-      );
       if (
         body.walletAddress == "0x35107a4c13d49bae2850c76d259e52808df0fa3c" ||
-        body.walletAddress == "0x8c30721af30c6f7508303055c20afe73fca5dd26"
+        body.walletAddress == "0x8c30721af30c6f7508303055c20afe73fca5dd26" ||
+        body.walletAddress == "0xe7aca373766503357a1a8e84b1c3f71706e4d4f6"
       ) {
         const response: ApiResponse<LoginResponse> = {
           status: "SUCCESS",

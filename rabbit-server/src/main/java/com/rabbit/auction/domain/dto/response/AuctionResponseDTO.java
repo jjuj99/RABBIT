@@ -22,6 +22,7 @@ public class AuctionResponseDTO {
     private Long totalAmount;             // 만기수취액
     private ZonedDateTime matDt;     // 만기일
     private BigDecimal dir;          // 연체 이자율
+    private Long la;    //원금
     private Boolean earlypayFlag;   // 중도상환 가능 여부
     private BigDecimal earlypayFee;  // 중도 상환 수수료
     private Integer creditScore;     // 신용점수

@@ -25,7 +25,7 @@ public class BidService {
     @Transactional
     public void addBid(@Valid BidRequestDTO bidRequest, Integer auctionId, Integer userId) {
         // 경매 존재하는지 확인
-        Auction auction = auctionRepository.findById(auctionId)
+        Auction auction = auctionRepository.findByIdForUpdate(auctionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
 
         // 경매가 마감되지 않았는지 확인

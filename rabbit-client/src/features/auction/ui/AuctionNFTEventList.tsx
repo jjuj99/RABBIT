@@ -1,5 +1,5 @@
 import { DataTable } from "@/shared/ui/DataTable";
-import { columns } from "../type/NFTEventType";
+import { columns } from "../../../entities/auction/types/NFTEventType";
 
 const AuctionNFTEventList = () => {
   const data = [

@@ -2,17 +2,17 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useAuthUser } from "@/entities/auth/hooks/useAuth";
-import useWalletConnection from "@/entities/auth/hooks/useWalletConnection";
 import { useState } from "react";
+import useGetWallet from "@/entities/wallet/hooks/useGetWallet";
 
 const useContractForm = () => {
   const { user } = useAuthUser();
-  const { data: walletData } = useWalletConnection();
   const [passUserName, setPassUserName] = useState("");
   const [passPhoneNumber, setPassPhoneNumber] = useState("");
   const [isPassDialogOpen, setIsPassDialogOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
+  const { address } = useGetWallet();
 
   const contractSchema = z.object({
     DR_PHONE: z.string().min(1, { message: "전화번호를 입력해주세요" }),
@@ -71,7 +71,7 @@ const useContractForm = () => {
     defaultValues: {
       DR_PHONE: "",
       DR_NAME: user?.nickname,
-      DR_WALLET: walletData?.address,
+      DR_WALLET: address ?? "",
       CR_EMAIL: "",
       CR_NAME: "",
       CR_WALLET: "",

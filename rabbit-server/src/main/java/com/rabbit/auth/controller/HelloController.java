@@ -27,6 +27,6 @@ public class HelloController {
 
     @GetMapping("/hello2")
     public String hello2() {
-        return "Hello world 342! !";
+        return "Hello world 5555! !";
     }
 }

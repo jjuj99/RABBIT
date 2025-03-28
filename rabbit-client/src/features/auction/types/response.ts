@@ -14,17 +14,17 @@ export interface PNInfoListResponse {
   auction_id: number;
   price: number;
   end_date: string;
-  ir: number;
+  ir: number; //
   created_at: string;
-  repay_type: string;
-  total_amount: number;
-  mat_dt: string;
-  dir: number;
-  la: number;
-  earlypay_flag: boolean;
-  earlypay_fee: number;
-  credit_score: number;
-  def_cnt: number;
+  repay_type: string; //
+  total_amount: number; //
+  mat_dt: string; //
+  dir: number; //
+  la: number; //
+  earlypay_flag: boolean; //
+  earlypay_fee: number; //
+  credit_score: number; //
+  def_cnt: number; //
 }
 
 export interface BidListResponse {
@@ -34,5 +34,8 @@ export interface BidListResponse {
 }
 
 export interface SubmitAuctionBidResponse {
+  message: string;
+}
+export interface CreateAuctionResponse {
   message: string;
 }

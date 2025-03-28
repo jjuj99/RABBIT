@@ -3,6 +3,7 @@ import { AuctionListRequest } from "../types/request";
 import {
   AuctionListResponse,
   BidListResponse,
+  CreateAuctionResponse,
   PNInfoListResponse,
   SubmitAuctionBidResponse,
 } from "../types/response";
@@ -62,6 +63,30 @@ export const SubmitAuctionBidAPI = async (
   const res = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/bids/auction/${auction_id}`,
     fetchOption("POST", { bid_amount }),
+  );
+  const data = await res.json();
+  return data;
+};
+
+export const createAuctionAPI = async ({
+  minimum_bid,
+  end_date,
+  token_id,
+  seller_sign,
+}: {
+  minimum_bid: number;
+  end_date: string;
+  token_id: string;
+  seller_sign: string;
+}): Promise<ApiResponse<CreateAuctionResponse>> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions`,
+    fetchOption("POST", {
+      minimum_bid,
+      end_date,
+      token_id,
+      seller_sign,
+    }),
   );
   const data = await res.json();
   return data;

@@ -13,7 +13,7 @@ export const NFTCard = ({ item }: NFTCardProps) => {
       to={`/auction/${item.auction_id}`}
       className="group bg-black-glass border-white-glass shadow-glow flex h-fit w-[326px] flex-col items-center gap-3 rounded-lg border px-3 pt-4 pb-7 md:w-[300px] 2xl:w-[326px]"
     >
-      <div className="h-fullw-full relative rounded-sm">
+      <div className="relative h-full w-full rounded-sm">
         <NFTCardInfo item={item} />
         <img
           src="/images/NFT.png"

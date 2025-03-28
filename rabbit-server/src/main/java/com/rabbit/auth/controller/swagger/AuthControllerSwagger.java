@@ -197,6 +197,40 @@ public interface AuthControllerSwagger {
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
     @Operation(
+            summary = "로그아웃",
+            description = "토큰 정보를 이용하여 로그아웃을 수행합니다.",
+            security = {@SecurityRequirement(name = "bearerAuth")},
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "로그아웃 요청",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "로그인 성공",
+                                                    summary = "로그인 성공",
+                                                    value = """
+                                                            {
+                                                              "status": "SUCCESS",
+                                                              "data": {
+                                                                "message": "회원가입에 성공했습니다."
+                                                              },
+                                                              "error": null
+                                                            }"""
+                                            )
+                                    }
+                            )
+                    )
+            }
+    )
+    @interface logoutApi {
+    }
+
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Operation(
             summary = "닉네임 중복 확인",
             description = "입력한 닉네임이 중복되었는지 여부를 확인합니다.",
             security = {@SecurityRequirement(name = "bearerAuth")},

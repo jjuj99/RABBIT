@@ -1,7 +1,7 @@
 import { AccountHistoryType } from "@/entities/account/types/response";
 import AccountHistoryCard from "@/entities/account/ui/AccountHistoryCard";
-import { MenubarSeparator } from "@/shared/ui/menubar";
 import { ScrollArea } from "@/shared/ui/scroll-area";
+import { Separator } from "@/shared/ui/Separator";
 interface AccountHistoryResponse {
   data: AccountHistoryType[];
 }
@@ -19,7 +19,7 @@ const AccountHistory = ({ data }: AccountHistoryResponse) => {
             {data.map((item) => (
               <>
                 <AccountHistoryCard key={item.date} data={item} />
-                <MenubarSeparator className="h-[0.2px] w-full bg-gray-300" />
+                <Separator />
               </>
             ))}
           </ul>

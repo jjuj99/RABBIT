@@ -5,10 +5,10 @@ import {
   MenubarContent,
   MenubarItem,
   MenubarMenu,
-  MenubarSeparator,
   MenubarTrigger,
 } from "@/shared/ui/menubar";
 import RAB from "@/shared/ui/RAB";
+import { Separator } from "@radix-ui/react-menubar";
 
 const RabbitButton = () => {
   const { user, logout } = useAuthUser();
@@ -34,21 +34,21 @@ const RabbitButton = () => {
             <span className="font-bit">{user?.user.nickname}</span>
             <span className="font-bit text-xs">님</span>
           </div>
-          <MenubarSeparator />
+          <Separator />
           <div className="py-2">
             <MenubarItem className="">
               <span>메뉴</span>
             </MenubarItem>
-            <MenubarSeparator className="mx-2" />
+            <Separator />
             <MenubarItem className="">
               <span>메뉴2</span>
             </MenubarItem>
-            <MenubarSeparator className="mx-2" />
+            <Separator />
             <MenubarItem className="">
               <RAB isColored={false} size="sm" amount={balance} />
             </MenubarItem>
           </div>
-          <MenubarSeparator />
+          <Separator />
           <MenubarItem>
             <button onClick={handleLogout}>로그아웃</button>
           </MenubarItem>

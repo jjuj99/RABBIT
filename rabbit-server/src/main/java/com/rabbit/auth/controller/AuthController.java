@@ -1,8 +1,13 @@
 package com.rabbit.auth.controller;
 
 import com.rabbit.auth.controller.swagger.AuthControllerSwagger;
-import com.rabbit.auth.domain.dto.request.*;
-import com.rabbit.auth.domain.dto.response.*;
+import com.rabbit.auth.domain.dto.request.LoginRequestDTO;
+import com.rabbit.auth.domain.dto.request.NonceRequestDTO;
+import com.rabbit.auth.domain.dto.request.SignupRequestDTO;
+import com.rabbit.auth.domain.dto.response.CheckNicknameResponseDTO;
+import com.rabbit.auth.domain.dto.response.LoginResponseDTO;
+import com.rabbit.auth.domain.dto.response.NonceResponseDTO;
+import com.rabbit.auth.domain.dto.response.RefreshResponseDTO;
 import com.rabbit.auth.service.AuthService;
 import com.rabbit.auth.service.dto.LoginServiceResult;
 import com.rabbit.global.exception.BusinessException;
@@ -14,17 +19,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import org.hibernate.annotations.Parameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -77,6 +80,27 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(CustomApiResponse.success(MessageResponse.of("회원가입에 성공했습니다.")));
+    }
+
+    @AuthControllerSwagger.logoutApi
+    @PostMapping("/logout")
+    public ResponseEntity<CustomApiResponse<MessageResponse>> logout(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = getRefreshTokenFromCookie(request)
+                .orElseThrow(() -> new BusinessException(ErrorCode.JWT_REQUIRED));
+
+        authService.logout(refreshToken);
+
+        ResponseCookie emptyCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0) // 쿠키 만료
+                .sameSite("Strict")
+                .build();
+
+        response.addHeader("Set-Cookie", emptyCookie.toString());
+
+        return ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("로그아웃에 성공했습니다.")));
     }
 
     @AuthControllerSwagger.checkNicknameApi

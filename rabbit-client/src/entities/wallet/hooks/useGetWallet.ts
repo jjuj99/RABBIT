@@ -5,7 +5,7 @@ import getWalletAddress from "../utils/getWalletAddress";
 const useGetWallet = () => {
   const [address, setAddress] = useState<string | null>(null);
   useEffect(() => {
-    const getDrWallet = async () => {
+    const getWallet = async () => {
       const provider = await getMetaMaskProvider();
       if (!provider) {
         return;
@@ -17,7 +17,7 @@ const useGetWallet = () => {
       setAddress(walletAddress.address);
       return;
     };
-    getDrWallet();
+    getWallet();
   }, []);
   return { address };
 };

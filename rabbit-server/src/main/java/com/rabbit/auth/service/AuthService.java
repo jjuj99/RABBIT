@@ -1,7 +1,11 @@
 package com.rabbit.auth.service;
 
-import com.rabbit.auth.domain.dto.request.*;
-import com.rabbit.auth.domain.dto.response.*;
+import com.rabbit.auth.domain.dto.request.LoginRequestDTO;
+import com.rabbit.auth.domain.dto.request.NonceRequestDTO;
+import com.rabbit.auth.domain.dto.request.SignupRequestDTO;
+import com.rabbit.auth.domain.dto.response.CheckNicknameResponseDTO;
+import com.rabbit.auth.domain.dto.response.NonceResponseDTO;
+import com.rabbit.auth.domain.dto.response.RefreshResponseDTO;
 import com.rabbit.auth.domain.entity.UserToken;
 import com.rabbit.auth.repository.UserTokenRepository;
 import com.rabbit.auth.service.dto.LoginServiceResult;
@@ -9,8 +13,12 @@ import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.util.JwtUtil;
 import com.rabbit.global.util.SignatureUtil;
-import com.rabbit.user.domain.entity.*;
-import com.rabbit.user.repository.*;
+import com.rabbit.user.domain.entity.MetamaskWallet;
+import com.rabbit.user.domain.entity.RefundAccount;
+import com.rabbit.user.domain.entity.User;
+import com.rabbit.user.repository.MetamaskWalletRepository;
+import com.rabbit.user.repository.RefundAccountRepository;
+import com.rabbit.user.repository.UserRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.time.ZonedDateTime;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -135,6 +142,13 @@ public class AuthService {
                 .updatedAt(ZonedDateTime.now())
                 .build()
         );
+    }
+
+    @Transactional
+    public void logout(String refreshToken) {
+        String userId = jwtUtil.getUserIdFromToken(refreshToken);
+
+        userTokenRepository.deleteByUser_UserId(Integer.parseInt(userId));
     }
 
     @Transactional(readOnly = true)

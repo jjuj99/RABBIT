@@ -147,10 +147,15 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
             paymentAmount = calculatePaymentAmount(info);
         }
 
-        
-        // 자금 이체 (채무자 -> 채권자)
         ICustomERC20 rabCoin = ICustomERC20(rabbitCoinAddress);
         
+        // 채무자 잔액 부족 시 이벤트 발행
+        if (rabCoin.balanceOf(info.drWalletAddress) < paymentAmount) {
+            emit InsufficientBalance(tokenId, info.drWalletAddress, paymentAmount, rabCoin.balanceOf(info.drWalletAddress));
+            return; // 함수 종료, 트랜잭션은 성공으로 처리됨
+        }
+
+        // 자금 이체 (채무자 -> 채권자)
         bool transferSuccess = rabCoin.transferFrom(
             info.drWalletAddress,
             currentOwner,
@@ -158,7 +163,7 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         );
         
         require(transferSuccess, "RAB token transfer failed");
-        
+
         // 남은 원금 업데이트
         // 마지막 납부일인 경우 원금을 0으로 설정
         if (info.remainingPayments == 1) { 
@@ -176,13 +181,15 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         
         // 남은 납부 횟수 감소
         info.remainingPayments--;
-        
-        // 다음 납부일 업데이트
-        info.nextMpDt = calculateNextPaymentDateFromCurrent(info.nextMpDt, info.mpDt);
+
+        // 마지막 납부가 아닌 경우에만 다음 납부일 업데이트
+        if (info.remainingPayments > 0) {
+            info.nextMpDt = calculateNextPaymentDateFromCurrent(info.nextMpDt, info.mpDt);
+        }
         
         emit RepaymentProcessed(tokenId, paymentAmount, info.remainingPrincipal, info.nextMpDt);
         
-        // 상환 완료 여부 확인
+        // 상환 완료 NFT 처리
         if (info.remainingPrincipal == 0 || info.remainingPayments == 0) {
             completeRepayment(tokenId);
         }

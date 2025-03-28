@@ -9,7 +9,7 @@ import { useAuthContext } from "./useAuthContext";
 import { GetUserAPI, LogoutAPI } from "../api/authApi";
 
 import { toast } from "sonner";
-import { User } from "@sentry/react";
+import { User } from "../types/response";
 
 type UserState = {
   isAuthenticated: boolean;

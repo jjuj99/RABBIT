@@ -95,4 +95,65 @@ public interface UserControllerSwagger {
     )
     @interface getLoginInfoApi {
     }
+
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Operation(
+            summary = "이메일로 사용자 검색",
+            description = "파라미터를 통해 사용자를 이메일로 검색합니다.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "유저 검색 결과",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "유저 검색 성공",
+                                                    summary = "유저 검색 성공",
+                                                    value = """
+                                                            {
+                                                              "status": "SUCCESS",
+                                                              "data": {
+                                                                "userId": 1,
+                                                                "email": "ssafy@ssafy.com",
+                                                                "name": "김싸피",
+                                                                "nickname": "열정두배"
+                                                              },
+                                                              "error": null
+                                                            }"""
+                                            ),
+                                            @ExampleObject(
+                                                    name = "유저 검색 실패",
+                                                    summary = "유저 검색 실패",
+                                                    value = """
+                                                            {
+                                                              "status": "SUCCESS",
+                                                              "data": null,
+                                                              "error": null
+                                                            }"""
+                                            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "잘못된 요청 - 파라미터 누락",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "검색 이메일 누락",
+                                                    summary = "검색 이메일 누락",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 400,\n    \"message\": \"이메일을 입력하지 않았습니다.\"\n  }\n}"
+                                            )
+                                    }
+                            )
+                    )
+            }
+    )
+    @interface searchUserByEmailApi {
+    }
 }

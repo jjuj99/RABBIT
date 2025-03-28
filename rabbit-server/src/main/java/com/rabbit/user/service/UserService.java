@@ -3,6 +3,7 @@ package com.rabbit.user.service;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.user.domain.dto.response.LoginInfoResponseDTO;
+import com.rabbit.user.domain.dto.response.SearchUserResponseDTO;
 import com.rabbit.user.domain.entity.User;
 import com.rabbit.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,5 +23,16 @@ public class UserService {
                 .userName(user.getUserName())
                 .nickname(user.getNickname())
                 .build();
+    }
+
+    public SearchUserResponseDTO searchUserByEmail(String searchEmail) {
+        return userRepository.findByEmail(searchEmail)
+                .map(user -> SearchUserResponseDTO.builder()
+                        .userId(user.getUserId())
+                        .email(user.getEmail())
+                        .userName(user.getUserName())
+                        .nickname(user.getNickname())
+                        .build())
+                .orElseGet(() -> null);
     }
 }

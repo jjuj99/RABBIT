@@ -93,15 +93,21 @@ pipeline {
                 }
 
                 stage('Docker Build & Push') {
+                    agent {
+                        docker {
+                            image 'docker:dind'
+                            args '-v /var/run/docker.sock:/var/run/docker.sock'
+                        }
+                    }
                     steps {
                         dir('rabbit-server') {
-                            withCredentials([
-                                string(credentialsId: 'docker-backend-image', variable: 'BACKEND_IMAGE'),
-                                usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS'
-                                )]) {
-                                    sh 'docker build -t "\$BACKEND_IMAGE" .'
-                                    sh 'echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin'
-                                    sh 'docker push \$BACKEND_IMAGE'
+                            withCredentials([string(credentialsId: 'docker-backend-image', variable: 'BACKEND_IMAGE')]) {  
+                                script {
+                                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-creds') {
+                                        def image = docker.build(BACKEND_IMAGE)
+                                        image.push()
+                                    }
+                                }   
                             }
                         }
                     }
@@ -112,7 +118,6 @@ pipeline {
                         withCredentials([file(credentialsId: 'rabbit-server-env', variable: 'DEPLOY_ENV_FILE')]) {
                             // .env 파일 로드해서 현재 쉘에 export
                             sh 'set -a && source $DEPLOY_ENV_FILE && set +a'
-
                             sh 'echo "[FILE] EC2_NAME=$EC2_NAME, EC2_HOST=$EC2_HOST, SCRIPT=$RABBIT_DEPLOY_SCRIPT"'
                         }
                     }

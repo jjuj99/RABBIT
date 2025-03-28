@@ -7,52 +7,63 @@ import {
 } from "../utils/authUtils";
 import { useAuthContext } from "./useAuthContext";
 import { GetUserAPI, LogoutAPI } from "../api/authApi";
-import useWalletConnection from "./useWalletConnection";
 
-// 인증 상태를 확인하는 훅
+import { toast } from "sonner";
+import { User } from "@sentry/react";
+
+type UserState = {
+  isAuthenticated: boolean;
+  user: User | null;
+};
+
+// 통합된 인증/유저 정보 훅
 export const useAuth = () => {
   const { isInitialized } = useAuthContext();
 
   return useQuery({
-    queryKey: ["auth", "status"],
-    queryFn: async () => {
-      // 액세스 토큰 확인
-      const token = getAccessToken();
-
-      // 토큰이 없는 경우 - 인증되지 않은 상태
-      if (!token) {
-        return { isAuthenticated: false };
-      }
-
+    queryKey: ["user"],
+    queryFn: async (): Promise<UserState> => {
       try {
-        // 토큰 검증 (만료 여부 확인)
+        let token = getAccessToken();
+
+        // 토큰이 없으면 refresh 시도
+        if (!token) {
+          const refreshResponse = await refreshAccessToken();
+          if (!refreshResponse) {
+            return { isAuthenticated: false, user: null };
+          }
+          token = getAccessToken(); // 새로 발급받은 토큰 가져오기
+        }
+
+        // 토큰 만료 체크
         // const decoded = jwtDecode(token);
         const decoded = { exp: 5 * 60 };
-
-        // 토큰이 만료된 경우 갱신 시도
         if (decoded.exp && decoded.exp * 1000 < Date.now()) {
           const refreshResponse = await refreshAccessToken();
-
-          // 갱신 성공
-          if (refreshResponse) {
-            return { isAuthenticated: true };
-          }
-          // 갱신 실패
-          else {
-            return { isAuthenticated: false };
+          if (!refreshResponse) {
+            return { isAuthenticated: false, user: null };
           }
         }
 
-        // 유효한 토큰
-        return { isAuthenticated: true };
+        // 유저 정보 가져오기
+        const response = await GetUserAPI();
+        if (!response.data) {
+          return { isAuthenticated: false, user: null };
+        }
+
+        return {
+          isAuthenticated: true,
+          user: response.data,
+        };
       } catch (error) {
-        console.log("Token validation failed:", error);
-        return { isAuthenticated: false };
+        console.log("Auth check failed:", error);
+        return { isAuthenticated: false, user: null };
       }
     },
     enabled: isInitialized,
     refetchOnWindowFocus: true,
     retry: false,
+    staleTime: 5 * 60 * 1000, // 5분
   });
 };
 
@@ -62,12 +73,11 @@ export const useUser = () => {
   const isAuthenticated = authStatus?.isAuthenticated || false;
 
   return useQuery({
-    queryKey: ["auth", "user"],
+    queryKey: ["user"],
     queryFn: async () => {
       // API에서 사용자 정보 가져오기
       // 이미 쿼리 클라이언트에 캐시되어 있으면 이 함수는 실행되지 않음
       const response = await GetUserAPI();
-      console.log("response", response);
 
       return response.data;
     },
@@ -75,24 +85,25 @@ export const useUser = () => {
     staleTime: 5 * 60 * 1000, // 5분 동안 캐시 유지
   });
 };
+
 export const useLogout = () => {
   const queryClient = useQueryClient();
   const { mutate: logout } = useMutation({
-    mutationFn: async () => {
-      await LogoutAPI();
-    },
+    mutationFn: LogoutAPI,
     onSuccess: () => {
       clearAccessToken();
+      localStorage.removeItem("nextTokenDialogShowTime");
 
-      // 상태 업데이트만 수행
-      queryClient.setQueryData(["auth", "status"], {
+      // 단일 쿼리로 상태 업데이트
+      queryClient.setQueryData(["user"], {
         isAuthenticated: false,
+        user: null,
       });
-      queryClient.setQueryData(["auth", "user"], { nickname: null });
-      queryClient.setQueryData(["wallet"], { address: null });
+
+      toast.success("로그아웃 되었습니다.");
     },
-    onError: (error) => {
-      console.error("로그아웃 실패:", error);
+    onError: () => {
+      toast.error("로그아웃에 실패했습니다.");
     },
   });
   return { logout };
@@ -102,10 +113,8 @@ export const useLogout = () => {
 export const useAuthUser = () => {
   const { data: authStatus, isLoading: isAuthLoading } = useAuth();
   const { data: user, isLoading: isUserLoading } = useUser();
-  const { data: walletData } = useWalletConnection();
   const { logout } = useLogout();
   return {
-    walletAddress: walletData?.address,
     isAuthenticated: authStatus?.isAuthenticated || false,
     user: user || null,
     isLoading: isAuthLoading || isUserLoading,

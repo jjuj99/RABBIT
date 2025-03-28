@@ -1,4 +1,5 @@
 import { useAuthUser } from "@/entities/auth/hooks/useAuth";
+import useGetBalance from "@/entities/wallet/hooks/useGetBalance";
 import {
   Menubar,
   MenubarContent,
@@ -12,11 +13,16 @@ import RAB from "@/shared/ui/RAB";
 const RabbitButton = () => {
   const { user, logout } = useAuthUser();
 
+  console.log(user);
+
   const handleLogout = () => {
-    console.log("로그아웃");
     logout();
     // 월렛 관련 쿼리 캐시 제거
   };
+
+  const { balance } = useGetBalance();
+  console.log(balance);
+
   return (
     <Menubar className="bg-transparent p-0">
       <MenubarMenu>
@@ -25,7 +31,7 @@ const RabbitButton = () => {
         </MenubarTrigger>
         <MenubarContent>
           <div className="px-2 py-1.5">
-            <span className="font-bit">{user?.nickname}</span>
+            <span className="font-bit">{user?.user.nickname}</span>
             <span className="font-bit text-xs">님</span>
           </div>
           <MenubarSeparator />
@@ -39,7 +45,7 @@ const RabbitButton = () => {
             </MenubarItem>
             <MenubarSeparator className="mx-2" />
             <MenubarItem className="">
-              <RAB isColored={false} size="sm" amount={100000} />
+              <RAB isColored={false} size="sm" amount={balance} />
             </MenubarItem>
           </div>
           <MenubarSeparator />

@@ -2,6 +2,7 @@ import { AccountHistoryType } from "@/entities/account/types/response";
 import AccountHistoryCard from "@/entities/account/ui/AccountHistoryCard";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Separator } from "@/shared/ui/Separator";
+import React from "react";
 interface AccountHistoryResponse {
   data: AccountHistoryType[];
 }
@@ -16,11 +17,11 @@ const AccountHistory = ({ data }: AccountHistoryResponse) => {
         </div>
         <ScrollArea className="h-[calc(100vh-344px)]">
           <ul className="flex flex-col gap-3">
-            {data.map((item) => (
-              <>
+            {data.map((item, index) => (
+              <React.Fragment key={item.date + item.type + index}>
                 <AccountHistoryCard key={item.date} data={item} />
                 <Separator />
-              </>
+              </React.Fragment>
             ))}
           </ul>
         </ScrollArea>

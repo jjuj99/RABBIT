@@ -103,8 +103,9 @@ pipeline {
                             ]) {
                                 sh """
                                     echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
-                                    docker build --platform linux/amd64 -t "\$BACKEND_IMAGE" .
-                                    docker push "\$BACKEND_IMAGE"
+                                    export DOCKER_BUILDKIT=1
+                                    docker buildx create --name mybuilder --use || docker buildx use mybuilder
+                                    docker buildx build --platform linux/amd64 -t "\$BACKEND_IMAGE" --push .
                                 """
                             }
                         }

@@ -34,7 +34,7 @@ interface IPromissoryNote is IERC721 {
         DrInfo drInfo;           // 채무자 정보
         uint256 la;              // 차용 금액
         uint256 ir;              // 이자율
-        uint256 lt;              // 대출 기간
+        uint256 lt;              // 대출 기간 (계약 개월 수)
         string repayType;        // 상환 방식
         string matDt;            // 만기일
         uint256 mpDt;            // 이자 납부일 (매월 n일)
@@ -42,7 +42,7 @@ interface IPromissoryNote is IERC721 {
         string contractDate;     // 계약일
         bool earlyPayFlag;       // 중도상환 가능 여부
         uint256 earlyPayFee;     // 중도상환 수수료
-        uint256 defCnt;          // 기한이익상실 횟수
+        uint256 accel;           // 기한이익상실 횟수
         AddTerms addTerms;       // 추가 조항
     }
     

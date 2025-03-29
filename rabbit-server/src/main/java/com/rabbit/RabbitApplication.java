@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Slf4j
 @EnableScheduling
 public class RabbitApplication {
+// 트리거를 위한 의미없는 주석
 	public static void main(String[] args) {
 		SpringApplication.run(RabbitApplication.class, args);
 	}

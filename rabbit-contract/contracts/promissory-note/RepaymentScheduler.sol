@@ -13,11 +13,15 @@ import "../rabbit-coin/interfaces/ICustomERC20.sol";
  * @title RepaymentScheduler
  * @dev 차용증 NFT의 자동 이자 상환을 관리하는 컨트랙트
  * Chainlink Keeper와 통합하여 정해진 시간에 자동으로 상환을 처리
+ * 연체 관리 기능 추가
  */
 contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibleInterface {
 
     address public promissoryNoteAddress;
     address public rabbitCoinAddress;
+
+    // 최대 연체 이자율 (20%)
+    uint256 public constant MAX_OVERDUE_INTEREST_RATE = 2000;
 
     // 상환 정보 매핑 (토큰 ID => 상환 정보)
     mapping(uint256 => RepaymentInfo) public repaymentSchedules;
@@ -47,7 +51,7 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         
         uint256 nextPaymentDate = calculateNextPaymentDate(metadata.mpDt);
         
-        // EPIP(원리금 균등 상환)인 경우 고정 납부액 계산
+        // EPIP인 경우 고정 납부액 계산
         uint256 fixedPaymentAmount = 0;
         if (repayType == RepaymentType.EPIP) {
             fixedPaymentAmount = calculateFixedPaymentForEPIP(metadata.la, metadata.ir, metadata.lt);
@@ -56,17 +60,27 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         // 상환 정보 등록
         repaymentSchedules[tokenId] = RepaymentInfo({
             tokenId: tokenId,
-            initialPrincipal: metadata.la,    // 초기 원금은 차용 금액과 동일
-            remainingPrincipal: metadata.la,  // 남은 원금 초기화
-            ir: metadata.ir,                  // 이자율
-            mpDt: metadata.mpDt,              // 월 납부일
-            nextMpDt: nextPaymentDate,        // 다음 납부일
-            totalPayments: metadata.lt,        // 총 납부 횟수 (대출 기간)
-            remainingPayments: metadata.lt,    // 남은 납부 횟수 (초기엔 총 납부 횟수와 같음)
+            initialPrincipal: metadata.la,      // 초기 원금
+            remainingPrincipal: metadata.la,    // 남은 원금
+            ir: metadata.ir,                    // 연이자율 (1% = 100)
+            dir: metadata.dir,                  // 연체 이자율 (1% = 100)
+            mpDt: metadata.mpDt,                // 월 납부일
+            nextMpDt: nextPaymentDate,          // 다음 납부일
+            totalPayments: metadata.lt,         // 총 납부 횟수
+            remainingPayments: metadata.lt,     // 남은 납부 횟수
             fixedPaymentAmount: fixedPaymentAmount, // EPIP 시 고정 납부액
-            repayType: repayType,             // 상환 방식
-            drWalletAddress: metadata.drInfo.drWalletAddress, // 채무자 주소
-            activeFlag: true                  // 활성화 상태
+            repayType: repayType,               // 상환 방식
+            drWalletAddress: metadata.drInfo.drWalletAddress,
+            activeFlag: true,                   // 활성 상태
+            
+            overdueFlag: false,                 // 연체 상태
+            overdueStartDate: 0,                // 연체 시작일 (타임스탬프)
+            overdueDays: 0,                     // 연체 일수
+            aoi: 0,                             // 누적 연체 이자
+            defCnt: 0,                          // 현재 연체 횟수
+            accel: metadata.accel,              // 기한이익상실 횟수
+            currentIr: metadata.ir,             // 현재 적용 이자율
+            totalDefCnt: 0                      // 총 누적 연체 횟수 (상환 후에도 유지)
         });
         
         // 활성 상환 목록에 추가
@@ -91,7 +105,7 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
             RepaymentInfo memory info = repaymentSchedules[tokenId];
             
             // 상환일이 도래했고 활성 상태인 경우만 처리
-            if (info.activeFlag && block.timestamp >= info.nextMpDt) {
+            if (info.activeFlag && (block.timestamp >= info.nextMpDt || info.overdueFlag)) {
                 tokensToProcess[count] = tokenId;
                 count++;
             }
@@ -112,9 +126,58 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
     // Chainlink Keeper performUpkeep 함수 - 상환 처리 실행
     function performUpkeep(bytes calldata performData) external override {
         uint256[] memory tokensToProcess = abi.decode(performData, (uint256[]));
-        
+
         for (uint256 i = 0; i < tokensToProcess.length; i++) {
-            processRepayment(tokensToProcess[i]);
+            uint256 tokenId = tokensToProcess[i];
+            updateOverdueStatus(tokenId); // 연체 상태 업데이트
+            processRepayment(tokenId); // 상환 처리
+        }
+    }
+
+    // 연체 상태 업데이트 함수
+    function updateOverdueStatus(uint256 tokenId) internal {
+        RepaymentInfo storage info = repaymentSchedules[tokenId];
+        
+        if (!info.activeFlag) return;
+        
+        // 현재 시간이 다음 납부일을 지났고 아직 연체 상태가 아닌 경우
+        if (block.timestamp > info.nextMpDt && !info.overdueFlag) {
+            // 연체 상태로 변경
+            info.overdueFlag = true;
+            info.overdueStartDate = info.nextMpDt;
+            
+            // 연체 횟수 증가
+            info.defCnt++;
+            info.totalDefCnt++;
+
+            emit RepaymentOverdue(tokenId, info.nextMpDt, info.totalDefCnt);
+            
+            // 기한이익상실 횟수 초과 시 최대 이자율 적용
+            if (info.defCnt >= info.accel) {
+                info.currentIr = MAX_OVERDUE_INTEREST_RATE;
+                emit AccelReached(tokenId, MAX_OVERDUE_INTEREST_RATE);
+            } else {
+                // 일반 연체 시 연체 이자율 적용
+                info.currentIr = info.dir;
+            }
+        }
+        
+        // 연체 중인 경우 연체 일수 및 누적 연체 이자 계산
+        if (info.overdueFlag) {
+            // 연체 일수 계산
+            uint256 previousOverdueDays = info.overdueDays;
+            info.overdueDays = (block.timestamp - info.overdueStartDate) / 86400; // 일 단위로 계산 (86400초 = 1일)
+            
+            // 새로 추가된 연체 일수에 대한 연체 이자 계산
+            if (info.overdueDays > previousOverdueDays) {
+                uint256 newOverdueDays = info.overdueDays - previousOverdueDays;
+                
+                // 일별 연체 이자 계산 및 누적
+                uint256 dailyOverdueInterest = (info.remainingPrincipal * info.currentIr) / (365 * 10000);
+                info.aoi += dailyOverdueInterest * newOverdueDays;
+                
+                emit OverdueInterestAccumulated(tokenId, dailyOverdueInterest * newOverdueDays, info.aoi);
+            }
         }
     }
     
@@ -129,22 +192,31 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         
         // 상환 금액 계산
         uint256 paymentAmount;
+        uint256 regularPaymentAmount = 0;
+        uint256 overdueAmount = 0;
 
-        // 마지막 납부일인 경우
+        // 정규 납부액 계산
         if (info.remainingPayments == 1) {
-            // 만기 일시 상환인 경우 원금 + 이자
+            // 마지막 납부일인 경우
             if (info.repayType == RepaymentType.BP) {
+                // 만기 일시 상환인 경우 원금 + 이자
                 uint256 interestAmount = calculateInterestAmount(info);
-                paymentAmount = info.remainingPrincipal + interestAmount;
-            }
-            // EPIP 또는 EPP인 경우 남은 원금 + 이자로 정확히 계산
-            else { 
+                regularPaymentAmount = info.remainingPrincipal + interestAmount;
+            } else {
+                // EPIP 또는 EPP인 경우 남은 원금 + 이자로 정확히 계산
                 uint256 interestAmount = calculateInterestAmount(info);
-                paymentAmount = info.remainingPrincipal + interestAmount;
+                regularPaymentAmount = info.remainingPrincipal + interestAmount;
             }
+        } else {
+            regularPaymentAmount = calculatePaymentAmount(info);
         }
-        else {
-            paymentAmount = calculatePaymentAmount(info);
+
+        // 연체 상태인 경우 누적 연체 이자 추가
+        if (info.overdueFlag) {
+            overdueAmount = info.aoi;
+            paymentAmount = regularPaymentAmount + overdueAmount;
+        } else {
+            paymentAmount = regularPaymentAmount;
         }
 
         ICustomERC20 rabCoin = ICustomERC20(rabbitCoinAddress);
@@ -163,6 +235,18 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         );
         
         require(transferSuccess, "RAB token transfer failed");
+
+        // 연체 상태 해제
+        if (info.overdueFlag) {
+            info.overdueFlag = false;
+            info.overdueStartDate = 0;
+            info.overdueDays = 0;
+            info.aoi = 0;
+            info.currentIr = info.ir;
+            info.defCnt = 0;
+            
+            emit OverdueResolved(tokenId, overdueAmount);
+        }
 
         // 남은 원금 업데이트
         // 마지막 납부일인 경우 원금을 0으로 설정
@@ -305,7 +389,7 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         return result;
     }
     
-     // 이자 금액 계산 함수
+     // 이자 금액 계산 함수 (연체X)
     function calculateInterestAmount(RepaymentInfo memory info) internal pure returns (uint256) {
         return (info.remainingPrincipal * info.ir) / (12 * 10000);
     }
@@ -398,6 +482,47 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         emit RepaymentScheduleCreated(tokenId, remainingPrincipal, nextPaymentDate);
     }
     
+    // 연체 정보 수동 업데이트 함수 (관리자 전용)
+    function updateOverdueInfo(
+        uint256 tokenId,
+        bool overdueFlag,
+        uint256 overdueStartDate,
+        uint256 overdueDays,
+        uint256 aoi,
+        uint256 defCnt,
+        uint256 currentIr,
+        uint256 totalDefCnt
+    ) external onlyOwner {
+        require(repaymentSchedules[tokenId].activeFlag, "Repayment is not active");
+
+        // UTC 시간을 KST(UTC+9)로 변환 (9시간 = 32400초 추가)
+        uint256 currentKstTimestamp = block.timestamp + 32400;
+
+        // 날짜 유효성 검사 - 미래 불가능
+        require(overdueStartDate <= currentKstTimestamp, "Overdue start date cannot be in the future");
+        
+        // 이자율 검사 - 최대 연체 이자율 이하하
+        require(currentIr <= MAX_OVERDUE_INTEREST_RATE, "Interest rate exceeds maximum allowed rate");
+        
+        // 연체 일수와 시작일 일관성 검사
+        if (overdueFlag && overdueStartDate > 0) {
+            // KST 기준으로 정확한 일수 계산
+            uint256 calculatedDays = (currentKstTimestamp - overdueStartDate) / 86400;
+            require(overdueDays == calculatedDays, "Overdue days must match exactly with calculated days");
+        }
+
+        RepaymentInfo storage info = repaymentSchedules[tokenId];
+        info.overdueFlag = overdueFlag;
+        info.overdueStartDate = overdueStartDate;
+        info.overdueDays = overdueDays;
+        info.aoi = aoi;
+        info.defCnt = defCnt;
+        info.currentIr = currentIr;
+        info.totalDefCnt = totalDefCnt;
+        
+        emit OverdueInfoUpdated(tokenId, overdueFlag, aoi);
+    }
+
     // 컨트랙트 주소 업데이트 함수 (관리자 전용)
     function updateContractAddresses(address _promissoryNoteAddress, address _rabbitCoinAddress) external onlyOwner {
         promissoryNoteAddress = _promissoryNoteAddress;

@@ -20,6 +20,8 @@ const useGetBalance = () => {
     };
     getBalance();
   }, []);
+  console.log(balance);
+
   return { balance };
 };
 export default useGetBalance;

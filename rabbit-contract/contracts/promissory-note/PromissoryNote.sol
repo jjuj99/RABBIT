@@ -213,7 +213,7 @@ contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
             '"contractDate":"', m.contractDate, '",',
             '"earlyPayFlag":', m.earlyPayFlag ? "true" : "false", ',',
             '"earlyPayFee":', Strings.toString(m.earlyPayFee), ',',
-            '"defCnt":', Strings.toString(m.defCnt), ',',
+            '"accel":', Strings.toString(m.accel), ',',
             '"addTerms":"', m.addTerms.addTerms, '",',
             '"addTermsHash":"', m.addTerms.addTermsHash, '"}'
         ));

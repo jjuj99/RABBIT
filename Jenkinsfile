@@ -83,31 +83,29 @@ pipeline {
                 expression { return env.BACKEND_CHANGED == 'true' }
             }
             stages {
-                stage('Gradle bootJar') {
+                stage('Docker Build & Push') {
                     steps {
                         dir('rabbit-server') {
+                            // Gradle bootJar
                             sh 'chmod +x ./gradlew'
                             sh './gradlew --no-daemon clean bootJar'
-                        }
-                    }
-                }
-
-                stage('Docker Build & Push') {
-                    agent {
-                        docker {
-                            image 'docker:dind'
-                            args '-v /var/run/docker.sock:/var/run/docker.sock'
-                        }
-                    }
-                    steps {
-                        dir('rabbit-server') {
-                            withCredentials([string(credentialsId: 'docker-backend-image', variable: 'BACKEND_IMAGE')]) {  
-                                script {
-                                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-creds') {
-                                        def image = docker.build(BACKEND_IMAGE)
-                                        image.push()
-                                    }
-                                }   
+                            
+                            withCredentials([
+                                usernamePassword(
+                                    credentialsId: 'docker-hub-creds',
+                                    usernameVariable: 'DOCKER_USER',
+                                    passwordVariable: 'DOCKER_PASS'
+                                ),
+                                string(
+                                    credentialsId: 'docker-backend-image',
+                                    variable: 'BACKEND_IMAGE'
+                                )
+                            ]) {
+                                sh """
+                                    echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
+                                    docker build -t "\$BACKEND_IMAGE" .
+                                    docker push "\$BACKEND_IMAGE"
+                                """
                             }
                         }
                     }
@@ -121,9 +119,12 @@ pipeline {
                                 def props = readProperties file: env.DEPLOY_ENV_FILE
                                 env.EC2_NAME = props.EC2_NAME
                                 env.EC2_HOST = props.EC2_HOST
-                                env.RABBIT_DEPLOY_SCRIPT = props.RABBIT_DEPLOY_SCRIPT
+                                env.RABBIT_DEPLOY_SCRITP = props.RABBIT_DEPLOY_SCRITP
                             }
-                            sh '[FILE] env 파일을 설정했습니다...'
+                            echo "[FILE] env 파일을 설정했습니다..."
+                            echo "[FILE] Debug - EC2_NAME: ${env.EC2_NAME}"
+                            echo "[FILE] Debug - EC2_HOST: ${env.EC2_HOST}"
+                            echo "[FILE] Debug - DEPLOY_SCRIPT_PATH: ${env.RABBIT_DEPLOY_SCRITP}"
                         }
                     }
                 }
@@ -132,7 +133,7 @@ pipeline {
                     steps {
                         sshagent(credentials: ['rabbit-ec2-key']) {
                             sh 'echo "[SERVER] EC2에 원격 접속하여 배포 스크립트를 실행합니다..."'
-                            sh "ssh -o StrictHostKeyChecking=no ${env.EC2_NAME}@${env.EC2_HOST} 'bash ${env.RABBIT_DEPLOY_SCRIPT}'"
+                            sh "ssh -o StrictHostKeyChecking=no ${env.EC2_NAME}@${env.EC2_HOST} 'bash ${env.RABBIT_DEPLOY_SCRITP}'"
                         }
                     }
                 }

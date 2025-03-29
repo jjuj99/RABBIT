@@ -103,7 +103,7 @@ pipeline {
                             ]) {
                                 sh """
                                     echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
-                                    docker build -t "\$BACKEND_IMAGE" .
+                                    docker build --platform linux/amd64 -t "\$BACKEND_IMAGE" .
                                     docker push "\$BACKEND_IMAGE"
                                 """
                             }

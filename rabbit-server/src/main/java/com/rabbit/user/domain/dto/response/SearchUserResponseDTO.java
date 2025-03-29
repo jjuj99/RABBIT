@@ -14,4 +14,5 @@ public class SearchUserResponseDTO {
     private String email;
     private String userName;
     private String nickname;
+    private String walletAddress;
 }

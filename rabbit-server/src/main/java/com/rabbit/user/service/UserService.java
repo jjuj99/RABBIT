@@ -61,12 +61,19 @@ public class UserService {
     @Transactional(readOnly = true)
     public SearchUserResponseDTO searchUserByEmail(String searchEmail) {
         return userRepository.findByEmail(searchEmail)
-                .map(user -> SearchUserResponseDTO.builder()
-                        .userId(user.getUserId())
-                        .email(user.getEmail())
-                        .userName(user.getUserName())
-                        .nickname(user.getNickname())
-                        .build())
+                .map(user -> {
+                    String walletAddress = metamaskWalletRepository.findByUser_UserIdAndPrimaryFlagTrue(user.getUserId())
+                                    .map(MetamaskWallet::getWalletAddress)
+                                    .orElseGet(() -> null);
+
+                    return SearchUserResponseDTO.builder()
+                            .userId(user.getUserId())
+                            .email(user.getEmail())
+                            .userName(user.getUserName())
+                            .nickname(user.getNickname())
+                            .walletAddress(walletAddress)
+                            .build();
+                })
                 .orElseGet(() -> null);
     }
 }

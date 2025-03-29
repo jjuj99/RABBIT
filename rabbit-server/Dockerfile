@@ -1,6 +1,7 @@
-FROM eclipse-temurin:17-jre-alpine
+# ARM 아키텍처를 지원하는 이미지로 변경하거나 플랫폼 명시
+FROM --platform=linux/amd64 eclipse-temurin:17-jre-alpine
 
-# 로컬에서 빌드한 jar 복사 (정확한 파일명은 직접 지정해주는 게 안정적)
+# 로컬에서 빌드한 jar 복사
 COPY build/libs/rabbit-server-0.0.1-SNAPSHOT.jar app.jar
 COPY . .
 

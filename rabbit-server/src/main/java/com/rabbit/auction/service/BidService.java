@@ -8,6 +8,7 @@ import com.rabbit.auction.repository.AuctionRepository;
 import com.rabbit.auction.repository.BidRepository;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
+import com.rabbit.sse.service.SseService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.List;
 public class BidService {
     private final BidRepository bidRepository;
     private final AuctionRepository auctionRepository;
+    private final SseService sseService;
 
     @Transactional
     public void addBid(@Valid BidRequestDTO bidRequest, Integer auctionId, Integer userId) {
@@ -54,6 +56,15 @@ public class BidService {
 
         // auction에 현재가, 입찰자 업데이트
         auction.updatePriceAndBidder(bidRequest.getBidAmount(), userId);
+
+        //SSE 전송
+        BidResponseDTO response = BidResponseDTO.builder()
+                .bidId(bid.getBidId())
+                .bidAmount(bid.getBidAmount())
+                .createdAt(bid.getCreatedAt())
+                .build();
+
+        sseService.sendBidUpdate(auctionId, response);
     }
 
     public List<BidResponseDTO> getBids(Integer auctionId) {

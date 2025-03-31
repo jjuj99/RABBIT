@@ -1,12 +1,17 @@
 package com.rabbit.auction.domain.entity;
 
-import com.rabbit.auction.domain.enums.AuctionStatus;
+import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.ZonedDateTime;
 
-@Table(name="auctions")
+@Table(
+        name = "auctions",
+        indexes = {
+                @Index(name = "idx_auction_status", columnList = "auction_status")
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -33,8 +38,8 @@ public class Auction {
     private String tokenId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private AuctionStatus auctionStatus;
+    @Column(name = "auction_status", nullable = false, length = 50)
+    private SysCommonCodes.Auction auctionStatus;
 
     private Long price;
 

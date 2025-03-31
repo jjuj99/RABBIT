@@ -2,10 +2,10 @@
 # 개발 서버 환경 설정
 spring:
   data:
-  # MySQL 설정
+  # PostgreSQL 설정
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DEV_DB_HOST}:${DEV_DB_PORT:5432}/${DEV_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUniCode=yes&characterEncoding=UTF-8
+    url: jdbc:postgresql://${DEV_DB_HOST}:${DEV_DB_PORT:5432}/${DEV_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&useUniCode=yes&characterEncoding=UTF-8
     username: ${DEV_DB_USERNAME}
     password: ${DEV_DB_PASSWORD}
   # JPA 설정 추가

@@ -1,13 +1,12 @@
 spring:
   # .env import
   data:
-# MySQL 설정
+  # PostgreSQL 설정
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${LOCAL_DB_HOST:localhost}:${LOCAL_DB_PORT:5432}/${LOCAL_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUniCode=yes&characterEncoding=UTF-8
+    url: jdbc:postgresql://${LOCAL_DB_HOST:localhost}:${LOCAL_DB_PORT:5432}/${LOCAL_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&useUniCode=yes&characterEncoding=UTF-8
     username: ${LOCAL_DB_USERNAME}
     password: ${LOCAL_DB_PASSWORD}
-
   # JPA 설정 추가
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect

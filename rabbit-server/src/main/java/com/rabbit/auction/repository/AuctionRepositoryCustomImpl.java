@@ -14,7 +14,7 @@ import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
 import com.rabbit.auction.domain.dto.response.MyAuctionResponseDTO;
 import com.rabbit.auction.domain.entity.QAuction;
 import com.rabbit.auction.domain.entity.QBid;
-import com.rabbit.auction.domain.enums.AuctionStatus;
+import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -37,7 +37,7 @@ public class AuctionRepositoryCustomImpl implements AuctionRepositoryCustom {
         if (req.getMaxPrice() != null) builder.and(auction.price.loe(req.getMaxPrice()));
 
         //진행중인 경매만 가져오기
-        builder.and(auction.auctionStatus.eq(AuctionStatus.ING));
+        builder.and(auction.auctionStatus.eq(SysCommonCodes.Auction.ING));
         
         List<AuctionResponseDTO> content = queryFactory
                 .select(fields(
@@ -84,7 +84,7 @@ public class AuctionRepositoryCustomImpl implements AuctionRepositoryCustom {
                         bid.bidAmount,
                         ExpressionUtils.as(
                                 new CaseBuilder()
-                                        .when(auction.auctionStatus.eq(AuctionStatus.ING)).then("PENDING")
+                                        .when(auction.auctionStatus.eq(SysCommonCodes.Auction.ING)).then("PENDING")
                                         .when(auction.winningBidder.eq(userId)).then("WON")
                                         .otherwise("LOST"),
                                 "bidStatus"

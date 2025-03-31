@@ -1,0 +1,214 @@
+package com.rabbit.global.code.domain.enums;
+
+import com.rabbit.global.exception.BusinessException;
+import com.rabbit.global.exception.ErrorCode;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+import java.util.Set;
+
+/**
+ * 시스템에서 사용되는 모든 상태 코드를 한 파일에서 관리하는 클래스
+ * 이 클래스의 enum 정의가 시스템 전체의 단일 진실 공급원(Single Source of Truth)입니다.
+ *
+ * [새로운 상태 코드 추가 방법]
+ * 1. 해당 코드 유형의 enum에 새 상태 코드 항목을 추가합니다. (예: Auction.NEW_STATUS)
+ * 2. 새로운 코드 유형을 추가하려면:
+ *    a. 새로운 enum 내부 클래스를 생성하고 SysCommonCodeEnum 인터페이스를 구현합니다.
+ *    b. getAllCodeTypes 메서드에 (예: NEW.values()[0].getCodeType())
+ *    c. service.impl 패키지에 해당 XXXCodeManager 클래스를 생성합니다.
+ *    d. 애플리케이션 재시작 시 자동으로 레지스트리에 등록되고 DB에 동기화됩니다.
+ */
+@Component
+public class SysCommonCodes {
+
+    /**
+     * 모든 코드 타입 목록 반환
+     */
+    public static Set<String> getAllCodeTypes() {
+        return Set.of(
+                Auction.values()[0].getCodeType(),
+                EmailLog.values()[0].getCodeType(),
+                PromissoryNote.values()[0].getCodeType(),
+                CoinLog.values()[0].getCodeType(),
+                Bid.values()[0].getCodeType()
+                // 새 코드 타입 추가 시 여기에 추가
+        );
+    }
+
+    /**
+     * 코드 타입 유효성 검사
+     */
+    public static boolean isValidCodeType(String codeType) {
+        return getAllCodeTypes().contains(codeType);
+    }
+
+    // 공통 enum 변환 로직
+    private static <T extends Enum<?> & SysCommonCodeEnum> T fromCodeCommon(
+            T[] values, String code, String codeType) {
+        return Arrays.stream(values)
+                .filter(status -> status.getCode().equals(code))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.CODE_NOT_FOUND, codeType, code));
+    }
+
+    /**
+     * 경매 상태 코드 열거형
+     */
+    @Getter
+    @RequiredArgsConstructor
+    public enum Auction implements SysCommonCodeEnum {
+        ING("진행중", "경매가 활성화되어 입찰을 받는 중", 1),
+        COMPLETED("완료", "경매가 종료되어 낙찰이 완료됨", 2),
+        FAILED("실패", "경매가 실패하여 종료됨", 3),
+        CANCELED("취소", "경매가 취소됨", 4);
+
+        private final String codeName;
+        private final String description;
+        private final int displayOrder;
+
+        private static final String CODE_TYPE = "AUCTION_STATUS";
+
+        @Override
+        public String getCode() {
+            return this.name();
+        }
+
+        @Override
+        public String getCodeType() {
+            return CODE_TYPE;
+        }
+
+        public static Auction fromCode(String code) {
+            return fromCodeCommon(values(), code, CODE_TYPE);
+        }
+    }
+
+    /**
+     * 입찰 상태 코드 열거형
+     */
+    @Getter
+    @RequiredArgsConstructor
+    public enum Bid implements SysCommonCodeEnum {
+        PENDING("대기중", "경매가 진행중인 입찰", 1),
+        WON("낙찰", "경매에서 낙찰됨", 2),
+        LOST("유찰", "경매에서 유찰됨", 3);
+
+        private final String codeName;
+        private final String description;
+        private final int displayOrder;
+
+        private static final String CODE_TYPE = "BID_STATUS";
+
+        @Override
+        public String getCode() {
+            return this.name();
+        }
+
+        @Override
+        public String getCodeType() {
+            return CODE_TYPE;
+        }
+
+        public static Bid fromCode(String code) {
+            return fromCodeCommon(values(), code, CODE_TYPE);
+        }
+    }
+
+    /**
+     * 이메일 로그 상태 코드 열거형
+     */
+    @Getter
+    @RequiredArgsConstructor
+    public enum EmailLog implements SysCommonCodeEnum {
+        PENDING("대기중", "이메일 전송 대기 중", 1),
+        SENT("전송 완료", "이메일 전송이 완료됨", 2),
+        FAILED("전송 실패", "이메일 전송이 실패함", 3);
+
+        private final String codeName;
+        private final String description;
+        private final int displayOrder;
+
+        private static final String CODE_TYPE = "EMAIL_LOG_STATUS";
+
+        @Override
+        public String getCode() {
+            return this.name();
+        }
+
+        @Override
+        public String getCodeType() {
+            return CODE_TYPE;
+        }
+
+        public static EmailLog fromCode(String code) {
+            return fromCodeCommon(values(), code, CODE_TYPE);
+        }
+    }
+
+    /**
+     * 차용증 상태 코드 열거형
+     */
+    @Getter
+    @RequiredArgsConstructor
+    public enum PromissoryNote implements SysCommonCodeEnum {
+        DRAFT("초안", "차용증이 초안 상태로 작성됨", 1),
+        PENDING("서명 대기중", "차용증 서명이 대기 중", 2),
+        CANCELED("취소", "차용증 계약이 취소됨", 3),
+        COMPLETED("완료", "차용증 계약이 완료됨", 4);
+
+        private final String codeName;
+        private final String description;
+        private final int displayOrder;
+
+        private static final String CODE_TYPE = "PROMISSORY_NOTE_STATUS";
+
+        @Override
+        public String getCode() {
+            return this.name();
+        }
+
+        @Override
+        public String getCodeType() {
+            return CODE_TYPE;
+        }
+
+        public static PromissoryNote fromCode(String code) {
+            return fromCodeCommon(values(), code, CODE_TYPE);
+        }
+    }
+
+    /**
+     * 코인 로그 타입 코드 열거형
+     */
+    @Getter
+    @RequiredArgsConstructor
+    public enum CoinLog implements SysCommonCodeEnum {
+        DEPOSIT("입금", "메타마스크 계좌로 입금", 1),
+        WITHDRAWAL("출금", "메타마스크 계좌에서 출금", 2);
+
+        private final String codeName;
+        private final String description;
+        private final int displayOrder;
+
+        private static final String CODE_TYPE = "COIN_LOG_TYPE";
+
+        @Override
+        public String getCode() {
+            return this.name();
+        }
+
+        @Override
+        public String getCodeType() {
+            return CODE_TYPE;
+        }
+
+        public static CoinLog fromCode(String code) {
+            return fromCodeCommon(values(), code, CODE_TYPE);
+        }
+    }
+
+}

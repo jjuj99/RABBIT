@@ -7,8 +7,9 @@ import com.rabbit.auction.domain.dto.response.MyAuctionResponseDTO;
 import com.rabbit.auction.repository.AuctionRepository;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
 import com.rabbit.auction.domain.entity.Auction;
-import com.rabbit.auction.domain.enums.AuctionStatus;
 import com.rabbit.auction.repository.BidRepository;
+import com.rabbit.global.code.domain.enums.SysCommonCodes;
+import com.rabbit.global.code.service.SysCommonCodeService;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.response.PageResponseDTO;
@@ -26,11 +27,15 @@ import java.time.ZonedDateTime;
 public class AuctionService {
     private final AuctionRepository auctionRepository;
     private final BidRepository bidRepository;
+    private final SysCommonCodeService sysCommonCodeService;
+    // 코드 타입 상수 정의
+    private static final String AUCTION_STATUS = SysCommonCodes.Auction.values()[0].getCodeType();
+    private static final String BID_STATUS = SysCommonCodes.Bid.values()[0].getCodeType();
 
     public void addAuction(@Valid AuctionRequestDTO auctionRequest) {
         //NFT의 소유자가 맞는지 확인
         //이미 경매가 진행중인지 확인
-        auctionRepository.findByTokenIdAndAuctionStatus(auctionRequest.getTokenId(), AuctionStatus.ING)
+        auctionRepository.findByTokenIdAndAuctionStatus(auctionRequest.getTokenId(), SysCommonCodes.Auction.ING)
                 .ifPresent(auction ->{
                     throw new BusinessException(ErrorCode.ALREADY_EXISTS, "해당 NFT는 이미 경매가 진행 중입니다.");
                 });
@@ -40,7 +45,7 @@ public class AuctionService {
                 .minimumBid(auctionRequest.getMinimumBid())
                 .endDate(auctionRequest.getEndDate())
                 .tokenId(auctionRequest.getTokenId())
-                .auctionStatus(AuctionStatus.ING)
+                .auctionStatus(SysCommonCodes.Auction.ING)
                 .sellerSign(auctionRequest.getSellerSign())
                 .createdAt(ZonedDateTime.now())
                 .build();
@@ -72,11 +77,25 @@ public class AuctionService {
         }
 
         //cancel로 상태 변경
-        auction.setAuctionStatus(AuctionStatus.CANCELED);
+        auction.setAuctionStatus(SysCommonCodes.Auction.CANCELED);
     }
 
     public PageResponseDTO<MyAuctionResponseDTO> getMyBidAuctions(Integer userId, Pageable pageable) {
         Page<MyAuctionResponseDTO> result = auctionRepository.getMyBidAuction(userId, pageable);
+
+        // 국제화된 상태명 설정
+        // page 처리 된 곳이기 때문에 매번 국제화를 불러와도 성능 차이 미미함 (10 - 50개 정도이기 때문)
+        // but 엑셀 저장과 같이 한번에 수만건 처리해야하는 batch 작업이라면 국제화한 code name 을 미리 계산해서 사용하는 것이 성능에 좋음
+        result.getContent().forEach(dto -> {
+            if (dto.getAuctionStatus() != null) {
+                dto.setAuctionStatusName(sysCommonCodeService.getCodeName(
+                        AUCTION_STATUS, dto.getAuctionStatus().getCode()));
+            }
+            if (dto.getBidStatus() != null) {
+                dto.setBidStatusName(sysCommonCodeService.getCodeName(
+                        BID_STATUS, dto.getBidStatus()));
+            }
+        });
 
         return PageResponseDTO.<MyAuctionResponseDTO>builder()
                 .content(result.getContent())

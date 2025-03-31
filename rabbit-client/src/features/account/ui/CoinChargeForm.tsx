@@ -6,12 +6,15 @@ import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/shared/ui/dialog";
 import currencyFormat from "@/shared/utils/currencyFormat";
 import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const CoinChargeForm = ({
   amountState,
 }: {
   amountState: [number, React.Dispatch<React.SetStateAction<number>>];
 }) => {
+  const [open, setOpen] = useState(false);
   const [amount, setAmount] = amountState;
   const { balance } = useGetBalance();
 
@@ -33,9 +36,29 @@ const CoinChargeForm = ({
             className="w-full text-base font-bold md:text-lg"
             unitColor="brand-primary"
           />
-          <Dialog>
+          <Dialog
+            open={open}
+            onOpenChange={(isOpen) => {
+              if (open && !isOpen) {
+                return;
+              }
+              setOpen(isOpen);
+            }}
+            modal
+          >
             <DialogTrigger asChild>
-              <Button type="button" variant={"primary"} className="w-[30%]">
+              <Button
+                type="button"
+                variant="primary"
+                className="w-[30%]"
+                onClick={(e) => {
+                  if (amount <= 0) {
+                    e.preventDefault(); // 모달 열림 방지
+                    toast.error("충전 금액을 확인해주세요.");
+                    return;
+                  }
+                }}
+              >
                 충전하기
               </Button>
             </DialogTrigger>
@@ -50,7 +73,7 @@ const CoinChargeForm = ({
                 개발 단계에서는 테스트 API의 제한으로 지금은 모든 결제 수단을
                 제공합니다.
               </DialogDescription>
-              <Checkout />
+              <Checkout onClose={() => setOpen(false)} amount={amount} />
             </DialogContent>
           </Dialog>
         </div>

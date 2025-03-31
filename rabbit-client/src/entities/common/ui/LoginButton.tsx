@@ -8,6 +8,7 @@ import ensureCorrectNetwork from "@/entities/wallet/utils/ensureCorrectNetwork";
 import getMetaMaskProvider from "@/entities/wallet/utils/getMetaMaskProvider";
 import connectWallet from "@/entities/wallet/utils/connectWallet";
 import generateSignature from "@/entities/wallet/utils/generateSignature";
+import checkRabbitTokenRegister from "@/entities/wallet/utils/checkRabbitTokenRegister";
 
 import { setAccessToken } from "@/entities/auth/utils/authUtils";
 import { LOGIN_MESSAGE } from "@/entities/wallet/constant";
@@ -62,6 +63,20 @@ const LoginButton = () => {
       setIsLoading(false);
       return;
     }
+
+    // 토큰 등록 확인 및 등록 시도
+    try {
+      const { isRegistered, error: tokenError } =
+        await checkRabbitTokenRegister();
+      if (!isRegistered && tokenError) {
+        toast.error(tokenError);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+    }
+
     // 3. 지갑 연결 요청 - 예외 처리 toast 띄우기, 지갑 연결을 거부했을 때?
     // 4. 지갑 주소 반환 - 예외 처리 toast 띄우기
     const provider = await getMetaMaskProvider();
@@ -90,8 +105,10 @@ const LoginButton = () => {
     // 6. 난수 요청
 
     const { data: nonce } = await nonceMutation.mutateAsync(address);
+
     if (!nonce) {
       toast.error("난수 요청에 실패했습니다.");
+
       setIsLoading(false);
       return;
     }
@@ -101,6 +118,8 @@ const LoginButton = () => {
       address,
       LOGIN_MESSAGE(address, nonce.nonce),
     );
+    console.log(signature);
+
     if (!signature) {
       switch (signatureError) {
         case "PROVIDER_NOT_FOUND":
@@ -127,13 +146,22 @@ const LoginButton = () => {
       if (loginRes.status === "SUCCESS" && loginRes.data) {
         toast.success("로그인에 성공했습니다.");
         setAccessToken(loginRes.data.accessToken);
+
         queryClient.setQueryData(["user"], {
           isAuthenticated: true,
-          user: loginRes.data.user,
+          user: {
+            nickname: loginRes.data.nickname,
+            userName: loginRes.data.userName,
+          },
         });
         setIsLoading(false);
         return;
       } else {
+        if (loginRes.status === "ERROR") {
+          toast.error(loginRes.error?.message);
+          setIsLoading(false);
+          return;
+        }
         // 회원가입
       }
     } catch {

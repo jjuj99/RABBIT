@@ -44,15 +44,15 @@ const ContractCreate = () => {
             className="flex w-full flex-col items-center gap-9 bg-gray-900 px-4 py-9 md:px-11"
           >
             <div className="flex w-full flex-col items-center gap-2">
-              <h2 className="text-3xl">신규 차용증 작성</h2>
-              <span className="text-text-disabled text-2xl">
+              <h2 className="text-2xl md:text-3xl">신규 차용증 작성</h2>
+              <span className="text-text-disabled text-lg md:text-2xl">
                 입력된 내용은 계약서에 반영되면, 법적 효력이 발생합니다.
               </span>
             </div>
             <div className="flex w-full flex-col gap-3 md:flex-row">
               {/* 채무자 정보 */}
               <div className="flex w-full flex-col gap-3">
-                <h3 className="text-2xl font-bold">채무자 정보</h3>
+                <h3 className="text-xl font-bold md:text-2xl">채무자 정보</h3>
                 <FormField
                   control={form.control}
                   name="DR_PHONE"
@@ -125,7 +125,7 @@ const ContractCreate = () => {
               </div>
               {/* 채권자 정보 */}
               <div className="flex w-full flex-col gap-3">
-                <h3 className="text-2xl font-bold">채권자 정보</h3>
+                <h3 className="text-xl font-bold md:text-2xl">채권자 정보</h3>
                 <FormField
                   control={form.control}
                   name="CR_EMAIL"
@@ -137,8 +137,8 @@ const ContractCreate = () => {
                       setOpen={setIsSearchUserDialogOpen}
                       onUserSelect={(user) => {
                         form.setValue("CR_EMAIL", user.email);
-                        form.setValue("CR_NAME", user.name);
-                        form.setValue("CR_WALLET", user.wallet);
+                        form.setValue("CR_NAME", user.userName);
+                        form.setValue("CR_WALLET", user.walletAddress);
                       }}
                     >
                       <InputForm
@@ -190,7 +190,7 @@ const ContractCreate = () => {
             </div>
             {/* 1. 기본 정보 */}
             <div className="flex w-full flex-col gap-3">
-              <h3 className="text-2xl font-bold">1. 기본 정보</h3>
+              <h3 className="text-xl font-bold md:text-2xl">1. 기본 정보</h3>
               <div className="grid grid-cols-2 items-center gap-3 md:grid-cols-4">
                 <FormField
                   control={form.control}
@@ -203,6 +203,13 @@ const ContractCreate = () => {
                       type="number"
                       id="LA"
                       {...field}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? undefined
+                            : e.target.valueAsNumber,
+                        )
+                      }
                     />
                   )}
                 />
@@ -217,6 +224,13 @@ const ContractCreate = () => {
                       placeholder="20% 이하(법정 최고)"
                       id="IR"
                       {...field}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? undefined
+                            : e.target.valueAsNumber,
+                        )
+                      }
                     />
                   )}
                 />
@@ -232,6 +246,13 @@ const ContractCreate = () => {
                       placeholder="대출 기간을 입력하세요."
                       id="LT"
                       {...field}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? undefined
+                            : e.target.valueAsNumber,
+                        )
+                      }
                     />
                   )}
                 />
@@ -257,6 +278,13 @@ const ContractCreate = () => {
                       type="number"
                       id="MP_DT"
                       {...field}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? undefined
+                            : e.target.valueAsNumber,
+                        )
+                      }
                     />
                   )}
                 />
@@ -271,13 +299,20 @@ const ContractCreate = () => {
                       type="number"
                       id="DIR"
                       {...field}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? undefined
+                            : e.target.valueAsNumber,
+                        )
+                      }
                     />
                   )}
                 />
               </div>
             </div>
             <div className="flex w-full flex-col gap-3 border-b-2 pb-4">
-              <h3 className="text-2xl font-bold">2. 기한이익상실</h3>
+              <h3 className="text-xl font-bold md:text-2xl">2. 기한이익상실</h3>
               <div className="flex flex-col gap-4 pl-4">
                 <span>
                   1. 채무자가 아래 사유 중 하나에 해당하는 경우, 채권자는 기한의
@@ -314,7 +349,7 @@ const ContractCreate = () => {
               </div>
             </div>
             <div className="flex w-full flex-col gap-3">
-              <h3 className="text-2xl font-bold">3. 선택항목</h3>
+              <h3 className="text-xl font-bold md:text-2xl">3. 선택항목</h3>
               <div className="flex flex-col gap-1 pl-4">
                 <span className="text-text-secondary">
                   차용증 양도 가능 여부 (선택사항)
@@ -388,7 +423,9 @@ const ContractCreate = () => {
               </div>
             </div>
             <div className="flex w-full flex-col gap-3">
-              <h3 className="text-2xl font-bold">4. 추가조항(선택)</h3>
+              <h3 className="text-xl font-bold md:text-2xl">
+                4. 추가조항(선택)
+              </h3>
               <FormField
                 control={form.control}
                 name="ADD_TERMS"
@@ -403,7 +440,7 @@ const ContractCreate = () => {
               />
             </div>
             <div className="flex w-full flex-col gap-3">
-              <h3 className="text-2xl font-bold">5. 메세지(선택)</h3>
+              <h3 className="text-xl font-bold md:text-2xl">5. 메세지(선택)</h3>
               <FormField
                 control={form.control}
                 name="MESSAGE"
@@ -419,14 +456,14 @@ const ContractCreate = () => {
             </div>
             <div className="flex w-full justify-center gap-3">
               <Button
-                className="h-11 w-[170px] text-xl font-bold text-gray-700"
+                className="h-11 flex-1 text-lg font-bold text-gray-700 md:max-w-[170px] md:text-xl"
                 variant="secondary"
               >
                 취소
               </Button>
               <Button
                 type="submit"
-                className="h-11 w-[170px] text-xl font-bold text-gray-700"
+                className="h-11 flex-1 text-lg font-bold text-gray-700 md:max-w-[170px] md:text-xl"
                 variant="primary"
               >
                 제출

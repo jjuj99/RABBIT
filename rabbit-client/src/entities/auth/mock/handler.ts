@@ -41,9 +41,8 @@ export const authHandlers = [
           status: "SUCCESS",
           data: {
             accessToken: "1234567890",
-            user: {
-              nickname: "test",
-            },
+            nickname: "test",
+            userName: "test",
           },
         };
 
@@ -79,9 +78,8 @@ export const authHandlers = [
       status: "SUCCESS",
       data: {
         accessToken: "1234567890",
-        user: {
-          nickname: "test",
-        },
+        nickname: "test",
+        userName: "test",
       },
     };
     return HttpResponse.json(successResponse);
@@ -90,7 +88,7 @@ export const authHandlers = [
   http.get(`${VITE_API_URL}/${VITE_API_VERSION}/user/me`, async () => {
     const response: ApiResponse<User> = {
       status: "SUCCESS",
-      data: { nickname: "test" },
+      data: { nickname: "test", userName: "test" },
     };
     return HttpResponse.json(response);
   }),

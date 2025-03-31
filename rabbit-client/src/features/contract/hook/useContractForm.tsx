@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useAuthUser } from "@/entities/auth/hooks/useAuth";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useGetWallet from "@/entities/wallet/hooks/useGetWallet";
 
 const useContractForm = () => {
@@ -24,26 +24,30 @@ const useContractForm = () => {
       .email({ message: "올바른 이메일 형식이 아닙니다" }),
     CR_NAME: z.string().min(1, { message: "이름을 입력해주세요" }),
     CR_WALLET: z.string().min(1, { message: "지갑 주소를 입력해주세요" }),
-    LA: z.number().min(1000000, { message: "100,000원 이상" }),
+    LA: z.number().min(99999, { message: "100,000원 이상" }).nullable(),
     IR: z
       .number()
       .min(0, { message: "이자율은 0% 이상이어야 합니다" })
       .max(20, { message: "이자율은 20%를 초과할 수 없습니다" })
-      .step(0.1, { message: "이자율은 0.1% 단위로 입력해주세요" }),
+      .step(0.1, { message: "이자율은 0.1% 단위로 입력해주세요" })
+      .nullable(),
     LT: z
       .number()
       .min(1, { message: "대출 기간은 1개월 이상이어야 합니다" })
-      .int({ message: "대출 기간은 정수로 입력해주세요" }),
+      .int({ message: "대출 기간은 정수로 입력해주세요" })
+      .nullable(),
     REPAY_TYPE: z.string().min(1, { message: "상환 방식을 선택해주세요" }),
     MP_DT: z
       .number()
       .min(1, { message: "납입일은 1일 이상이어야 합니다" })
-      .max(31, { message: "납입일은 31일을 초과할 수 없습니다" }),
+      .max(31, { message: "납입일은 31일을 초과할 수 없습니다" })
+      .nullable(),
     DIR: z
       .number()
       .min(0, { message: "연체이자율은 0% 이상이어야 합니다" })
       .max(20, { message: "연체이자율은 20%를 초과할 수 없습니다" })
-      .step(0.1, { message: "연체이자율은 0.1% 단위로 입력해주세요" }),
+      .step(0.1, { message: "연체이자율은 0.1% 단위로 입력해주세요" })
+      .nullable(),
     DEF_CNT: z.number().min(0, { message: "기한이익상실 기준을 입력해주세요" }),
     PN_TRANS: z.boolean().optional(),
     EARLYPAY: z.boolean().optional(),
@@ -66,21 +70,27 @@ const useContractForm = () => {
     MESSAGE: z.string().optional(),
   });
 
+  useEffect(() => {
+    if (address) {
+      form.setValue("DR_WALLET", address);
+    }
+  }, [address]);
+
   const form = useForm<z.infer<typeof contractSchema>>({
     resolver: zodResolver(contractSchema),
     defaultValues: {
+      DR_NAME: user?.userName ?? "",
       DR_PHONE: "",
-      DR_NAME: user?.nickname,
-      DR_WALLET: address ?? "",
-      CR_EMAIL: "",
+      DR_WALLET: "",
       CR_NAME: "",
+      CR_EMAIL: "",
       CR_WALLET: "",
-      // LA: 0,
-      // IR: 0,
-      // LT: 0,
+      LA: undefined,
+      IR: undefined,
+      LT: undefined,
       REPAY_TYPE: "",
-      // MP_DT: 0,
-      // DIR: 0,
+      MP_DT: undefined,
+      DIR: undefined,
       DEF_CNT: 0,
       PN_TRANS: false,
       EARLYPAY: false,
@@ -91,20 +101,6 @@ const useContractForm = () => {
   });
 
   const onSubmit = (data: z.infer<typeof contractSchema>) => {
-    // if (!data.DR_NAME) {
-    //   setDialogMessage("계약자 이름을 입력해주세요.");
-    //   setDialogOpen(true);
-    //   return;
-    // }
-
-    if (!data.DR_PHONE) {
-      setDialogMessage("휴대폰 번호를 인증해주세요.");
-      console.log("여기");
-
-      setDialogOpen(true);
-      return;
-    }
-
     console.log(data);
   };
 
@@ -124,7 +120,6 @@ const useContractForm = () => {
   return {
     form,
     onSubmit,
-
     passUserName,
     passPhoneNumber,
     isPassDialogOpen,

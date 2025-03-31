@@ -24,7 +24,11 @@ export const clearAccessToken = () => {
  * 리프레시 토큰을 사용하여 새 액세스 토큰을 요청합니다.
  * 로그인되지 않은 사용자의 경우 null을 반환합니다 (에러를 던지지 않음).
  */
-export const refreshAccessToken = async () => {
+export const refreshAccessToken = async (): Promise<{
+  userName: string;
+  nickname: string;
+  accessToken: string;
+} | null> => {
   try {
     const res = await RefreshTokenAPI();
 

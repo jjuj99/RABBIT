@@ -39,3 +39,12 @@ export interface SubmitAuctionBidResponse {
 export interface CreateAuctionResponse {
   message: string;
 }
+
+export interface BidHistoryResponse {
+  auction_id: number;
+  bid_date: string;
+  auction_status: "COMPLETED" | "IN_PROGRESS";
+  price: number;
+  bid_amount: number;
+  bid_status: "WON" | "LOST" | "PENDING";
+}

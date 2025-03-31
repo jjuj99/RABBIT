@@ -2,6 +2,7 @@ import fetchOption from "@/shared/utils/fetchOption";
 import { AuctionListRequest } from "../types/request";
 import {
   AuctionListResponse,
+  BidHistoryResponse,
   BidListResponse,
   CreateAuctionResponse,
   PNInfoListResponse,
@@ -87,6 +88,17 @@ export const createAuctionAPI = async ({
       token_id,
       seller_sign,
     }),
+  );
+  const data = await res.json();
+  return data;
+};
+
+export const getBidHistoryAPI = async (): Promise<
+  ApiResponse<BidHistoryResponse[]>
+> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/auction/my-bids`,
+    fetchOption("GET", undefined, "access"),
   );
   const data = await res.json();
   return data;

@@ -17,7 +17,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // 인증 상태와 유저 정보를 하나의 쿼리로 통합
           queryClient.setQueryData(["user"], {
             isAuthenticated: true,
-            user: authResponse.user,
+            user: {
+              userName: authResponse.userName,
+              nickname: authResponse.nickname,
+            },
           });
         } else {
           // 인증 실패 시

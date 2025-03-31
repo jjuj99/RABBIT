@@ -9,11 +9,20 @@ import { useAuthContext } from "./useAuthContext";
 import { GetUserAPI, LogoutAPI } from "../api/authApi";
 
 import { toast } from "sonner";
-import { User } from "../types/response";
 
 type UserState = {
   isAuthenticated: boolean;
-  user: User | null;
+  user: {
+    nickname: string;
+    userName: string;
+  } | null;
+};
+
+type DecodedToken = {
+  exp: number;
+  iat: number;
+  sub: string;
+  userId: string;
 };
 
 // 통합된 인증/유저 정보 훅
@@ -24,37 +33,32 @@ export const useAuth = () => {
     queryKey: ["user"],
     queryFn: async (): Promise<UserState> => {
       try {
-        let token = getAccessToken();
-
-        // 토큰이 없으면 refresh 시도
+        const token = getAccessToken();
         if (!token) {
-          const refreshResponse = await refreshAccessToken();
-          if (!refreshResponse) {
-            return { isAuthenticated: false, user: null };
-          }
-          token = getAccessToken(); // 새로 발급받은 토큰 가져오기
-        }
-
-        // 토큰 만료 체크
-        // const decoded = jwtDecode(token);
-        const decoded = { exp: 5 * 60 };
-        if (decoded.exp && decoded.exp * 1000 < Date.now()) {
-          const refreshResponse = await refreshAccessToken();
-          if (!refreshResponse) {
-            return { isAuthenticated: false, user: null };
-          }
-        }
-
-        // 유저 정보 가져오기
-        const response = await GetUserAPI();
-        if (!response.data) {
           return { isAuthenticated: false, user: null };
         }
 
-        return {
-          isAuthenticated: true,
-          user: response.data,
-        };
+        const decoded = jwtDecode<DecodedToken>(token);
+        if (decoded.exp * 1000 < Date.now()) {
+          const refreshResponse = await refreshAccessToken();
+          if (!refreshResponse) {
+            return { isAuthenticated: false, user: null };
+          }
+        }
+
+        // userId가 있으면 유저 정보 조회
+        if (decoded.userId) {
+          const response = await GetUserAPI();
+          if (!response.data) {
+            return { isAuthenticated: false, user: null };
+          }
+          return {
+            isAuthenticated: true,
+            user: response.data,
+          };
+        }
+
+        return { isAuthenticated: false, user: null };
       } catch (error) {
         console.log("Auth check failed:", error);
         return { isAuthenticated: false, user: null };
@@ -70,6 +74,7 @@ export const useAuth = () => {
 // 사용자 정보를 가져오는 훅
 export const useUser = () => {
   const { data: authStatus } = useAuth();
+  console.log(authStatus);
   const isAuthenticated = authStatus?.isAuthenticated || false;
 
   return useQuery({
@@ -111,13 +116,13 @@ export const useLogout = () => {
 
 // 인증 상태와 사용자 정보를 모두 제공하는 편의 훅
 export const useAuthUser = () => {
-  const { data: authStatus, isLoading: isAuthLoading } = useAuth();
-  const { data: user, isLoading: isUserLoading } = useUser();
+  const { data: authData, isLoading } = useAuth();
   const { logout } = useLogout();
+
   return {
-    isAuthenticated: authStatus?.isAuthenticated || false,
-    user: user || null,
-    isLoading: isAuthLoading || isUserLoading,
+    isAuthenticated: authData?.isAuthenticated || false,
+    user: authData?.user || null,
+    isLoading,
     logout,
   };
 };

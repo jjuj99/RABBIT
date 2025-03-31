@@ -13,8 +13,6 @@ import { Separator } from "@radix-ui/react-menubar";
 const RabbitButton = () => {
   const { user, logout } = useAuthUser();
 
-  console.log(user);
-
   const handleLogout = () => {
     logout();
     // 월렛 관련 쿼리 캐시 제거
@@ -31,7 +29,7 @@ const RabbitButton = () => {
         </MenubarTrigger>
         <MenubarContent>
           <div className="px-2 py-1.5">
-            <span className="font-bit">{user?.user.nickname}</span>
+            <span className="font-bit">{user?.nickname}</span>
             <span className="font-bit text-xs">님</span>
           </div>
           <Separator />

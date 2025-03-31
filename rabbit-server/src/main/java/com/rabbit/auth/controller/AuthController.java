@@ -22,6 +22,7 @@ import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -62,7 +63,7 @@ public class AuthController {
 
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", result.getRefreshToken())
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .path("/")
                 .maxAge(60 * 60 * 24 * 7)
                 .sameSite("Strict")
@@ -92,7 +93,7 @@ public class AuthController {
 
         ResponseCookie emptyCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .path("/")
                 .maxAge(0) // 쿠키 만료
                 .sameSite("Strict")

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export interface AuctionFilterState {
+interface AuctionFilterState {
   max_price: string;
   min_price: string;
   max_ir: string;

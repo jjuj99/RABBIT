@@ -26,17 +26,17 @@ async function enableMocking() {
 }
 
 // MSW 초기화 후 앱 렌더링
-// enableMocking().then(() => {
-createRoot(document.getElementById("root")!).render(
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <BrowserRouter>
-        <App />
-        <Toaster />
-      </BrowserRouter>
-    </AuthProvider>
-    {/* 개발 환경에서만 DevTools 표시 */}
-    {import.meta.env.DEV && <ReactQueryDevtools />}
-  </QueryClientProvider>,
-);
-// });
+enableMocking().then(() => {
+  createRoot(document.getElementById("root")!).render(
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter>
+          <App />
+          <Toaster />
+        </BrowserRouter>
+      </AuthProvider>
+      {/* 개발 환경에서만 DevTools 표시 */}
+      {import.meta.env.DEV && <ReactQueryDevtools />}
+    </QueryClientProvider>,
+  );
+});

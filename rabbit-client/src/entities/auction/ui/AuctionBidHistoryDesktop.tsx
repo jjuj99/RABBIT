@@ -11,22 +11,22 @@ const AuctionBidHistoryDesktop = ({ data }: AuctionBidHistoryDesktopProps) => {
     <table className="w-full table-fixed">
       <thead>
         <tr className="border-b border-gray-800">
-          <th className="w-[120px] px-4 py-3 text-center text-xs font-medium text-gray-200 sm:text-base">
+          <th className="w-[120px] px-4 py-3 text-center text-base font-medium text-gray-200">
             NFT
           </th>
-          <th className="w-[140px] px-4 py-3 text-center text-xs font-medium text-gray-200 sm:text-base">
+          <th className="w-[140px] px-4 py-3 text-center text-base font-medium text-gray-200">
             경매 상태
           </th>
-          <th className="w-[180px] px-4 py-3 text-center text-xs font-medium text-gray-200 sm:text-base">
+          <th className="w-[180px] px-4 py-3 text-center text-base font-medium text-gray-200">
             현재 가격
           </th>
-          <th className="w-[180px] px-4 py-3 text-center text-xs font-medium text-gray-200 sm:text-base">
+          <th className="w-[180px] px-4 py-3 text-center text-base font-medium text-gray-200">
             내 입찰가
           </th>
-          <th className="w-[100px] px-4 py-3 text-center text-xs font-medium text-gray-200 sm:text-base">
+          <th className="w-[100px] px-4 py-3 text-center text-base font-medium text-gray-200">
             상태
           </th>
-          <th className="w-[160px] px-4 py-3 text-center text-xs font-medium text-gray-200 sm:text-base">
+          <th className="w-[160px] px-4 py-3 text-center text-base font-medium text-gray-200">
             거래일시
           </th>
         </tr>
@@ -37,10 +37,10 @@ const AuctionBidHistoryDesktop = ({ data }: AuctionBidHistoryDesktopProps) => {
             <td className="px-4 py-3">
               <div className="flex flex-col items-center gap-2">
                 <div className="flex flex-wrap items-center justify-center">
-                  <span className="font-bit text-xs font-medium text-white sm:text-base">
+                  <span className="font-bit text-base font-medium text-white">
                     RABBIT
                   </span>
-                  <span className="font-bit text-xs font-medium text-white sm:text-base">
+                  <span className="font-bit text-base font-medium text-white">
                     #{item.auction_id}
                   </span>
                 </div>
@@ -52,7 +52,7 @@ const AuctionBidHistoryDesktop = ({ data }: AuctionBidHistoryDesktopProps) => {
               </div>
             </td>
             <td className="px-4 py-3 text-center">
-              <div className="flex items-center justify-center gap-2 text-xs font-medium sm:text-base">
+              <div className="flex items-center justify-center gap-2 text-base font-medium">
                 {item.auction_status === "IN_PROGRESS" ? (
                   <>
                     <Circle
@@ -70,17 +70,17 @@ const AuctionBidHistoryDesktop = ({ data }: AuctionBidHistoryDesktopProps) => {
                 )}
               </div>
             </td>
-            <td className="px-4 py-3 text-center text-xs text-white sm:text-base">
+            <td className="px-4 py-3 text-center text-base text-white">
               {item.price.toLocaleString()} RAB
             </td>
             <td className="px-4 py-3 text-center">
-              <div className="text-xs text-white sm:text-base">
+              <div className="text-base text-white">
                 {item.bid_amount.toLocaleString()} RAB
               </div>
             </td>
             <td className="px-4 py-3 text-center">
               <div
-                className={`mx-auto w-fit text-xs font-medium sm:text-base ${getBidStatusColor(item.bid_status)}`}
+                className={`mx-auto w-fit text-base font-medium ${getBidStatusColor(item.bid_status)}`}
               >
                 {item.bid_status === "WON"
                   ? "낙찰"
@@ -89,7 +89,7 @@ const AuctionBidHistoryDesktop = ({ data }: AuctionBidHistoryDesktopProps) => {
                     : "입찰중"}
               </div>
             </td>
-            <td className="px-4 py-3 text-center text-xs text-white sm:text-base">
+            <td className="px-4 py-3 text-center text-base text-white">
               {formatDateToYMD(item.bid_date)}
             </td>
           </tr>

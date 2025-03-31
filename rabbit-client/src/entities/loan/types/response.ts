@@ -1,4 +1,4 @@
-export interface LoanInfoResponse {
+export interface BorrowInfoResponse {
   tokenId: string;
   tokenImage: string;
   isOverdue: boolean;
@@ -6,6 +6,21 @@ export interface LoanInfoResponse {
   creditorWallet: string;
   loanAmount: number;
   interestRate: number;
+  endDate: string;
+  endDays: number;
+  nextDueDate: string;
+  overDueAmount: number | null;
+  overdueDays: number | null;
+}
+
+export interface LentInfoResponse {
+  tokenId: string;
+  tokenImage: string;
+  isOverdue: boolean;
+  debtorName: string;
+  debtorWallet: string;
+  loanAmount: number;
+  returnRate: number;
   endDate: string;
   endDays: number;
   nextDueDate: string;

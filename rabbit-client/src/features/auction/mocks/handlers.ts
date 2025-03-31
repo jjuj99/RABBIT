@@ -7,7 +7,7 @@ import {
   PNInfoListResponse,
   SubmitAuctionBidResponse,
 } from "../types/response";
-import { mockAuctionList, mockBidList } from "./data";
+import { mockAuctionList, mockBidHistoryData, mockBidList } from "./data";
 
 interface CreateAuctionRequest {
   minimum_bid: number;
@@ -16,7 +16,7 @@ interface CreateAuctionRequest {
   seller_sign: string;
 }
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 const VITE_API_VERSION = import.meta.env.VITE_API_VERSION || "v1";
 
 console.log("MSW API URL:", VITE_API_URL, "Version:", VITE_API_VERSION);
@@ -305,4 +305,13 @@ export const handlers = [
       );
     },
   ),
+
+  // 입찰 내역 조회
+  http.get(`${VITE_API_URL}/${VITE_API_VERSION}/auction/my-bids`, () => {
+    const response: ApiResponse<typeof mockBidHistoryData> = {
+      status: "SUCCESS",
+      data: mockBidHistoryData,
+    };
+    return HttpResponse.json(response);
+  }),
 ];

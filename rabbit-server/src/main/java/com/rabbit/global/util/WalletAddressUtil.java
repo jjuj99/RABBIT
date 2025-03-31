@@ -17,11 +17,6 @@ public class WalletAddressUtil {
             return false;
         }
 
-        // 주소 형식 검증
-        if (!WalletUtils.isValidAddress(address1) || !WalletUtils.isValidAddress(address2)) {
-            return false;
-        }
-
         // cleanHexPrefix를 통해 접두사(0x) 제거
         // 대소문자 무시하여 비교
         return Numeric.cleanHexPrefix(address1)
@@ -33,18 +28,6 @@ public class WalletAddressUtil {
      * @return 체크섬이 포함된 표준 형식의 주소
      */
     public static String toChecksumAddress(String address) {
-        if (!WalletUtils.isValidAddress(address)) {
-            throw new BusinessException(ErrorCode.INVALID_WALLET_ADDRESS);
-        }
-
         return Keys.toChecksumAddress(address);
-    }
-
-    /**
-     * 지갑 주소가 유효한지 검증합니다.
-     * @return 유효하면 true, 그렇지 않으면 false
-     */
-    public static boolean isValidAddress(String address) {
-        return WalletUtils.isValidAddress(address);
     }
 }

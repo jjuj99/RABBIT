@@ -222,8 +222,9 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         ICustomERC20 rabCoin = ICustomERC20(rabbitCoinAddress);
         
         // 채무자 잔액 부족 시 이벤트 발행
-        if (rabCoin.balanceOf(info.drWalletAddress) < paymentAmount) {
-            emit InsufficientBalance(tokenId, info.drWalletAddress, paymentAmount, rabCoin.balanceOf(info.drWalletAddress));
+        uint256 drBalance = rabCoin.balanceOf(info.drWalletAddress);
+        if (drBalance < paymentAmount) {
+            emit InsufficientBalance(tokenId, info.drWalletAddress, paymentAmount, drBalance);
             return; // 함수 종료, 트랜잭션은 성공으로 처리됨
         }
 
@@ -464,7 +465,116 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
     function getActiveRepayments() external view returns (uint256[] memory) {
         return activeRepayments;
     }
-    
+
+    // 중도 상환 수수료 계산 함수
+    function getEarlyRepaymentFee(
+        uint256 tokenId,
+        uint256 paymentAmount
+    ) external view returns (uint256 feeAmount) {
+        RepaymentInfo memory info = repaymentSchedules[tokenId];
+        require(info.activeFlag, "Repayment is not active");
+        
+        IPromissoryNote promissoryNote = IPromissoryNote(promissoryNoteAddress);
+        IPromissoryNote.PromissoryMetadata memory metadata = promissoryNote.getPromissoryMetadata(tokenId);
+        
+        // 입력된 금액이 남은 원금보다 크면 남은 원금에 대해서만 수수료 계산
+        uint256 actualPrincipal = paymentAmount;
+        if (actualPrincipal > info.remainingPrincipal) {
+            actualPrincipal = info.remainingPrincipal;
+        }
+        
+        // 중도 상환 수수료 계산 (전액/부분 상환 모두 동일하게 적용)
+        return (actualPrincipal * metadata.earlyPayFee) / 10000;
+    }
+
+    // 중도 상환 처리 함수
+    function processEarlyRepayment(
+        uint256 tokenId,
+        uint256 paymentAmount,
+        uint256 feeAmount
+    ) external {
+        RepaymentInfo storage info = repaymentSchedules[tokenId];
+        require(info.activeFlag, "Repayment is not active");
+
+        // 연체 상태 확인 - 연체 중인 경우 중도 상환 불가
+        require(!info.overdueFlag, "Cannot process early repayment while loan is overdue");
+        
+        // NFT 메타데이터에서 중도 상환 가능 여부 확인
+        IPromissoryNote promissoryNote = IPromissoryNote(promissoryNoteAddress);
+        IPromissoryNote.PromissoryMetadata memory metadata = promissoryNote.getPromissoryMetadata(tokenId);
+        require(metadata.earlyPayFlag, "Early repayment not allowed for this loan");
+        
+        // 원금 검증 및 조정
+        bool isFullRepayment = false;
+        uint256 actualPrincipal = paymentAmount;
+        if (actualPrincipal >= info.remainingPrincipal) {
+            actualPrincipal = info.remainingPrincipal;
+            isFullRepayment = true;
+        }
+        
+        // 수수료 검증
+        uint256 expectedFee = (actualPrincipal * metadata.earlyPayFee) / 10000;
+        require(feeAmount == expectedFee, "Fee amount mismatch");
+        
+        // 현재 NFT 소유자 (채권자) 확인
+        address currentOwner = promissoryNote.ownerOf(tokenId);
+        
+        // 상환 처리를 위한 총 금액 (원금 + 수수료)
+        uint256 totalAmount = actualPrincipal + feeAmount;
+        
+        // 채무자 잔액 확인
+        ICustomERC20 rabCoin = ICustomERC20(rabbitCoinAddress);
+        uint256 drBalance = rabCoin.balanceOf(info.drWalletAddress);
+
+        if (drBalance < totalAmount) {
+            emit InsufficientBalance(
+                tokenId, 
+                info.drWalletAddress, 
+                totalAmount, 
+                drBalance
+            );
+            return; // 잔액 부족 시 종료
+        }
+        
+        // 자금 이체 (채무자 -> 채권자)
+        bool transferSuccess = rabCoin.transferFrom(
+            info.drWalletAddress,
+            currentOwner,
+            totalAmount // 원금 + 수수료
+        );
+        require(transferSuccess, "Transfer failed");
+        
+        // 상환 정보 업데이트
+        if (isFullRepayment) {
+            // 전액 상환 시 원금 0,납부 횟수 0 설정
+            info.remainingPrincipal = 0;
+            info.remainingPayments = 0;
+        } else {
+            // 부분 상환 시 상환 금액만큼 원금 감소
+            info.remainingPrincipal -= actualPrincipal;
+            
+            // 원리금 균등 상환(EPIP)인 경우 새로운 고정 납부액 계산
+            if (info.repayType == RepaymentType.EPIP && info.remainingPayments > 0) {
+                info.fixedPaymentAmount = calculateFixedPaymentForEPIP(
+                    info.remainingPrincipal,
+                    info.ir,
+                    info.remainingPayments
+                );
+            }
+        }
+        
+        // 원금 상환 이벤트 발행
+        emit EarlyRepaymentPrincipal(tokenId, actualPrincipal, info.remainingPrincipal, isFullRepayment);
+        
+        // 수수료 이벤트 발행
+        emit EarlyRepaymentFee(tokenId, feeAmount);
+        
+        // 전액 상환 시 상환 완료 처리
+        if (isFullRepayment) {
+            completeRepayment(tokenId);
+        }
+    }
+
     // 상환 정보 수동 업데이트 함수 (관리자 전용)
     function updateRepaymentInfo(
         uint256 tokenId, 

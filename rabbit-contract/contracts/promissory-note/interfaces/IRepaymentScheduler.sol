@@ -39,6 +39,10 @@ interface IRepaymentScheduler {
     event RepaymentProcessed(uint256 tokenId, uint256 amount, uint256 remainingPrincipal, uint256 nextMpDt); 
     event RepaymentCompleted(uint256 tokenId); // 상환 완료
 
+    // IRepaymentScheduler.sol에 추가할 이벤트
+    event EarlyRepaymentPrincipal(uint256 indexed tokenId, uint256 principalAmount, uint256 remainingPrincipal, bool isFullRepayment);
+    event EarlyRepaymentFee(uint256 indexed tokenId, uint256 feeAmount);
+
     // 채무자 잔액 부족 이벤트
     event InsufficientBalance(uint256 tokenId, address debtor, uint256 requiredAmount, uint256 currentBalance);
 
@@ -66,26 +70,42 @@ interface IRepaymentScheduler {
 
     /**
      * @dev 상환 관련 데이터 정리 함수 (채권자가 직접 NFT를 소각한 경우)
-     * @param tokenId 정리할 토큰 ID
+     * @param tokenId 정리할 차용증 NFT 토큰 ID
      */
     function cleanupRepaymentData(uint256 tokenId) external;
 
     /**
      * @dev 상환 정보 조회 함수
-     * @param tokenId 조회할 토큰 ID
+     * @param tokenId 조회할 차용증 NFT 토큰 ID
      * @return 상환 정보
      */
     function getRepaymentInfo(uint256 tokenId) external view returns (RepaymentInfo memory);
 
     /**
      * @dev 활성화된 상환 목록 조회 함수
-     * @return 활성화된 상환 목록 (토큰 ID 배열)
+     * @return 활성화된 상환 목록 (차용증 NFT 토큰 ID 배열)
      */
     function getActiveRepayments() external view returns (uint256[] memory);
 
     /**
+    * @dev 중도 상환 수수료 계산 함수
+    * @param tokenId 조회할 차용증 NFT 토큰 ID
+    * @param paymentAmount 중도 상환할 금액액
+    * @return feeAmount 중도 상환 수수료
+    */
+    function getEarlyRepaymentFee(uint256 tokenId, uint256 paymentAmount) external view returns (uint256 feeAmount);
+
+    /**
+    * @dev 중도 상환 처리 함수
+    * @param tokenId 처리할 차용증 NFT 토큰 ID
+    * @param paymentAmount 중도 상환할 금액
+    * @param feeAmount 중도 상환 수수료
+    */
+    function processEarlyRepayment(uint256 tokenId, uint256 paymentAmount, uint256 feeAmount) external;
+
+    /**
      * @dev 상환 정보 수동 업데이트 함수 (관리자 전용)
-     * @param tokenId 업데이트할 토큰 ID
+     * @param tokenId 업데이트할 차용증 NFT 토큰 ID
      * @param remainingPrincipal 변경한 남은 원금
      * @param remainingPayments 변경한 남은 납부 횟수
      * @param nextPaymentDate 변경한 다음 납부일
@@ -95,6 +115,18 @@ interface IRepaymentScheduler {
         uint256 remainingPrincipal, 
         uint256 remainingPayments, 
         uint256 nextPaymentDate
+    ) external;
+
+    // 연체 정보 수동 업데이트 함수 (관리자 전용)
+    function updateOverdueInfo(
+        uint256 tokenId,
+        bool overdueFlag,
+        uint256 overdueStartDate,
+        uint256 overdueDays,
+        uint256 aoi,
+        uint256 defCnt,
+        uint256 currentIr,
+        uint256 totalDefCnt
     ) external;
 
     /**

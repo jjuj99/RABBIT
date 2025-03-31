@@ -1,13 +1,13 @@
 import { Circle, Copy, Check } from "lucide-react";
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/shared/ui/dialog";
-import { LoanInfoResponse } from "../types/response";
+import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
+import { LentInfoResponse } from "../types/response";
 
-interface LoanInfoProps {
-  data?: LoanInfoResponse[];
+interface LentInfoProps {
+  data?: LentInfoResponse[];
 }
 
-const LoanInfo = ({ data = [] }: LoanInfoProps) => {
+const LentInfo = ({ data = [] }: LentInfoProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState("");
@@ -48,7 +48,7 @@ const LoanInfo = ({ data = [] }: LoanInfoProps) => {
               금액
             </th>
             <th className="w-[70px] px-4 py-3 text-center text-base font-medium text-gray-200">
-              이자율
+              수익률
             </th>
             <th className="w-[120px] px-4 py-3 text-center text-base font-medium text-gray-200">
               만기일
@@ -80,18 +80,18 @@ const LoanInfo = ({ data = [] }: LoanInfoProps) => {
               </td>
               <td className="px-4 py-3 text-center">
                 <div className="flex items-center justify-center gap-2 text-base font-medium">
-                  {item.creditorName}
+                  {item.debtorName}
                 </div>
               </td>
               <td className="px-4 py-3 text-center text-base text-white">
                 <div
                   className="hover:text-brand-primary mx-auto max-w-[180px] cursor-pointer truncate"
                   onClick={() => {
-                    setSelectedWallet(item.creditorWallet);
+                    setSelectedWallet(item.debtorWallet);
                     setIsOpen(true);
                   }}
                 >
-                  {item.creditorWallet}
+                  {item.debtorWallet || "-"}
                 </div>
               </td>
               <td className="px-4 py-3 text-center">
@@ -101,7 +101,7 @@ const LoanInfo = ({ data = [] }: LoanInfoProps) => {
               </td>
               <td className="px-4 py-3 text-center">
                 <div className="mx-auto w-fit text-base text-white">
-                  {item.interestRate}%
+                  {item.returnRate}%
                 </div>
               </td>
               <td className="px-4 py-3 text-center">
@@ -126,8 +126,9 @@ const LoanInfo = ({ data = [] }: LoanInfoProps) => {
                     />
                     <div>{item.isOverdue ? "연체" : "정상"}</div>
                   </div>
-                  <div className="text-sm text-gray-200">
-                    다음 납부일 : {item.nextDueDate}
+                  <div className="flex flex-wrap gap-1 text-sm text-gray-200">
+                    <span className="text-gray-300">다음 납부일 </span>
+                    <span>{item.nextDueDate} </span>
                   </div>
                   {item.isOverdue && item.overDueAmount && item.overdueDays && (
                     <div className="text-sm text-red-500">
@@ -145,6 +146,7 @@ const LoanInfo = ({ data = [] }: LoanInfoProps) => {
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="bg-gray-900 text-white">
+          <DialogTitle className="sr-only">지갑 주소 복사</DialogTitle>
           <div className="flex flex-col gap-4">
             <div className="text-lg font-medium">지갑 주소</div>
             <div className="flex items-center gap-2 rounded-lg bg-gray-800 p-3">
@@ -168,4 +170,4 @@ const LoanInfo = ({ data = [] }: LoanInfoProps) => {
   );
 };
 
-export default LoanInfo;
+export default LentInfo;

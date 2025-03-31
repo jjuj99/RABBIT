@@ -2,13 +2,13 @@ import { Circle, Copy, Check } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import { Separator } from "@/shared/ui/Separator";
-import { LoanInfoResponse } from "../types/response";
+import { LentInfoResponse } from "../types/response";
 
-interface LoanInfoMobileProps {
-  data?: LoanInfoResponse[];
+interface LentInfoMobileProps {
+  data?: LentInfoResponse[];
 }
 
-const LoanInfoMobile = ({ data = [] }: LoanInfoMobileProps) => {
+const LentInfoMobile = ({ data = [] }: LentInfoMobileProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState("");
@@ -81,16 +81,18 @@ const LoanInfoMobile = ({ data = [] }: LoanInfoMobileProps) => {
                   </span>
                   <div className="flex flex-col items-end">
                     <span className="text-xs font-medium text-white sm:text-base">
-                      {item.creditorName}
+                      {item.debtorName}
                     </span>
                     <span
                       className="hover:text-brand-primary cursor-pointer text-xs font-light text-gray-200 sm:text-sm"
                       onClick={() => {
-                        setSelectedWallet(item.creditorWallet);
+                        setSelectedWallet(item.debtorWallet);
                         setIsOpen(true);
                       }}
                     >
-                      {item.creditorWallet}
+                      {item.debtorWallet
+                        ? `${item.debtorWallet.slice(0, 6)}...${item.debtorWallet.slice(-4)}`
+                        : "-"}
                     </span>
                   </div>
                 </div>
@@ -104,10 +106,10 @@ const LoanInfoMobile = ({ data = [] }: LoanInfoMobileProps) => {
                 </div>
                 <div className="flex flex-row justify-between">
                   <span className="text-xs font-light text-gray-100 sm:text-base">
-                    이자율
+                    수익률
                   </span>
                   <span className="text-xs font-medium text-white sm:text-base">
-                    {item.interestRate}%
+                    {item.returnRate}%
                   </span>
                 </div>
                 <div className="flex flex-row justify-between">
@@ -160,4 +162,4 @@ const LoanInfoMobile = ({ data = [] }: LoanInfoMobileProps) => {
   );
 };
 
-export default LoanInfoMobile;
+export default LentInfoMobile;

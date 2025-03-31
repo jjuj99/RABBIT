@@ -13,6 +13,7 @@ import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.util.JwtUtil;
 import com.rabbit.global.util.SignatureUtil;
+import com.rabbit.global.util.WalletAddressUtil;
 import com.rabbit.user.domain.entity.MetamaskWallet;
 import com.rabbit.user.domain.entity.RefundAccount;
 import com.rabbit.user.domain.entity.User;
@@ -42,8 +43,11 @@ public class AuthService {
     private final JwtUtil jwtUtil;
 
     public NonceResponseDTO nonce(NonceRequestDTO request) {
+        // 표준 체크섬 주소로 변환
+        String checksumAddress = toChecksumAddress(request.getWalletAddress());
+
         // 존재하는 회원인지 확인
-        return metamaskWalletRepository.findByWalletAddress(request.getWalletAddress())
+        return metamaskWalletRepository.findByWalletAddress(checksumAddress)
                 .map(wallet -> NonceResponseDTO.builder()
                             .nonce(createNonce()) // 난수 생성
                             .build()
@@ -58,8 +62,11 @@ public class AuthService {
 
     @Transactional
     public LoginServiceResult login(LoginRequestDTO request) {
+        // 표준 체크섬 주소로 변환
+        String checksumAddress = toChecksumAddress(request.getWalletAddress());
+
         // 지갑 주소로 회원 정보 불러오기
-        User user = metamaskWalletRepository.findByWalletAddress(request.getWalletAddress())
+        User user = metamaskWalletRepository.findByWalletAddress(checksumAddress)
                 .map(MetamaskWallet::getUser)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "존재하지 않는 지갑 주소입니다."));
 
@@ -67,7 +74,7 @@ public class AuthService {
         String recoverAddress = signatureUtil.recoverAddress(request.getSignature(), request.getNonce());
 
         // 서명 검증
-        if (!request.getWalletAddress().equalsIgnoreCase(recoverAddress)) {
+        if (!WalletAddressUtil.compareAddresses(checksumAddress, recoverAddress)) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "서명이 일치하지 않습니다.");
         }
 
@@ -90,6 +97,16 @@ public class AuthService {
                 .build();
     }
 
+    private String toChecksumAddress(String walletAddress) {
+        // 입력된 지갑 주소가 유효한지 확인
+        if (WalletAddressUtil.isValidAddress(walletAddress)) {
+            throw new BusinessException(ErrorCode.INVALID_WALLET_ADDRESS);
+        }
+
+        // 표준 체크섬 주소로 변환한 주소 반환
+        return WalletAddressUtil.toChecksumAddress(walletAddress);
+    }
+
     @Transactional
     public void signup(SignupRequestDTO request) {
         // 이미 존재하는 이메일인지 확인
@@ -104,8 +121,11 @@ public class AuthService {
                     throw new BusinessException(ErrorCode.ALREADY_EXISTS, "이미 등록된 닉네임입니다.");
                 });
 
+        // 표준 체크섬 주소로 변환
+        String checksumAddress = toChecksumAddress(request.getWalletAddress());
+
         // 이미 존재하는 지갑 주소인지 확인
-        metamaskWalletRepository.findByWalletAddress(request.getWalletAddress())
+        metamaskWalletRepository.findByWalletAddress(checksumAddress)
                 .ifPresent(metamaskWallet -> {
                     throw new BusinessException(ErrorCode.ALREADY_EXISTS, "이미 등록된 지갑 주소입니다.");
                 });
@@ -136,7 +156,7 @@ public class AuthService {
         // 메타마스크 지갑 엔티티 생성
         metamaskWalletRepository.save(MetamaskWallet.builder()
                 .user(user)
-                .walletAddress(request.getWalletAddress())
+                .walletAddress(checksumAddress)
                 .primaryFlag(true)
                 .createdAt(ZonedDateTime.now())
                 .updatedAt(ZonedDateTime.now())

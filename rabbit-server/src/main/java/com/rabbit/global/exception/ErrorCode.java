@@ -21,6 +21,9 @@ public enum ErrorCode {
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "error.auth.unauthorized", "인증이 필요합니다"),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "error.auth.access.denied", "접근 권한이 없습니다"),
 
+    // =========== Metamask Wallet Address ===========
+    INVALID_WALLET_ADDRESS(HttpStatus.BAD_REQUEST, "error.wallet.address.invalid", "유효하지 않은 지갑 주소 형식입니다"),
+
     // =========== JWT ===========
     JWT_EXPIRED(HttpStatus.UNAUTHORIZED, "error.jwt.expired", "토큰이 만료되었습니다"),
     JWT_INVALID(HttpStatus.FORBIDDEN, "error.jwt.invalid", "유효하지 않은 토큰입니다"),

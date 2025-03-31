@@ -114,6 +114,7 @@ const LoginButton = () => {
     }
 
     // 7. 시그니처 생성
+
     const { signature, error: signatureError } = await generateSignature(
       address,
       LOGIN_MESSAGE(address, nonce.nonce),
@@ -140,7 +141,7 @@ const LoginButton = () => {
       const loginRes = await LoginAPI({
         walletAddress: address,
         signature,
-        nonce: nonce.nonce,
+        nonce: LOGIN_MESSAGE(address, nonce.nonce),
       });
 
       if (loginRes.status === "SUCCESS" && loginRes.data) {

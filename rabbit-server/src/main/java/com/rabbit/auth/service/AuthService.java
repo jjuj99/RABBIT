@@ -23,6 +23,7 @@ import com.rabbit.user.repository.UserRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.WebUtils;
@@ -31,6 +32,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.time.ZonedDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -40,11 +42,12 @@ public class AuthService {
     private final RefundAccountRepository refundAccountRepository;
     private final MetamaskWalletRepository metamaskWalletRepository;
 
-    private final SignatureUtil signatureUtil;
     private final JwtUtil jwtUtil;
 
     public NonceResponseDTO nonce(NonceRequestDTO request) {
         // 전체 스트림을 호출 -> 대소문자 무시하여 지갑 주소 비교
+        System.out.println("난수 요청 " + request.getWalletAddress());
+
         return metamaskWalletRepository.findByPrimaryFlagTrue().stream()
                 .filter(wallet -> {
                     return WalletAddressUtil.compareAddresses(request.getWalletAddress(), wallet.getWalletAddress());
@@ -73,8 +76,9 @@ public class AuthService {
                 .map(MetamaskWallet::getUser)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "존재하지 않는 지갑 주소입니다."));
 
-        // 서명에서 주소 복원
-        String recoverAddress = signatureUtil.recoverAddress(request.getSignature(), request.getNonce());
+        userTokenRepository.deleteByUser_UserId(user.getUserId());
+
+        String recoverAddress = SignatureUtil.recoverAddress(request.getSignature(), request.getNonce());
 
         // 서명 검증
         if (!WalletAddressUtil.compareAddresses(request.getWalletAddress(), recoverAddress)) {

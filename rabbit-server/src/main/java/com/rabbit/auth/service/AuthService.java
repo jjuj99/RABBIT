@@ -46,8 +46,6 @@ public class AuthService {
 
     public NonceResponseDTO nonce(NonceRequestDTO request) {
         // 전체 스트림을 호출 -> 대소문자 무시하여 지갑 주소 비교
-        System.out.println("난수 요청 " + request.getWalletAddress());
-
         return metamaskWalletRepository.findByPrimaryFlagTrue().stream()
                 .filter(wallet -> {
                     return WalletAddressUtil.compareAddresses(request.getWalletAddress(), wallet.getWalletAddress());
@@ -166,10 +164,8 @@ public class AuthService {
     }
 
     @Transactional
-    public void logout(String refreshToken) {
-        String userId = jwtUtil.getUserIdFromToken(refreshToken);
-
-        userTokenRepository.deleteByUser_UserId(Integer.parseInt(userId));
+    public void logout(int userId) {
+        userTokenRepository.deleteByUser_UserId(userId);
     }
 
     @Transactional(readOnly = true)

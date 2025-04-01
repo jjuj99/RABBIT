@@ -158,6 +158,11 @@ jwt:
   access-token-refresh-threshold: 300000
   secret: ${JWT_SECRET}
 
+# 쿠키 설정
+cookie:
+  secure: false
+
+# TOSS 설정
 toss:
   secret: ${TOSS_SECRET}
 

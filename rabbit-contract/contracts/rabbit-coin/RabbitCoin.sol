@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./interfaces/ICustomERC20.sol";
+import "./interfaces/IRabbitCoin.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title RabbitCoin
  * @dev ERC-20 표준을 구현한 RABBIT 코인
  */
-contract RabbitCoin is ICustomERC20, Ownable {
+contract RabbitCoin is IRabbitCoin, Ownable {
     string public constant name = "RABBIT";
     string public constant symbol = "RAB";
     uint8 public constant decimals = 0;
@@ -41,6 +41,8 @@ contract RabbitCoin is ICustomERC20, Ownable {
         _systemContract = systemContract;
     }
     
+    // ============== ERC-20 기본 함수 ==============
+
     /**
      * @dev RAB의 총 공급량을 반환
      */
@@ -49,7 +51,7 @@ contract RabbitCoin is ICustomERC20, Ownable {
     }
     
     /**
-     * @dev 특정 계정의 RAB 잔액을 반환
+     * @dev 특정 계좌의 RAB 잔액을 반환
      * @param account 잔액을 조회할 주소
      */
     function balanceOf(address account) external view override returns (uint256) {
@@ -76,7 +78,7 @@ contract RabbitCoin is ICustomERC20, Ownable {
     }
     
     /**
-     * @dev 다른 주소가 귀하의 계정에서 사용할 수 있는 RAB 양을 승인
+     * @dev 다른 주소가 사용자의 계좌에서 사용할 수 있는 RAB 양을 승인
      * @param spender RAB 사용이 허용될 주소
      * @param amount 승인할 RAB 양
      */
@@ -119,6 +121,7 @@ contract RabbitCoin is ICustomERC20, Ownable {
         _totalSupply += amount;
         _balances[account] += amount;
         emit Transfer(address(0), account, amount);
+        emit RABMinted(account, amount);
     }
     
     /**
@@ -131,26 +134,7 @@ contract RabbitCoin is ICustomERC20, Ownable {
         _balances[msg.sender] -= amount;
         _totalSupply -= amount;
         emit Transfer(msg.sender, address(0), amount);
-    }
-
-    /**
-     * @dev RAB 코인 충전 - 백엔드에서 사용할 인터페이스
-     * @param account 충전할 계좌 주소
-     * @param amount 충전할 RAB 양
-     */
-    function charge(address account, uint256 amount) external onlyOwner returns (bool) {
-        require(account != address(0), "Cannot charge to zero address");
-        require(amount > 0, "Amount must be greater than 0");
-        
-        // 코인 발행
-        _mint(account, amount);
-
-        // 시스템 컨트랙트에 자동 승인
-        if (_systemContract != address(0)) {
-            _approve(account, _systemContract, _balances[account]);
-        }
-        emit Charged(account, amount);
-        return true;
+        emit RABBurned(msg.sender, amount);
     }
     
     /**
@@ -176,4 +160,42 @@ contract RabbitCoin is ICustomERC20, Ownable {
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
+
+    // ============== 백엔드 커스텀 함수 ==============
+
+    /**
+     * @dev RAB 코인 충전
+     * @param account 충전할 계좌 주소
+     * @param amount 충전할 RAB 양
+     */
+    function charge(address account, uint256 amount) external onlyOwner returns (bool) {
+        require(account != address(0), "Cannot charge to zero address");
+        require(amount > 0, "Amount must be greater than 0");
+        
+        // 코인 발행
+        _mint(account, amount);
+
+        // 시스템 컨트랙트에 자동 승인
+        if (_systemContract != address(0)) {
+            _approve(account, _systemContract, _balances[account]);
+        }
+        return true;
+    }
+
+    /**
+    * @dev RAB 코인 환불
+    * @param account 소각할 계좌 주소
+    * @param amount 소각할 RAB 양
+    */
+    function refund(address account, uint256 amount) external returns (bool) {
+        require(msg.sender == _systemContract || msg.sender == owner(), "Only system contract or owner can call");
+        require(_balances[account] >= amount, "ERC20: burn amount exceeds balance");
+        
+        _balances[account] -= amount;
+        _totalSupply -= amount;
+        emit Transfer(account, address(0), amount);
+        emit RABBurned(account, amount);
+        return true;
+    }
+
 }

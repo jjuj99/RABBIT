@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "./interfaces/IPromissoryNote.sol";
 import "./interfaces/IRepaymentScheduler.sol";
-import "../rabbit-coin/interfaces/ICustomERC20.sol";
+import "../rabbit-coin/interfaces/IRabbitCoin.sol";
 
 contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
     uint256 public tokenIdCounter;
@@ -86,7 +86,7 @@ contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
         
         // RAB 토큰 이체 (채권자 -> 채무자)
         require(rabbitCoinAddress != address(0), "RAB token address not set");
-        ICustomERC20 rabToken = ICustomERC20(rabbitCoinAddress);
+        IRabbitCoin rabToken = IRabbitCoin(rabbitCoinAddress);
         
         bool transferSuccess = rabToken.transferFrom(
             metadata.crInfo.crWalletAddress,  // 채권자 (송금자)

@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "../libs/BokkyPooBahsDateTimeLibrary.sol";
 import "./interfaces/IPromissoryNote.sol";
 import "./interfaces/IRepaymentScheduler.sol";
-import "../rabbit-coin/interfaces/ICustomERC20.sol";
+import "../rabbit-coin/interfaces/IRabbitCoin.sol";
 
 /**
  * @title RepaymentScheduler
@@ -219,7 +219,7 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
             paymentAmount = regularPaymentAmount;
         }
 
-        ICustomERC20 rabCoin = ICustomERC20(rabbitCoinAddress);
+        IRabbitCoin rabCoin = IRabbitCoin(rabbitCoinAddress);
         
         // 채무자 잔액 부족 시 이벤트 발행
         uint256 drBalance = rabCoin.balanceOf(info.drWalletAddress);
@@ -523,7 +523,7 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         uint256 totalAmount = actualPrincipal + feeAmount;
         
         // 채무자 잔액 확인
-        ICustomERC20 rabCoin = ICustomERC20(rabbitCoinAddress);
+        IRabbitCoin rabCoin = IRabbitCoin(rabbitCoinAddress);
         uint256 drBalance = rabCoin.balanceOf(info.drWalletAddress);
 
         if (drBalance < totalAmount) {

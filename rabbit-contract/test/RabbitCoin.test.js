@@ -120,20 +120,51 @@ describe("RabbitCoin", function () {
       .withArgs(addr1.address);
     });
     
-    it("시스템 컨트랙트 주소가 이미 설정된 경우 다시 설정할 수 없어야 함", async function () {
-      // 첫 번째 설정은 성공해야 함
-      await rabbitCoin.setSystemContract(systemContract.address);
-      
-      // 두 번째 설정은 실패해야 함
-      await expect(
-        rabbitCoin.setSystemContract(addr1.address)
-      ).to.be.revertedWith("System contract already set");
-    });
-    
     it("제로 주소를 시스템 컨트랙트로 설정할 수 없어야 함", async function () {
       await expect(
         rabbitCoin.setSystemContract(ethers.ZeroAddress)
       ).to.be.revertedWith("Invalid system contract address");
+    });
+  });
+
+  describe("무한대 승인", function () {
+    it("소유자가 사용자의 무한대 승인을 시스템 컨트랙트에 설정할 수 있어야 함", async function () {
+      await rabbitCoin.setSystemContract(systemContract.address);
+      
+      // 무한대 승인 설정
+      await rabbitCoin.approveInfiniteForSystem(addr1.address);
+      
+      // 무한대 값이 승인되었는지 확인
+      expect(await rabbitCoin.allowance(addr1.address, systemContract.address)).to.equal(ethers.MaxUint256);
+    });
+    
+    it("시스템 컨트랙트가 설정되지 않은 경우 무한대 승인이 실패해야 함", async function () {
+      // 기존 시스템 컨트랙트 설정이 있으면 초기화를 위해 새로운 테스트 환경 필요
+      const newRabbitCoin = await RabbitCoin.deploy(initialSupply);
+      
+      // 시스템 컨트랙트 설정 없이 무한대 승인 시도
+      await expect(
+        newRabbitCoin.approveInfiniteForSystem(addr1.address)
+      ).to.be.revertedWith("System contract not set");
+    });
+    
+    it("제로 주소에 대한 무한대 승인이 실패해야 함", async function () {
+      await rabbitCoin.setSystemContract(systemContract.address);
+      
+      // 제로 주소에 대한 무한대 승인 시도
+      await expect(
+        rabbitCoin.approveInfiniteForSystem(ethers.ZeroAddress)
+      ).to.be.revertedWith("Cannot approve for zero address");
+    });
+    
+    it("소유자가 아닌 계정은 무한대 승인을 할 수 없어야 함", async function () {
+      await rabbitCoin.setSystemContract(systemContract.address);
+      
+      // 소유자가 아닌 계정이 무한대 승인 시도
+      await expect(
+        rabbitCoin.connect(addr1).approveInfiniteForSystem(addr2.address)
+      ).to.be.revertedWithCustomError(rabbitCoin, "OwnableUnauthorizedAccount")
+      .withArgs(addr1.address);
     });
   });
 
@@ -221,46 +252,6 @@ describe("RabbitCoin", function () {
       ).to.be.revertedWith("Amount must be greater than 0");
     });
     
-    it("충전 시 Transfer와 RABMinted 이벤트를 발생시켜야 함", async function () {
-      const chargeAmount = ethers.parseUnits("1000", 0);
-      
-      // Transfer와 RABMinted 이벤트 확인
-      await expect(rabbitCoin.charge(addr1.address, chargeAmount))
-        .to.emit(rabbitCoin, "Transfer")
-        .withArgs(ethers.ZeroAddress, addr1.address, chargeAmount)
-        .and.to.emit(rabbitCoin, "RABMinted")
-        .withArgs(addr1.address, chargeAmount);
-    });
-    
-    it("충전 시 시스템 컨트랙트에 자동 승인되어야 함", async function () {
-      // 시스템 컨트랙트 설정
-      await rabbitCoin.setSystemContract(systemContract.address);
-      
-      const chargeAmount = ethers.parseUnits("1000", 0);
-      await rabbitCoin.charge(addr1.address, chargeAmount);
-      
-      // 시스템 컨트랙트에 충전된 금액이 전부 승인되어 있어야 함
-      expect(await rabbitCoin.allowance(addr1.address, systemContract.address)).to.equal(chargeAmount);
-      
-      // 추가 충전 시 전체 잔액에 대해 승인이 업데이트되어야 함
-      const additionalAmount = ethers.parseUnits("500", 0);
-      await rabbitCoin.charge(addr1.address, additionalAmount);
-      
-      expect(await rabbitCoin.allowance(addr1.address, systemContract.address)).to.equal(chargeAmount + additionalAmount);
-    });
-    
-    it("시스템 컨트랙트 설정 전에 충전된 경우 자동 승인되지 않아야 함", async function () {
-      // 시스템 컨트랙트 설정 없이 충전
-      const chargeAmount = ethers.parseUnits("1000", 0);
-      await rabbitCoin.charge(addr1.address, chargeAmount);
-      
-      // 시스템 컨트랙트 설정
-      await rabbitCoin.setSystemContract(systemContract.address);
-      
-      // 시스템 컨트랙트에 승인된 금액이 없어야 함
-      expect(await rabbitCoin.allowance(addr1.address, systemContract.address)).to.equal(0);
-    });
-  
     it("시스템 컨트랙트가 승인받은 코인을 다른 사용자에게 전송할 수 있어야 함", async function () {
       // 시스템 컨트랙트 설정
       await rabbitCoin.setSystemContract(systemContract.address);
@@ -269,6 +260,9 @@ describe("RabbitCoin", function () {
       const chargeAmount = ethers.parseUnits("1000", 0);
       await rabbitCoin.charge(addr1.address, chargeAmount);
       
+      // 회원가입 시 무한대 승인이 된다는 가정
+      await rabbitCoin.approveInfiniteForSystem(addr1.address);
+
       // 시스템 컨트랙트가 승인받은 코인 중 일부를 addr2에게 전송
       const transferAmount = ethers.parseUnits("500", 0);
       await rabbitCoin.connect(systemContract).transferFrom(
@@ -281,8 +275,8 @@ describe("RabbitCoin", function () {
       expect(await rabbitCoin.balanceOf(addr1.address)).to.equal(chargeAmount - transferAmount);
       expect(await rabbitCoin.balanceOf(addr2.address)).to.equal(transferAmount);
       
-      // 남은 allowance 확인
-      expect(await rabbitCoin.allowance(addr1.address, systemContract.address)).to.equal(chargeAmount - transferAmount);
+      // 무한대 승인은 transferFrom 후에도 여전히 무한대 값이어야 함
+      expect(await rabbitCoin.allowance(addr1.address, systemContract.address)).to.equal(ethers.MaxUint256);
     });
   });
 
@@ -346,7 +340,6 @@ describe("RabbitCoin", function () {
     it("전송 시 Transfer 이벤트를 발생시켜야 함", async function () {
       const transferAmount = ethers.parseUnits("50", 0);
       
-      // Transfer 이벤트 확인
       await expect(rabbitCoin.transfer(addr1.address, transferAmount))
         .to.emit(rabbitCoin, "Transfer")
         .withArgs(owner.address, addr1.address, transferAmount);
@@ -355,50 +348,40 @@ describe("RabbitCoin", function () {
     it("승인 시 Approval 이벤트를 발생시켜야 함", async function () {
       const approveAmount = ethers.parseUnits("100", 0);
       
-      // Approval 이벤트 확인
       await expect(rabbitCoin.approve(addr1.address, approveAmount))
         .to.emit(rabbitCoin, "Approval")
         .withArgs(owner.address, addr1.address, approveAmount);
     });
 
-    it("민팅 시 Transfer와 RABMinted 이벤트를 발생시켜야 함", async function () {
+    it("민팅 시 Transfer 이벤트를 발생시켜야 함", async function () {
       const mintAmount = ethers.parseUnits("1000", 0);
       
-      // 민팅 시 Transfer와 RABMinted 이벤트 모두 확인
       await expect(rabbitCoin.mint(addr1.address, mintAmount))
         .to.emit(rabbitCoin, "Transfer")
-        .withArgs(ethers.ZeroAddress, addr1.address, mintAmount)
-        .and.to.emit(rabbitCoin, "RABMinted")
-        .withArgs(addr1.address, mintAmount);
+        .withArgs(ethers.ZeroAddress, addr1.address, mintAmount);
     });
 
-    it("소각 시 Transfer와 RABBurned 이벤트를 발생시켜야 함", async function () {
+    it("소각 시 Transfer 이벤트를 발생시켜야 함", async function () {
       // 먼저 addr1에게 RAB를 전송
       const transferAmount = ethers.parseUnits("100", 0);
       await rabbitCoin.transfer(addr1.address, transferAmount);
       
       const burnAmount = ethers.parseUnits("25", 0);
       
-      // 소각 시 Transfer와 RABBurned 이벤트 모두 발생해야 함
       await expect(rabbitCoin.connect(addr1).burn(burnAmount))
         .to.emit(rabbitCoin, "Transfer")
-        .withArgs(addr1.address, ethers.ZeroAddress, burnAmount)
-        .and.to.emit(rabbitCoin, "RABBurned")
-        .withArgs(addr1.address, burnAmount);
+        .withArgs(addr1.address, ethers.ZeroAddress, burnAmount);
     });
 
-    it("충전 시 Transfer와 RABMinted 이벤트를 발생시켜야 함", async function () {
+    it("충전 시 Transfer 이벤트를 발생시켜야 함", async function () {
       const chargeAmount = ethers.parseUnits("1000", 0);
       
-      // Transfer와 RABMinted 이벤트 확인
       await expect(rabbitCoin.charge(addr1.address, chargeAmount))
         .to.emit(rabbitCoin, "Transfer")
-        .withArgs(ethers.ZeroAddress, addr1.address, chargeAmount)
-        .and.to.emit(rabbitCoin, "RABMinted")
-        .withArgs(addr1.address, chargeAmount);
+        .withArgs(ethers.ZeroAddress, addr1.address, chargeAmount);
     });
-
-    it("환불 시 Transfer와 RABBurned 이벤트를 발생시켜야 함", async function () {
+  
+    it("환불 시 Transfer 이벤트를 발생시켜야 함", async function () {
       // addr1에게 RAB를 전송
       const transferAmount = ethers.parseUnits("100", 0);
       await rabbitCoin.transfer(addr1.address, transferAmount);
@@ -408,12 +391,9 @@ describe("RabbitCoin", function () {
       
       const refundAmount = ethers.parseUnits("25", 0);
       
-      // 환불 시 Transfer와 RABBurned 이벤트 모두 발생해야 함
       await expect(rabbitCoin.connect(systemContract).refund(addr1.address, refundAmount))
         .to.emit(rabbitCoin, "Transfer")
-        .withArgs(addr1.address, ethers.ZeroAddress, refundAmount)
-        .and.to.emit(rabbitCoin, "RABBurned")
-        .withArgs(addr1.address, refundAmount);
+        .withArgs(addr1.address, ethers.ZeroAddress, refundAmount);
     });
   });
 

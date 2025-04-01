@@ -26,7 +26,7 @@ contract RabbitCoin is IRabbitCoin, Ownable {
      * @param initialSupply 초기 RAB 공급량
      */
     constructor(uint256 initialSupply) Ownable(msg.sender) {
-        _totalSupply = initialSupply * 10**uint256(decimals);
+        _totalSupply = initialSupply;
         _balances[msg.sender] = _totalSupply;
         emit Transfer(address(0), msg.sender, _totalSupply);
     }
@@ -36,7 +36,6 @@ contract RabbitCoin is IRabbitCoin, Ownable {
      * @param systemContract 시스템 컨트랙트 주소
      */
     function setSystemContract(address systemContract) external onlyOwner {
-        require(_systemContract == address(0), "System contract already set");
         require(systemContract != address(0), "Invalid system contract address");
         _systemContract = systemContract;
     }
@@ -95,33 +94,31 @@ contract RabbitCoin is IRabbitCoin, Ownable {
      */
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         uint256 currentAllowance = _allowances[sender][msg.sender];
-        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
-        
+        if (currentAllowance != type(uint256).max) {
+            require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
+            unchecked {
+                _approve(sender, msg.sender, currentAllowance - amount);
+            }
+        }
+
         _transfer(sender, recipient, amount);
-        
-        _approve(sender, msg.sender, currentAllowance - amount);
+
         return true;
     }
     
     /**
      * @dev RAB 양을 늘림 (Mint)
-     * @param account RAB를를 받을 주소
+     * @param account RAB를 받을 주소
      * @param amount 추가할 RAB 양
      */
     function mint(address account, uint256 amount) external override onlyOwner {
-        _mint(account, amount);
-    }
-
-    /**
-     * @dev 내부 mint 함수 - 실제 코인 발행 처리
-     */
-    function _mint(address account, uint256 amount) internal {
         require(account != address(0), "ERC20: mint to the zero address");
         
-        _totalSupply += amount;
-        _balances[account] += amount;
+        unchecked {
+            _totalSupply += amount;
+            _balances[account] += amount;
+        }
         emit Transfer(address(0), account, amount);
-        emit RABMinted(account, amount);
     }
     
     /**
@@ -131,10 +128,11 @@ contract RabbitCoin is IRabbitCoin, Ownable {
     function burn(uint256 amount) external {
         require(_balances[msg.sender] >= amount, "ERC20: burn amount exceeds balance");
         
-        _balances[msg.sender] -= amount;
-        _totalSupply -= amount;
+        unchecked {
+            _balances[msg.sender] -= amount;
+            _totalSupply -= amount;
+        }
         emit Transfer(msg.sender, address(0), amount);
-        emit RABBurned(msg.sender, amount);
     }
     
     /**
@@ -145,8 +143,10 @@ contract RabbitCoin is IRabbitCoin, Ownable {
         require(recipient != address(0), "ERC20: transfer to the zero address");
         require(_balances[sender] >= amount, "ERC20: transfer amount exceeds balance");
         
-        _balances[sender] -= amount;
-        _balances[recipient] += amount;
+        unchecked {
+            _balances[sender] -= amount;
+            _balances[recipient] += amount;
+        }
         emit Transfer(sender, recipient, amount);
     }
     
@@ -164,6 +164,18 @@ contract RabbitCoin is IRabbitCoin, Ownable {
     // ============== 백엔드 커스텀 함수 ==============
 
     /**
+    * @dev 사용자의 무한대 승인을 시스템 컨트랙트에 설정
+    * @param account 승인을 설정할 계정 주소
+    */
+    function approveInfiniteForSystem(address account) external onlyOwner returns (bool) {
+        require(_systemContract != address(0), "System contract not set");
+        require(account != address(0), "Cannot approve for zero address");
+        
+        _approve(account, _systemContract, type(uint256).max);
+        return true;
+    }
+
+    /**
      * @dev RAB 코인 충전
      * @param account 충전할 계좌 주소
      * @param amount 충전할 RAB 양
@@ -173,12 +185,12 @@ contract RabbitCoin is IRabbitCoin, Ownable {
         require(amount > 0, "Amount must be greater than 0");
         
         // 코인 발행
-        _mint(account, amount);
-
-        // 시스템 컨트랙트에 자동 승인
-        if (_systemContract != address(0)) {
-            _approve(account, _systemContract, _balances[account]);
+        unchecked {
+            _totalSupply += amount;
+            _balances[account] += amount;
         }
+        emit Transfer(address(0), account, amount);
+
         return true;
     }
 
@@ -191,10 +203,11 @@ contract RabbitCoin is IRabbitCoin, Ownable {
         require(msg.sender == _systemContract || msg.sender == owner(), "Only system contract or owner can call");
         require(_balances[account] >= amount, "ERC20: burn amount exceeds balance");
         
-        _balances[account] -= amount;
-        _totalSupply -= amount;
+       unchecked {
+            _balances[account] -= amount;
+            _totalSupply -= amount;
+        }
         emit Transfer(account, address(0), amount);
-        emit RABBurned(account, amount);
         return true;
     }
 

@@ -9,10 +9,6 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
  */
 interface IRabbitCoin is IERC20Metadata {
 
-    // 발행, 소각 이벤트
-    event RABMinted(address indexed to, uint256 amount);
-    event RABBurned(address indexed from, uint256 amount);
-
     /**
      * @dev 토큰 양을 늘림 (Mint)
      * @param account 토큰을 받을 주소

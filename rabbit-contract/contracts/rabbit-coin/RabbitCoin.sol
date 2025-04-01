@@ -13,7 +13,8 @@ contract RabbitCoin is ICustomERC20, Ownable {
     string public constant symbol = "RAB";
     uint8 public constant decimals = 0;
     uint256 private _totalSupply;
-    
+    address private _systemContract; // 시스템 컨트랙트 주소
+
     // 각 주소별 잔액을 저장하는 매핑
     mapping(address => uint256) private _balances;
     
@@ -28,6 +29,16 @@ contract RabbitCoin is ICustomERC20, Ownable {
         _totalSupply = initialSupply * 10**uint256(decimals);
         _balances[msg.sender] = _totalSupply;
         emit Transfer(address(0), msg.sender, _totalSupply);
+    }
+    
+    /**
+     * @dev 시스템 컨트랙트 주소 설정
+     * @param systemContract 시스템 컨트랙트 주소
+     */
+    function setSystemContract(address systemContract) external onlyOwner {
+        require(_systemContract == address(0), "System contract already set");
+        require(systemContract != address(0), "Invalid system contract address");
+        _systemContract = systemContract;
     }
     
     /**
@@ -96,6 +107,13 @@ contract RabbitCoin is ICustomERC20, Ownable {
      * @param amount 추가할 RAB 양
      */
     function mint(address account, uint256 amount) external override onlyOwner {
+        _mint(account, amount);
+    }
+
+    /**
+     * @dev 내부 mint 함수 - 실제 코인 발행 처리
+     */
+    function _mint(address account, uint256 amount) internal {
         require(account != address(0), "ERC20: mint to the zero address");
         
         _totalSupply += amount;
@@ -113,6 +131,26 @@ contract RabbitCoin is ICustomERC20, Ownable {
         _balances[msg.sender] -= amount;
         _totalSupply -= amount;
         emit Transfer(msg.sender, address(0), amount);
+    }
+
+    /**
+     * @dev RAB 코인 충전 - 백엔드에서 사용할 인터페이스
+     * @param account 충전할 계좌 주소
+     * @param amount 충전할 RAB 양
+     */
+    function charge(address account, uint256 amount) external onlyOwner returns (bool) {
+        require(account != address(0), "Cannot charge to zero address");
+        require(amount > 0, "Amount must be greater than 0");
+        
+        // 코인 발행
+        _mint(account, amount);
+
+        // 시스템 컨트랙트에 자동 승인
+        if (_systemContract != address(0)) {
+            _approve(account, _systemContract, _balances[account]);
+        }
+        emit Charged(account, amount);
+        return true;
     }
     
     /**

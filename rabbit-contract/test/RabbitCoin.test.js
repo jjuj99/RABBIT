@@ -8,6 +8,7 @@ describe("RabbitCoin", function () {
   let addr1;
   let addr2;
   let addrs;
+  let systemContract;
   
   // 초기 공급량을 1,000,000 RAB로 설정
   const initialSupply = 1000000;
@@ -15,7 +16,7 @@ describe("RabbitCoin", function () {
   beforeEach(async function () {
     // 컨트랙트 및 계정 설정
     RabbitCoin = await ethers.getContractFactory("RabbitCoin");
-    [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
+    [owner, addr1, addr2, systemContract, ...addrs] = await ethers.getSigners();
     
     // 컨트랙트 배포
     rabbitCoin = await RabbitCoin.deploy(initialSupply);
@@ -111,6 +112,122 @@ describe("RabbitCoin", function () {
       await expect(
         rabbitCoin.mint(ethers.ZeroAddress, 100)
       ).to.be.revertedWith("ERC20: mint to the zero address");
+    });
+  });
+
+  describe("시스템 컨트랙트와 충전 기능", function () {
+    it("소유자만 시스템 컨트랙트 주소를 설정할 수 있어야 함", async function () {
+      await rabbitCoin.setSystemContract(systemContract.address);
+      
+      // 다른 사용자가 시스템 컨트랙트 주소를 설정하려고 하면 실패해야 함
+      await expect(
+        rabbitCoin.connect(addr1).setSystemContract(addr1.address)
+      ).to.be.revertedWithCustomError(rabbitCoin, "OwnableUnauthorizedAccount")
+      .withArgs(addr1.address);
+    });
+    
+    it("시스템 컨트랙트 주소가 이미 설정된 경우 다시 설정할 수 없어야 함", async function () {
+      // 첫 번째 설정은 성공해야 함
+      await rabbitCoin.setSystemContract(systemContract.address);
+      
+      // 두 번째 설정은 실패해야 함
+      await expect(
+        rabbitCoin.setSystemContract(addr1.address)
+      ).to.be.revertedWith("System contract already set");
+    });
+    
+    it("제로 주소를 시스템 컨트랙트로 설정할 수 없어야 함", async function () {
+      await expect(
+        rabbitCoin.setSystemContract(ethers.ZeroAddress)
+      ).to.be.revertedWith("Invalid system contract address");
+    });
+    
+    it("소유자만 RAB를 충전할 수 있어야 함", async function () {
+      const chargeAmount = ethers.parseUnits("1000", 0);
+      
+      // 소유자가 아닌 사용자가 충전을 시도하면 실패해야 함
+      await expect(
+        rabbitCoin.connect(addr1).charge(addr2.address, chargeAmount)
+      ).to.be.revertedWithCustomError(rabbitCoin, "OwnableUnauthorizedAccount")
+      .withArgs(addr1.address);
+      
+      // 소유자는 충전할 수 있어야 함
+      await rabbitCoin.charge(addr1.address, chargeAmount);
+      expect(await rabbitCoin.balanceOf(addr1.address)).to.equal(chargeAmount);
+    });
+    
+    it("충전 시 제로 주소로 충전할 수 없어야 함", async function () {
+      await expect(
+        rabbitCoin.charge(ethers.ZeroAddress, 100)
+      ).to.be.revertedWith("Cannot charge to zero address");
+    });
+    
+    it("충전 시 0 이하의 금액으로 충전할 수 없어야 함", async function () {
+      await expect(
+        rabbitCoin.charge(addr1.address, 0)
+      ).to.be.revertedWith("Amount must be greater than 0");
+    });
+    
+    it("충전 시 Charged 이벤트를 발생시켜야 함", async function () {
+      const chargeAmount = ethers.parseUnits("1000", 0);
+      
+      // Charged 이벤트 확인
+      await expect(rabbitCoin.charge(addr1.address, chargeAmount))
+        .to.emit(rabbitCoin, "Charged")
+        .withArgs(addr1.address, chargeAmount);
+    });
+    
+    it("시스템 컨트랙트 설정 후 충전 시 시스템 컨트랙트에 자동 승인되어야 함", async function () {
+      // 시스템 컨트랙트 설정
+      await rabbitCoin.setSystemContract(systemContract.address);
+      
+      const chargeAmount = ethers.parseUnits("1000", 0);
+      await rabbitCoin.charge(addr1.address, chargeAmount);
+      
+      // 시스템 컨트랙트에 충전된 금액이 전부 승인되어 있어야 함
+      expect(await rabbitCoin.allowance(addr1.address, systemContract.address)).to.equal(chargeAmount);
+      
+      // 추가 충전 시 전체 잔액에 대해 승인이 업데이트되어야 함
+      const additionalAmount = ethers.parseUnits("500", 0);
+      await rabbitCoin.charge(addr1.address, additionalAmount);
+      
+      expect(await rabbitCoin.allowance(addr1.address, systemContract.address)).to.equal(chargeAmount + additionalAmount);
+    });
+    
+    it("시스템 컨트랙트 설정 전에 충전된 경우 시스템 컨트랙트에 자동 승인되지 않아야 함", async function () {
+      // 시스템 컨트랙트 설정 없이 충전
+      const chargeAmount = ethers.parseUnits("1000", 0);
+      await rabbitCoin.charge(addr1.address, chargeAmount);
+      
+      // 시스템 컨트랙트 설정
+      await rabbitCoin.setSystemContract(systemContract.address);
+      
+      // 시스템 컨트랙트에 승인된 금액이 없어야 함
+      expect(await rabbitCoin.allowance(addr1.address, systemContract.address)).to.equal(0);
+    });
+
+    it("시스템 컨트랙트가 승인받은 코인을 다른 사용자에게 전송할 수 있어야 함", async function () {
+      // 시스템 컨트랙트 설정
+      await rabbitCoin.setSystemContract(systemContract.address);
+      
+      // addr1에게 코인 충전 (자동으로 시스템 컨트랙트에 승인됨)
+      const chargeAmount = ethers.parseUnits("1000", 0);
+      await rabbitCoin.charge(addr1.address, chargeAmount);
+      
+      // 시스템 컨트랙트가 승인받은 코인 중 일부를 addr2에게 전송
+      const transferAmount = ethers.parseUnits("500", 0);
+      await rabbitCoin.connect(systemContract).transferFrom(
+        addr1.address,
+        addr2.address,
+        transferAmount
+      );
+      
+      // addr1과 addr2의 잔액 확인
+      expect(await rabbitCoin.balanceOf(addr1.address)).to.equal(chargeAmount - transferAmount);
+      expect(await rabbitCoin.balanceOf(addr2.address)).to.equal(transferAmount);
+      
+      // 남은 allowance 확인
+      expect(await rabbitCoin.allowance(addr1.address, systemContract.address)).to.equal(chargeAmount - transferAmount);
     });
   });
 

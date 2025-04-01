@@ -106,7 +106,7 @@ const LentInfoMobile = ({ data = [] }: LentInfoMobileProps) => {
                 </div>
                 <div className="flex flex-row justify-between">
                   <span className="text-xs font-light text-gray-100 sm:text-base">
-                    수익률
+                    이자율
                   </span>
                   <span className="text-xs font-medium text-white sm:text-base">
                     {item.returnRate}%

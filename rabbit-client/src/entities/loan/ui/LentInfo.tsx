@@ -48,7 +48,7 @@ const LentInfo = ({ data = [] }: LentInfoProps) => {
               금액
             </th>
             <th className="w-[70px] px-4 py-3 text-center text-base font-medium text-gray-200">
-              수익률
+              이자율
             </th>
             <th className="w-[120px] px-4 py-3 text-center text-base font-medium text-gray-200">
               만기일

@@ -30,6 +30,10 @@ spring:
     #        order_updates: true
     open-in-view: false  # OSIV 비활성화
 
+# 쿠키 설정
+cookie:
+  secure: true
+
 # 운영 환경 로깅 설정
 logging:
   config: classpath:log4j2-prod.xml

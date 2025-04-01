@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import jnr.ffi.annotations.In;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -85,11 +86,10 @@ public class AuthController {
 
     @AuthControllerSwagger.logoutApi
     @PostMapping("/logout")
-    public ResponseEntity<CustomApiResponse<MessageResponse>> logout(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = getRefreshTokenFromCookie(request)
-                .orElseThrow(() -> new BusinessException(ErrorCode.JWT_REQUIRED));
+    public ResponseEntity<CustomApiResponse<MessageResponse>> logout(Authentication authentication, HttpServletResponse httpResponse) {
+        String userId = (String) authentication.getPrincipal();
 
-        authService.logout(refreshToken);
+        authService.logout(Integer.parseInt(userId));
 
         ResponseCookie emptyCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
@@ -99,7 +99,7 @@ public class AuthController {
                 .sameSite("Strict")
                 .build();
 
-        response.addHeader("Set-Cookie", emptyCookie.toString());
+        httpResponse.addHeader("Set-Cookie", emptyCookie.toString());
 
         return ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("로그아웃에 성공했습니다.")));
     }

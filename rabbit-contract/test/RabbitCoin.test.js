@@ -107,15 +107,9 @@ describe("RabbitCoin", function () {
         rabbitCoin.transfer(ethers.ZeroAddress, 100)
       ).to.be.revertedWith("ERC20: transfer to the zero address");
     });
-    
-    it("제로 주소로 민팅하면 실패해야 함", async function () {
-      await expect(
-        rabbitCoin.mint(ethers.ZeroAddress, 100)
-      ).to.be.revertedWith("ERC20: mint to the zero address");
-    });
   });
 
-  describe("시스템 컨트랙트와 충전 기능", function () {
+  describe("시스템 컨트랙트", function () {
     it("소유자만 시스템 컨트랙트 주소를 설정할 수 있어야 함", async function () {
       await rabbitCoin.setSystemContract(systemContract.address);
       
@@ -141,7 +135,66 @@ describe("RabbitCoin", function () {
         rabbitCoin.setSystemContract(ethers.ZeroAddress)
       ).to.be.revertedWith("Invalid system contract address");
     });
-    
+  });
+
+  describe("민팅", function () {
+    it("소유자가 새 RAB를 민팅할 수 있어야 함", async function () {
+      const mintAmount = ethers.parseUnits("5000", 0);
+      const initialSupplyBN = ethers.parseUnits(initialSupply.toString(), 0);
+      
+      await rabbitCoin.mint(addr1.address, mintAmount);
+      
+      // addr1의 잔액이 민팅된 금액과 일치해야 함
+      expect(await rabbitCoin.balanceOf(addr1.address)).to.equal(mintAmount);
+      
+      // 총 공급량이 증가해야 함
+      expect(await rabbitCoin.totalSupply()).to.equal(initialSupplyBN + mintAmount);
+    });
+
+    it("소유자가 아닌 계정은 민팅을 할 수 없어야 함", async function () {
+      const mintAmount = ethers.parseUnits("5000", 0);
+      
+      // addr1이 민팅을 시도하면 실패해야 함
+      await expect(
+        rabbitCoin.connect(addr1).mint(addr2.address, mintAmount)
+      ).to.be.revertedWithCustomError(rabbitCoin, "OwnableUnauthorizedAccount")
+       .withArgs(addr1.address);
+    });
+
+    it("제로 주소로 민팅하면 실패해야 함", async function () {
+      await expect(
+        rabbitCoin.mint(ethers.ZeroAddress, 100)
+      ).to.be.revertedWith("ERC20: mint to the zero address");
+    });
+  });
+
+  describe("소각", function () {
+    it("사용자가 RAB를 소각할 수 있어야 함", async function () {
+      // 먼저 addr1에게 RAB 전송 (사용자 주소에서 소각할 수 있도록 RAB 전송)
+      const transferAmount = ethers.parseUnits("100", 0);
+      await rabbitCoin.transfer(addr1.address, transferAmount);
+      
+      // addr1이 50 RAB를 소각
+      const burnAmount = ethers.parseUnits("50", 0);
+      await rabbitCoin.connect(addr1).burn(burnAmount);
+      
+      // addr1의 잔액이 감소해야 함
+      expect(await rabbitCoin.balanceOf(addr1.address)).to.equal(transferAmount - burnAmount);
+      
+      // 총 공급량이 감소해야 함
+      const initialSupplyBN = ethers.parseUnits(initialSupply.toString(), 0);
+      expect(await rabbitCoin.totalSupply()).to.equal(initialSupplyBN - burnAmount);
+    });
+
+    it("잔액보다 많은 RAB를 소각할 수 없어야 함", async function () {
+      // addr1은 초기에 0 RAB를 가지고 있음, 잔액이 없는데 소각을 시도하면 실패해야 함
+      await expect(
+        rabbitCoin.connect(addr1).burn(1)
+      ).to.be.revertedWith("ERC20: burn amount exceeds balance");
+    });
+  });
+
+  describe("충전", function () {
     it("소유자만 RAB를 충전할 수 있어야 함", async function () {
       const chargeAmount = ethers.parseUnits("1000", 0);
       
@@ -168,16 +221,18 @@ describe("RabbitCoin", function () {
       ).to.be.revertedWith("Amount must be greater than 0");
     });
     
-    it("충전 시 Charged 이벤트를 발생시켜야 함", async function () {
+    it("충전 시 Transfer와 RABMinted 이벤트를 발생시켜야 함", async function () {
       const chargeAmount = ethers.parseUnits("1000", 0);
       
-      // Charged 이벤트 확인
+      // Transfer와 RABMinted 이벤트 확인
       await expect(rabbitCoin.charge(addr1.address, chargeAmount))
-        .to.emit(rabbitCoin, "Charged")
+        .to.emit(rabbitCoin, "Transfer")
+        .withArgs(ethers.ZeroAddress, addr1.address, chargeAmount)
+        .and.to.emit(rabbitCoin, "RABMinted")
         .withArgs(addr1.address, chargeAmount);
     });
     
-    it("시스템 컨트랙트 설정 후 충전 시 시스템 컨트랙트에 자동 승인되어야 함", async function () {
+    it("충전 시 시스템 컨트랙트에 자동 승인되어야 함", async function () {
       // 시스템 컨트랙트 설정
       await rabbitCoin.setSystemContract(systemContract.address);
       
@@ -194,7 +249,7 @@ describe("RabbitCoin", function () {
       expect(await rabbitCoin.allowance(addr1.address, systemContract.address)).to.equal(chargeAmount + additionalAmount);
     });
     
-    it("시스템 컨트랙트 설정 전에 충전된 경우 시스템 컨트랙트에 자동 승인되지 않아야 함", async function () {
+    it("시스템 컨트랙트 설정 전에 충전된 경우 자동 승인되지 않아야 함", async function () {
       // 시스템 컨트랙트 설정 없이 충전
       const chargeAmount = ethers.parseUnits("1000", 0);
       await rabbitCoin.charge(addr1.address, chargeAmount);
@@ -205,7 +260,7 @@ describe("RabbitCoin", function () {
       // 시스템 컨트랙트에 승인된 금액이 없어야 함
       expect(await rabbitCoin.allowance(addr1.address, systemContract.address)).to.equal(0);
     });
-
+  
     it("시스템 컨트랙트가 승인받은 코인을 다른 사용자에게 전송할 수 있어야 함", async function () {
       // 시스템 컨트랙트 설정
       await rabbitCoin.setSystemContract(systemContract.address);
@@ -231,56 +286,62 @@ describe("RabbitCoin", function () {
     });
   });
 
-  describe("민팅과 소각", function () {
-    it("소유자가 새 RAB를 발행할 수 있어야 함", async function () {
-      const mintAmount = ethers.parseUnits("5000", 0);
-      const initialSupplyBN = ethers.parseUnits(initialSupply.toString(), 0);
-      
-      await rabbitCoin.mint(addr1.address, mintAmount);
-      
-      // addr1의 잔액이 민팅된 금액과 일치해야 함
-      expect(await rabbitCoin.balanceOf(addr1.address)).to.equal(mintAmount);
-      
-      // 총 공급량이 증가해야 함
-      expect(await rabbitCoin.totalSupply()).to.equal(initialSupplyBN + mintAmount);
-    });
-
-    it("소유자가 아닌 계정은 민팅을 할 수 없어야 함", async function () {
-      const mintAmount = ethers.parseUnits("5000", 0);
-      
-      // addr1이 민팅을 시도하면 실패해야 함
-      await expect(
-        rabbitCoin.connect(addr1).mint(addr2.address, mintAmount)
-      ).to.be.revertedWithCustomError(rabbitCoin, "OwnableUnauthorizedAccount")
-       .withArgs(addr1.address);
-    });
-
-    it("사용자가 RAB를 소각할 수 있어야 함", async function () {
-      // 먼저 addr1에게 RAB 전송 (사용자 주소에서 소각할 수 있도록 RAB 전송)
+  describe("환불", function () {
+    it("시스템 컨트랙트나 소유자만 환불 기능을 호출할 수 있어야 함", async function () {
+      // addr1에게 RAB를 전송
       const transferAmount = ethers.parseUnits("100", 0);
       await rabbitCoin.transfer(addr1.address, transferAmount);
       
-      // addr1이 50 RAB를 소각
-      const burnAmount = ethers.parseUnits("50", 0);
-      await rabbitCoin.connect(addr1).burn(burnAmount);
+      // 시스템 컨트랙트 설정
+      await rabbitCoin.setSystemContract(systemContract.address);
       
-      // addr1의 잔액이 감소해야 함
-      expect(await rabbitCoin.balanceOf(addr1.address)).to.equal(transferAmount - burnAmount);
-      
-      // 총 공급량이 감소해야 함
-      const initialSupplyBN = ethers.parseUnits(initialSupply.toString(), 0);
-      expect(await rabbitCoin.totalSupply()).to.equal(initialSupplyBN - burnAmount);
-    });
-
-    it("잔액보다 많은 RAB를 소각할 수 없어야 함", async function () {
-      // addr1은 초기에 0 RAB를 가지고 있음
-      // 잔액이 없는데 소각을 시도하면 실패해야 함
+      // 시스템 컨트랙트가 아닌 일반 사용자가 환불을 시도하면 실패해야 함
       await expect(
-        rabbitCoin.connect(addr1).burn(1)
+        rabbitCoin.connect(addr2).refund(addr1.address, 50)
+      ).to.be.revertedWith("Only system contract or owner can call");
+      
+      // 시스템 컨트랙트는 환불 가능
+      await rabbitCoin.connect(systemContract).refund(addr1.address, 50);
+      expect(await rabbitCoin.balanceOf(addr1.address)).to.equal(50);
+      
+      // 소유자도 환불 가능
+      await rabbitCoin.refund(addr1.address, 50);
+      expect(await rabbitCoin.balanceOf(addr1.address)).to.equal(0);
+    });
+    
+    it("환불 시 잔액을 초과하는 양을 환불할 수 없어야 함", async function () {
+      // addr1에게 RAB를 전송
+      const transferAmount = ethers.parseUnits("100", 0);
+      await rabbitCoin.transfer(addr1.address, transferAmount);
+      
+      // 시스템 컨트랙트 설정
+      await rabbitCoin.setSystemContract(systemContract.address);
+      
+      // 잔액을 초과하는 양을 환불하려고 하면 실패해야 함
+      await expect(
+        rabbitCoin.connect(systemContract).refund(addr1.address, 101)
       ).to.be.revertedWith("ERC20: burn amount exceeds balance");
     });
-  });
 
+    it("환불 후 총 공급량이 정확히 감소해야 함", async function () {
+      // 초기 총 공급량 기록
+      const initialTotalSupply = await rabbitCoin.totalSupply();
+      
+      // addr1에게 RAB를 전송
+      const transferAmount = ethers.parseUnits("100", 0);
+      await rabbitCoin.transfer(addr1.address, transferAmount);
+      
+      // 시스템 컨트랙트 설정
+      await rabbitCoin.setSystemContract(systemContract.address);
+      
+      const refundAmount = ethers.parseUnits("75", 0);
+      await rabbitCoin.connect(systemContract).refund(addr1.address, refundAmount);
+      
+      // 환불 후 총 공급량이 감소해야 함
+      expect(await rabbitCoin.totalSupply()).to.equal(initialTotalSupply - refundAmount);
+    });
+  });
+  
   describe("이벤트", function () {
     it("전송 시 Transfer 이벤트를 발생시켜야 함", async function () {
       const transferAmount = ethers.parseUnits("50", 0);
@@ -300,26 +361,59 @@ describe("RabbitCoin", function () {
         .withArgs(owner.address, addr1.address, approveAmount);
     });
 
-    it("민팅 시 Transfer 이벤트를 발생시켜야 함", async function () {
+    it("민팅 시 Transfer와 RABMinted 이벤트를 발생시켜야 함", async function () {
       const mintAmount = ethers.parseUnits("1000", 0);
       
-      // 민팅 시 Transfer 이벤트 확인 (from은 0 주소)
+      // 민팅 시 Transfer와 RABMinted 이벤트 모두 확인
       await expect(rabbitCoin.mint(addr1.address, mintAmount))
         .to.emit(rabbitCoin, "Transfer")
-        .withArgs(ethers.ZeroAddress, addr1.address, mintAmount);
+        .withArgs(ethers.ZeroAddress, addr1.address, mintAmount)
+        .and.to.emit(rabbitCoin, "RABMinted")
+        .withArgs(addr1.address, mintAmount);
     });
 
-    it("소각 시 Transfer 이벤트를 발생시켜야 함", async function () {
-      // 먼저 addr1에게 RAB를 전송 (사용자 주소에서 소각할 수 있도록 RAB 전송)
+    it("소각 시 Transfer와 RABBurned 이벤트를 발생시켜야 함", async function () {
+      // 먼저 addr1에게 RAB를 전송
       const transferAmount = ethers.parseUnits("100", 0);
       await rabbitCoin.transfer(addr1.address, transferAmount);
       
-      const burnAmount = ethers.parseUnits("50", 0);
+      const burnAmount = ethers.parseUnits("25", 0);
       
-      // 소각 시 Transfer 이벤트 확인 (to는 0 주소)
+      // 소각 시 Transfer와 RABBurned 이벤트 모두 발생해야 함
       await expect(rabbitCoin.connect(addr1).burn(burnAmount))
         .to.emit(rabbitCoin, "Transfer")
-        .withArgs(addr1.address, ethers.ZeroAddress, burnAmount);
+        .withArgs(addr1.address, ethers.ZeroAddress, burnAmount)
+        .and.to.emit(rabbitCoin, "RABBurned")
+        .withArgs(addr1.address, burnAmount);
+    });
+
+    it("충전 시 Transfer와 RABMinted 이벤트를 발생시켜야 함", async function () {
+      const chargeAmount = ethers.parseUnits("1000", 0);
+      
+      // Transfer와 RABMinted 이벤트 확인
+      await expect(rabbitCoin.charge(addr1.address, chargeAmount))
+        .to.emit(rabbitCoin, "Transfer")
+        .withArgs(ethers.ZeroAddress, addr1.address, chargeAmount)
+        .and.to.emit(rabbitCoin, "RABMinted")
+        .withArgs(addr1.address, chargeAmount);
+    });
+
+    it("환불 시 Transfer와 RABBurned 이벤트를 발생시켜야 함", async function () {
+      // addr1에게 RAB를 전송
+      const transferAmount = ethers.parseUnits("100", 0);
+      await rabbitCoin.transfer(addr1.address, transferAmount);
+      
+      // 시스템 컨트랙트 설정
+      await rabbitCoin.setSystemContract(systemContract.address);
+      
+      const refundAmount = ethers.parseUnits("25", 0);
+      
+      // 환불 시 Transfer와 RABBurned 이벤트 모두 발생해야 함
+      await expect(rabbitCoin.connect(systemContract).refund(addr1.address, refundAmount))
+        .to.emit(rabbitCoin, "Transfer")
+        .withArgs(addr1.address, ethers.ZeroAddress, refundAmount)
+        .and.to.emit(rabbitCoin, "RABBurned")
+        .withArgs(addr1.address, refundAmount);
     });
   });
 

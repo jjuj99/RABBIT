@@ -19,6 +19,10 @@ spring:
         use_sql_comments: true
         highlight_sql: true  # SQL 로그 하이라이팅 활성화
 
+# 쿠키 설정
+cookie:
+  secure: false
+
 # 로컬 환경 로깅 설정
 logging:
   config: classpath:log4j2-local.xml

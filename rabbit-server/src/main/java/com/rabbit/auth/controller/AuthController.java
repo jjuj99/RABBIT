@@ -20,6 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jnr.ffi.annotations.In;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +41,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Validated
 public class AuthController {
+
+    @Value("${cookie.secure}")
+    private boolean cookieSecure;
 
     private final AuthService authService;
 
@@ -64,7 +68,7 @@ public class AuthController {
 
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", result.getRefreshToken())
                 .httpOnly(true)
-                .secure(false)
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(60 * 60 * 24 * 7)
                 .sameSite("Strict")
@@ -93,7 +97,7 @@ public class AuthController {
 
         ResponseCookie emptyCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(0) // 쿠키 만료
                 .sameSite("Strict")

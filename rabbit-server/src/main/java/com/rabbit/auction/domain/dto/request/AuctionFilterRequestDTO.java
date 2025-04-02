@@ -2,8 +2,10 @@ package com.rabbit.auction.domain.dto.request;
 
 import com.rabbit.global.request.PageRequestDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -12,6 +14,8 @@ import java.time.ZonedDateTime;
 
 @Getter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Schema(description = "경매 목록 조회를 위한 필터링 검색 요청")
 public class AuctionFilterRequestDTO extends PageRequestDTO {
     private Long minPrice;

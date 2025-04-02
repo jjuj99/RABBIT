@@ -4,7 +4,6 @@ import com.rabbit.global.filter.JwtFilter;
 import com.rabbit.global.security.JwtAuthenticationEntryPoint;
 import com.rabbit.global.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -26,8 +25,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CorsProperties corsProperties;
-
     private final JwtUtil jwtUtil;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
@@ -40,9 +37,9 @@ public class SecurityConfig {
                         -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 사용 비활성화
                 .authorizeHttpRequests(auth -> auth // API 접근 권한 설정
                                 .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**", "/favicon.ico").permitAll()
-                                .requestMatchers("/api/v1/auth/**").permitAll()
-                                .requestMatchers("/api/v1/sse/**").permitAll()
+                                .requestMatchers("/api/v1/auth/**", "/api/v1/sse/**").permitAll()
                                 .anyRequest().authenticated() // 모든 요청 인증 필요
+//                                .anyRequest().permitAll()
                 )
                 .exceptionHandling(exception
                         -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint)) // 인증 실패 시 예워 처리
@@ -55,7 +52,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(corsProperties.getAllowedOrigins()); // 허용할 도메인
+        configuration.setAllowedOrigins(List.of("https://localhost:8080", "http://localhost:8080", "https://j12a604.p.ssafy.io", "http://localhost:5173", "http://127.0.0.1:5500")); // 허용할 도메인
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")); // 허용할 HTTP 메소드
         configuration.setAllowedHeaders(List.of("*")); // 모든 헤더 허용
         configuration.setExposedHeaders(List.of("Authorization")); // 클라이언트가 Authorization 읽을 수 있게

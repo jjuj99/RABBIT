@@ -22,6 +22,7 @@ contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
     address public repaymentSchedulerAddress;
 
     bytes32 public constant TRANSFER_TYPEHASH = keccak256("Transfer(address from,address to,uint256 amount,uint256 nonce,uint256 deadline)");
+    bytes32 public constant PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,uint256 tokenId,uint256 nonce,uint256 deadline)");
 
     constructor(address _rabbitCoinAddress) ERC721("PromissoryNote", "PNFT") EIP712("PromissoryNote", "1") Ownable(msg.sender) {
         tokenIdCounter = 1;
@@ -217,5 +218,52 @@ contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
             '"addTerms":"', m.addTerms.addTerms, '",',
             '"addTermsHash":"', m.addTerms.addTermsHash, '"}'
         ));
+    }
+
+    // ========== permit 관련 함수 ==========
+
+    // permit용 메시지 해시 생성
+    function getPermitMessageHash(
+        address owner,
+        address spender,
+        uint256 tokenId,
+        uint256 nonce,
+        uint256 deadline
+    ) public view returns (bytes32) {
+        bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, tokenId, nonce, deadline));
+        return _hashTypedDataV4(structHash);
+    }
+
+    // 서명을 통해 NFT 이체 승인
+    function permit(
+        address owner,
+        address spender,
+        uint256 tokenId,
+        uint256 deadline,
+        bytes memory signature
+    ) external {
+        require(block.timestamp <= deadline, "Signature expired");
+        require(_tokenExists(tokenId), "Token does not exist");
+        require(ownerOf(tokenId) == owner, "Owner mismatch");
+        
+        // 소유자의 서명 검증
+        bytes32 permitMessageHash = getPermitMessageHash(
+            owner,
+            spender,
+            tokenId,
+            nonces[owner],
+            deadline
+        );
+        
+        address signer = ECDSA.recover(permitMessageHash, signature);
+        require(signer == owner, "Invalid signature");
+        
+        // 논스 증가 (서명 재사용 방지)
+        nonces[owner]++;
+        
+        // 경매 컨트랙트만 승인
+        _approve(spender, tokenId, owner);
+        
+        emit Approval(owner, spender, tokenId);
     }
 }

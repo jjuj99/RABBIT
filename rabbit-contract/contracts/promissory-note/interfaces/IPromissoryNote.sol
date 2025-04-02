@@ -108,4 +108,22 @@ interface IPromissoryNote is IERC721 {
     * @return 소각 권한 여부
     */
     function isBurnAuthorized(address _address) external view returns (bool);
+
+    // permit용 메시지 해시 생성
+    function getPermitMessageHash(
+        address owner,      
+        address spender,    
+        uint256 tokenId,    
+        uint256 nonce,      
+        uint256 deadline    
+    ) external view returns (bytes32);
+
+    // 서명을 통한 NFT 승인
+    function permit(
+        address owner,
+        address spender,
+        uint256 tokenId,
+        uint256 deadline,
+        bytes memory signature
+    ) external;
 }

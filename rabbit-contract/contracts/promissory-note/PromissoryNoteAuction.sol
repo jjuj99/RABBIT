@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "../rabbit-coin/interfaces/IRabbitCoin.sol";
 import "./interfaces/IPromissoryNote.sol";
 import "./interfaces/IPromissoryNoteAuction.sol";
 
@@ -11,16 +12,25 @@ import "./interfaces/IPromissoryNoteAuction.sol";
  * @dev 차용증 NFT 경매 관리 및 부속 NFT 발행을 위한 통합 컨트랙트
  */
 contract PromissoryNoteAuction is IPromissoryNoteAuction, ERC721, Ownable {
+    address public rabbitCoinAddress;
     address public promissoryNoteAddress;
     
-    // NFT 토큰 ID : 판매자 메타마스크 계좌
+    // NFT 토큰ID, 판매자
     mapping(uint256 => address) private nftDepositors;
 
+    // NFT 토큰ID, 입찰자, 입찰 금액 
+    mapping(uint256 => address) private currentBidders;
+    mapping(uint256 => uint256) private biddingAmounts;
+
     constructor(
+        address _rabbitCoinAddress,
         address _promissoryNoteAddress
     ) ERC721("AppendixNFT", "ANFT") Ownable(msg.sender) {
+        rabbitCoinAddress = _rabbitCoinAddress;
         promissoryNoteAddress = _promissoryNoteAddress;
     }
+
+    // ========== NFT 예치 ==========
 
     // 예치된 NFT의 소유자 확인
     function getDepositor(uint256 tokenId) external view returns (address) {
@@ -50,5 +60,58 @@ contract PromissoryNoteAuction is IPromissoryNoteAuction, ERC721, Ownable {
         nftDepositors[tokenId] = owner; // 실제 소유자(예치자) 정보 저장
         
         emit NFTDeposited(tokenId, owner, block.timestamp);
+    }
+
+    // ========== RAB 예치 ==========
+
+    // 현재 입찰자 확인
+    function getCurrentBidder(uint256 tokenId) external view returns (address) {
+        return currentBidders[tokenId];
+    }
+
+    // 현재 입찰 금액 확인
+    function getBiddingAmount(uint256 tokenId) external view returns (uint256) {
+        return biddingAmounts[tokenId];
+    }
+
+    // RAB 코인을 예치하는 입찰 함수
+    function depositRAB(uint256 tokenId, uint256 amount, address bidder) external {
+        // 해당 NFT가 예치되어 있는지 확인
+        require(nftDepositors[tokenId] != address(0), "NFT not deposited");
+        
+        // 예치자와 입찰자가 동일인물인지 확인
+        require(nftDepositors[tokenId] != bidder, "Depositor cannot bid on their own NFT");
+        
+        // 이전 입찰 기록 가져오기
+        address previousBidder = currentBidders[tokenId];
+        uint256 previousAmount = biddingAmounts[tokenId];
+
+        // 이전 입찰 금액보다 높은 경우만 처리
+        require(amount > previousAmount, "New bid amount must be higher than previous bid");
+        
+        IRabbitCoin rabbitCoin = IRabbitCoin(rabbitCoinAddress);
+        
+        // 같은 입찰자인 경우 차액만 전송
+        if (previousBidder == bidder) {
+            uint256 additionalAmount = amount - previousAmount;
+            require(rabbitCoin.transferFrom(bidder, address(this), additionalAmount), "Additional bid transfer failed");
+        } 
+        // 다른 입찰자인 경우
+        else {
+              // 이전 입찰자에게 코인 환불
+            if (previousBidder != address(0) && previousAmount > 0) {
+                require(rabbitCoin.transfer(previousBidder, previousAmount), "Return previous bid failed");
+            }
+            
+            // 새 입찰자의 코인 예치
+            require(rabbitCoin.transferFrom(bidder, address(this), amount), "Bidding transfer failed");
+        }
+        
+        // 상태 업데이트
+        currentBidders[tokenId] = bidder;
+        biddingAmounts[tokenId] = amount;
+        
+        // 이벤트 발생
+        emit RABDeposited(tokenId, bidder, amount, block.timestamp);
     }
 }

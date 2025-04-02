@@ -5,7 +5,7 @@ describe("PromissoryNoteAuction", function () {
     let owner, creditor, debtor, bidder;
     let rabbitCoin, promissoryNote, promissoryNoteAuction;
     let tokenId;
-    const loanAmount = ethers.parseEther("1000"); // 1000 RAB
+    const loanAmount = 1000; // 1000 RAB
     const interestRate = 500; // 5%
     const loanTerm = 12; // 12개월
     const deadline = Math.floor(Date.now() / 1000) + 60 * 60; // 1시간 후 만료
@@ -26,7 +26,7 @@ describe("PromissoryNoteAuction", function () {
 
         // PromissoryNoteAuction 배포
         const PromissoryNoteAuction = await ethers.getContractFactory("PromissoryNoteAuction");
-        promissoryNoteAuction = await PromissoryNoteAuction.deploy(await promissoryNote.getAddress());
+        promissoryNoteAuction = await PromissoryNoteAuction.deploy(await rabbitCoin.getAddress(), await promissoryNote.getAddress());
         await promissoryNoteAuction.waitForDeployment();
 
         // 채권자에게 토큰 발행
@@ -301,5 +301,220 @@ describe("PromissoryNoteAuction", function () {
                 promissoryNoteAuction.depositNFTWithPermit(tokenId, creditor.address, deadline, signature)
             ).to.be.reverted;
         });        
+    });
+
+    describe("입찰 시 RAB 코인 예치", function () {
+        let bidAmount;
+
+        beforeEach(async function () {
+            // RAB 코인을 입찰자에게 발행하고 승인
+            bidAmount = 500;
+            await rabbitCoin.mint(bidder.address, bidAmount);
+            await rabbitCoin.connect(bidder).approve(await promissoryNoteAuction.getAddress(), bidAmount);
+            
+            // NFT 예치 준비
+            const nonce = await promissoryNote.getNonce(creditor.address);
+            const permitMessageHash = await promissoryNote.getPermitMessageHash(
+                creditor.address,
+                await promissoryNoteAuction.getAddress(),
+                tokenId,
+                nonce,
+                deadline
+            );
+
+            const signature = await creditor.signTypedData(
+                {
+                    name: "PromissoryNote",
+                    version: "1",
+                    chainId: (await ethers.provider.getNetwork()).chainId,
+                    verifyingContract: await promissoryNote.getAddress()
+                },
+                {
+                    Permit: [
+                        { name: "owner", type: "address" },
+                        { name: "spender", type: "address" },
+                        { name: "tokenId", type: "uint256" },
+                        { name: "nonce", type: "uint256" },
+                        { name: "deadline", type: "uint256" }
+                    ]
+                },
+                {
+                    owner: creditor.address,
+                    spender: await promissoryNoteAuction.getAddress(),
+                    tokenId: tokenId,
+                    nonce: nonce,
+                    deadline: deadline
+                }
+            );
+            
+            // 차용증 NFT를 경매 컨트랙트에 예치
+            await promissoryNoteAuction.depositNFTWithPermit(
+                tokenId,
+                creditor.address,
+                deadline,
+                signature
+            );
+        });
+
+        it("입찰자가 RAB 코인을 예치할 수 있어야 함", async function () {
+            // 1. 초기 상태 확인
+            expect(await promissoryNoteAuction.getCurrentBidder(tokenId)).to.equal(ethers.ZeroAddress);
+            expect(await promissoryNoteAuction.getBiddingAmount(tokenId)).to.equal(0);
+
+            // 2. 입찰자가 RAB 코인을 예치
+            await expect(
+                promissoryNoteAuction.depositRAB(tokenId, bidAmount, bidder.address)
+            )
+            .to.emit(promissoryNoteAuction, "RABDeposited");
+
+            // 3. 예치 후 상태 검증
+            expect(await promissoryNoteAuction.getCurrentBidder(tokenId)).to.equal(bidder.address);
+            expect(await promissoryNoteAuction.getBiddingAmount(tokenId)).to.equal(bidAmount);
+
+            // 4. RAB 코인이 경매 컨트랙트로 이체되었는지 확인
+            const auctionBalance = await rabbitCoin.balanceOf(await promissoryNoteAuction.getAddress());
+            expect(auctionBalance).to.equal(bidAmount);
+        });
+
+        it("예치되지 않은 NFT에 대해 입찰 실패해야 함", async function () {
+            const nonExistentTokenId = 999;
+
+            await expect(
+                promissoryNoteAuction.depositRAB(nonExistentTokenId, bidAmount, bidder.address)
+            ).to.be.revertedWith("NFT not deposited");
+        });
+
+        it("새로운 입찰자가 입찰하면 이전 입찰자의 코인이 환불되어야 함", async function () {
+            // 첫 번째 입찰자 입찰
+            const firstBidAmount = 300;
+            await promissoryNoteAuction.depositRAB(tokenId, firstBidAmount, bidder.address);
+
+            // 첫 번째 입찰자의 상태 확인
+            expect(await promissoryNoteAuction.getCurrentBidder(tokenId)).to.equal(bidder.address);
+            expect(await promissoryNoteAuction.getBiddingAmount(tokenId)).to.equal(firstBidAmount);
+
+            // 두 번째 입찰자(owner) 준비
+            const secondBidAmount = 400;
+            await rabbitCoin.mint(owner.address, secondBidAmount);
+            await rabbitCoin.connect(owner).approve(await promissoryNoteAuction.getAddress(), secondBidAmount);
+
+            // 첫 번째 입찰자의 초기 잔액 기록
+            const bidderInitialBalance = await rabbitCoin.balanceOf(bidder.address);
+
+            // 두 번째 입찰자 입찰
+            await promissoryNoteAuction.depositRAB(tokenId, secondBidAmount, owner.address);
+
+            // 입찰 후 상태 검증
+            expect(await promissoryNoteAuction.getCurrentBidder(tokenId)).to.equal(owner.address);
+            expect(await promissoryNoteAuction.getBiddingAmount(tokenId)).to.equal(secondBidAmount);
+
+            // 첫 번째 입찰자에게 코인이 환불되었는지 확인
+            const bidderFinalBalance = await rabbitCoin.balanceOf(bidder.address);
+            expect(bidderFinalBalance).to.equal(Number(bidderInitialBalance) + Number(firstBidAmount));
+
+            // 경매 컨트랙트에는 두 번째 입찰 금액만 남아있어야 함
+            const auctionBalance = await rabbitCoin.balanceOf(await promissoryNoteAuction.getAddress());
+            expect(auctionBalance).to.equal(secondBidAmount);
+        });
+
+        it("입찰자가 승인하지 않은 코인으로 입찰 시 실패해야 함", async function () {
+            // 새 계정에 RAB 코인 발행하지만 승인은 하지 않음
+            const newBidder = (await ethers.getSigners())[4];
+            await rabbitCoin.mint(newBidder.address, bidAmount);
+            await expect(
+                promissoryNoteAuction.depositRAB(tokenId, bidAmount, newBidder.address)
+            ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
+        });
+
+        it("RAB 잔액이 부족한 상태에서 입찰 시 실패해야 함", async function () {
+            // 잔액보다 큰 금액으로 입찰 시도
+            const highBidAmount = 1000; // bidder는 500 RAB만 가지고 있음
+            await rabbitCoin.connect(bidder).approve(await promissoryNoteAuction.getAddress(), highBidAmount);
+
+            await expect(
+                promissoryNoteAuction.depositRAB(tokenId, highBidAmount, bidder.address)
+            ).to.be.reverted;
+        });
+
+        it("이전 입찰보다 낮은 금액으로 입찰 시 실패해야 함", async function () {
+            // 첫 번째 입찰
+            await promissoryNoteAuction.depositRAB(tokenId, bidAmount, bidder.address);
+            
+            // 더 낮은 금액으로 두 번째 입찰 준비
+            const lowerBidAmount = 200;
+            await rabbitCoin.mint(owner.address, lowerBidAmount);
+            await rabbitCoin.connect(owner).approve(await promissoryNoteAuction.getAddress(), lowerBidAmount);
+            
+            // 더 낮은 금액으로 입찰 시도 - 실패
+            await expect(
+                promissoryNoteAuction.depositRAB(tokenId, lowerBidAmount, owner.address)
+            ).to.be.revertedWith("New bid amount must be higher than previous bid");
+            
+            // 상태가 변경되지 않았는지 확인
+            expect(await promissoryNoteAuction.getCurrentBidder(tokenId)).to.equal(bidder.address);
+            expect(await promissoryNoteAuction.getBiddingAmount(tokenId)).to.equal(bidAmount);
+        });
+
+        it("동일한 입찰자가 동일한 금액으로 재입찰 시 실패해야 함", async function () {
+            // 첫 번째 입찰
+            await promissoryNoteAuction.depositRAB(tokenId, bidAmount, bidder.address);
+            
+            // 동일 금액으로 재입찰 시도
+            await expect(
+                promissoryNoteAuction.depositRAB(tokenId, bidAmount, bidder.address)
+            ).to.be.revertedWith("New bid amount must be higher than previous bid");
+        });
+
+        it("동일한 입찰자가 더 높은 금액으로 입찰 시 차액만 전송해야 함", async function () {
+            // 첫 번째 입찰
+            const initialBidAmount = 300;
+            await promissoryNoteAuction.depositRAB(tokenId, initialBidAmount, bidder.address);
+            
+            // 추가 코인 발행 및 승인
+            const additionalAmount = 200;
+            await rabbitCoin.mint(bidder.address, additionalAmount);
+            await rabbitCoin.connect(bidder).approve(await promissoryNoteAuction.getAddress(), additionalAmount);
+            
+            // 경매 컨트랙트의 초기 RAB 잔액 확인
+            const initialContractBalance = await rabbitCoin.balanceOf(await promissoryNoteAuction.getAddress());
+            
+            // 입찰자의 초기 RAB 잔액 확인
+            const initialBidderBalance = await rabbitCoin.balanceOf(bidder.address);
+            
+            // 금액을 증액하여 재입찰
+            const newBidAmount = 500;
+            await expect(
+                promissoryNoteAuction.depositRAB(tokenId, newBidAmount, bidder.address)
+            ).to.emit(promissoryNoteAuction, "RABDeposited");
+            
+            // 상태 검증
+            expect(await promissoryNoteAuction.getCurrentBidder(tokenId)).to.equal(bidder.address);
+            expect(await promissoryNoteAuction.getBiddingAmount(tokenId)).to.equal(newBidAmount);
+            
+            // 입찰자 잔액 확인 - 차액만큼만 감소해야 함
+            const finalBidderBalance = await rabbitCoin.balanceOf(bidder.address);
+            expect(Number(initialBidderBalance) - Number(finalBidderBalance)).to.equal(Number(additionalAmount));
+
+            
+            // 경매 컨트랙트 잔액 확인 - 차액만큼만 증가해야 함
+            const finalContractBalance = await rabbitCoin.balanceOf(await promissoryNoteAuction.getAddress());
+            expect(Number(finalContractBalance) - Number(initialContractBalance)).to.equal(Number(additionalAmount));
+        });
+
+        it("NFT 예치자는 자신의 NFT에 입찰할 수 없어야 함", async function () {
+            // 예치자(creditor)에게 RAB 코인 발행 및 승인
+            const creditorBidAmount = 600;
+            await rabbitCoin.mint(creditor.address, creditorBidAmount);
+            await rabbitCoin.connect(creditor).approve(await promissoryNoteAuction.getAddress(), creditorBidAmount);
+            
+            // 예치자가 자신의 NFT에 입찰 시도 - 실패해야 함
+            await expect(
+                promissoryNoteAuction.depositRAB(tokenId, creditorBidAmount, creditor.address)
+            ).to.be.revertedWith("Depositor cannot bid on their own NFT");
+            
+            // 상태가 변경되지 않았는지 확인
+            expect(await promissoryNoteAuction.getCurrentBidder(tokenId)).to.equal(ethers.ZeroAddress);
+            expect(await promissoryNoteAuction.getBiddingAmount(tokenId)).to.equal(0);
+        });
     });
 });

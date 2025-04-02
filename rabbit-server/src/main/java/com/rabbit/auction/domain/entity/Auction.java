@@ -4,6 +4,7 @@ import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 @Table(
@@ -50,6 +51,12 @@ public class Auction {
 
     @Column(nullable = false)
     private ZonedDateTime createdAt;
+
+    private Long remainPrincipal;
+
+    private Integer remainRepaymentDate;
+
+    private BigDecimal returnRate;
 
     public void updatePriceAndBidder(Long price, Integer bidderId) {
         this.price = price;

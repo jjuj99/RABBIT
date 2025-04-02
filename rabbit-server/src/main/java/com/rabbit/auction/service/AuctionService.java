@@ -1,9 +1,7 @@
 package com.rabbit.auction.service;
 
 import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
-import com.rabbit.auction.domain.dto.response.AuctionDetailResponseDTO;
-import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
-import com.rabbit.auction.domain.dto.response.MyAuctionResponseDTO;
+import com.rabbit.auction.domain.dto.response.*;
 import com.rabbit.auction.domain.entity.Bid;
 import com.rabbit.auction.repository.AuctionRepository;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
@@ -22,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -33,6 +32,7 @@ public class AuctionService {
     private final BidRepository bidRepository;
     private final AuctionScheduler auctionScheduler;
     private final SysCommonCodeService sysCommonCodeService;
+
     // 코드 타입 상수 정의
     private static final String AUCTION_STATUS = SysCommonCodes.Auction.values()[0].getCodeType();
     private static final String BID_STATUS = SysCommonCodes.Bid.values()[0].getCodeType();
@@ -148,5 +148,53 @@ public class AuctionService {
 
         //차용증 채권자 정보 변경
         //부속 NFT 추가
+    }
+
+    public SimilarAuctionResponseDTO getSimilarAuctions(@Valid Integer auctionId) {
+        Auction targetAuction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
+
+        // 2. 기준 값 추출
+        // 남은 원금, 남은 상환일 조회 => nft에서 조회
+        Long basePrincipal = 1000000L;
+        Integer baseDays = 100;
+        // 현재 수익률 (기대가격-현재가격)/100?
+        BigDecimal currentRR = BigDecimal.valueOf(20.0);
+
+        // 3. 유사 경매 조회
+        List<Auction> similarAuctions = auctionRepository.findSimilarAuctionsByPrincipalAndDays(
+                auctionId, basePrincipal, baseDays
+        );
+
+        // 4. percentile 계산
+        int rank = 0;
+        for (int i = 0; i < similarAuctions.size(); i++) {
+            if (currentRR.compareTo(similarAuctions.get(i).getReturnRate()) >= 0) {
+                rank = i + 1;
+            }
+        }
+        int percentile = (int) Math.round((rank * 100.0) / similarAuctions.size());
+
+        TargetAuctionResponseDTO targetAuctionResponseDTO = TargetAuctionResponseDTO.builder()
+                .auctionId(targetAuction.getAuctionId())
+                .rp(basePrincipal)
+                .rd(baseDays)
+                .rr(currentRR)
+                .percentile(percentile)
+                .build();
+
+        List<ComparisonAuctionResponseDTO> comparisonList = similarAuctions.stream()
+                .map(a -> ComparisonAuctionResponseDTO.builder()
+                        .auctionId(a.getAuctionId())
+                        .rp(a.getRemainPrincipal())
+                        .rd(a.getRemainRepaymentDate())
+                        .rr(a.getReturnRate())
+                        .build())
+                .toList();
+
+        return SimilarAuctionResponseDTO.builder()
+                .targetAuction(targetAuctionResponseDTO)
+                .comparisonAuctions(comparisonList)
+                .build();
     }
 }

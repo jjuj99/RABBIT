@@ -63,7 +63,7 @@ public class SysCommonCodes {
     public enum Auction implements SysCommonCodeEnum {
         ING("진행중", "경매가 활성화되어 입찰을 받는 중", 1),
         COMPLETED("완료", "경매가 종료되어 낙찰이 완료됨", 2),
-        FAILED("실패", "경매가 실패하여 종료됨", 3),
+        FAILED("유찰", "경매가 실패하여 종료됨", 3),
         CANCELED("취소", "경매가 취소됨", 4);
 
         private final String codeName;
@@ -93,9 +93,9 @@ public class SysCommonCodes {
     @Getter
     @RequiredArgsConstructor
     public enum Bid implements SysCommonCodeEnum {
-        PENDING("대기중", "경매가 진행중인 입찰", 1),
+        PENDING("입찰중", "경매가 진행중인 입찰", 1),
         WON("낙찰", "경매에서 낙찰됨", 2),
-        LOST("유찰", "경매에서 유찰됨", 3);
+        LOST("낙찰 실패", "경매에서 유찰됨", 3);
 
         private final String codeName;
         private final String description;

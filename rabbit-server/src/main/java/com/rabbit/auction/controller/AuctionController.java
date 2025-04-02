@@ -5,6 +5,7 @@ import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
 import com.rabbit.auction.domain.dto.response.AuctionDetailResponseDTO;
 import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
 import com.rabbit.auction.domain.dto.response.MyAuctionResponseDTO;
+import com.rabbit.auction.domain.dto.response.SimilarAuctionResponseDTO;
 import com.rabbit.auction.service.AuctionService;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
 import com.rabbit.global.exception.BusinessException;
@@ -109,5 +110,12 @@ public class AuctionController {
         AuctionDetailResponseDTO auctionDetailResponse = auctionService.getAuctionDetail(auctionId);
 
         return ResponseEntity.ok(CustomApiResponse.success(auctionDetailResponse));
+    }
+
+    @GetMapping("/{auctionId}/similar")
+    public ResponseEntity<CustomApiResponse<?>> getSimilarAuctions(@Valid @PathVariable Integer auctionId) {
+        SimilarAuctionResponseDTO response = auctionService.getSimilarAuctions(auctionId);
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
     }
 }

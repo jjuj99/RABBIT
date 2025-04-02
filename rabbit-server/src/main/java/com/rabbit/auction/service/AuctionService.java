@@ -4,6 +4,7 @@ import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
 import com.rabbit.auction.domain.dto.response.AuctionDetailResponseDTO;
 import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
 import com.rabbit.auction.domain.dto.response.MyAuctionResponseDTO;
+import com.rabbit.auction.domain.entity.Bid;
 import com.rabbit.auction.repository.AuctionRepository;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
 import com.rabbit.auction.domain.entity.Auction;
@@ -15,18 +16,22 @@ import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.response.PageResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Pageable;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuctionService {
     private final AuctionRepository auctionRepository;
     private final BidRepository bidRepository;
+    private final AuctionScheduler auctionScheduler;
     private final SysCommonCodeService sysCommonCodeService;
     // 코드 타입 상수 정의
     private static final String AUCTION_STATUS = SysCommonCodes.Auction.values()[0].getCodeType();
@@ -41,7 +46,7 @@ public class AuctionService {
                 });
 
         Auction auction= Auction.builder()
-                .userId(1)  //아직 임의로 설정해둠
+                .userId(3)  //아직 임의로 설정해둠
                 .minimumBid(auctionRequest.getMinimumBid())
                 .endDate(auctionRequest.getEndDate())
                 .tokenId(auctionRequest.getTokenId())
@@ -50,7 +55,9 @@ public class AuctionService {
                 .createdAt(ZonedDateTime.now())
                 .build();
 
-        auctionRepository.save(auction);
+        Auction savedAuction=auctionRepository.save(auction);
+
+        auctionScheduler.scheduleAuctionEnd(savedAuction.getAuctionId(), savedAuction.getEndDate());
     }
 
     public PageResponseDTO<AuctionResponseDTO> searchAuctions(AuctionFilterRequestDTO request, Pageable pageable) {
@@ -117,5 +124,29 @@ public class AuctionService {
                 .endDate(auction.getEndDate())
                 .createdAt(auction.getCreatedAt())
                 .build();
+    }
+
+    public void processAuctionEnd(Integer auctionId) {
+        log.info("경매 종료 처리 시작 - auctionId={}", auctionId);
+
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
+
+        if (auction.getAuctionStatus() != SysCommonCodes.Auction.ING) return;
+
+        List<Bid> bids = bidRepository.findAllByAuction_AuctionIdOrderByBidAmountDescCreatedAtAsc(auctionId);
+
+        if (bids.isEmpty()) {   //낙찰자가 없는 경우
+            auction.setAuctionStatus(SysCommonCodes.Auction.FAILED);
+        } else {
+            Bid winningBid = bids.get(0);   //최고가
+            auction.updatePriceAndBidder(winningBid.getBidAmount(), winningBid.getUserId());
+            auction.setAuctionStatus(SysCommonCodes.Auction.COMPLETED);
+        }
+
+        auctionRepository.save(auction);
+
+        //차용증 채권자 정보 변경
+        //부속 NFT 추가
     }
 }

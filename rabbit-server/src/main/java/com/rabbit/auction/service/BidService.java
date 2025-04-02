@@ -36,7 +36,7 @@ public class BidService {
         }
 
         // 입찰 금액이 현재 금액보다 큰지 확인
-        if(auction.getPrice()>=bidRequest.getBidAmount()){
+        if(auction.getPrice()!=null && auction.getPrice()>=bidRequest.getBidAmount()){
             throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "입찰 금액이 현재 경매가보다 낮습니다.");
         }
 

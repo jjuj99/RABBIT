@@ -6,23 +6,30 @@ import com.rabbit.auction.domain.entity.Auction;
 import com.rabbit.auction.domain.entity.Bid;
 import com.rabbit.auction.repository.AuctionRepository;
 import com.rabbit.auction.repository.BidRepository;
+import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
-import com.rabbit.sse.service.SseService;
+import com.rabbit.notification.domain.dto.request.NotificationRequestDTO;
+import com.rabbit.notification.service.NotificationService;
+import com.rabbit.sse.domain.dto.response.NotiResponseDTO;
+import com.rabbit.sse.service.SseEventPublisher;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class BidService {
     private final BidRepository bidRepository;
     private final AuctionRepository auctionRepository;
-    private final SseService sseService;
+    private final SseEventPublisher sseEventPublisher;
+    private final NotificationService notificationService;
 
     @Transactional
     public void addBid(@Valid BidRequestDTO bidRequest, Integer auctionId, Integer userId) {
@@ -39,6 +46,9 @@ public class BidService {
         if(auction.getPrice()!=null && auction.getPrice()>=bidRequest.getBidAmount()){
             throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "입찰 금액이 현재 경매가보다 낮습니다.");
         }
+
+        //기존 입찰자
+        Integer previousBidderId = 3;
 
         //해당 입찰자에게 금액만큼 잔고가 있는지 확인 -> 서명 후 스마트컨트랙트로 예치
         //이전 입찰자에게는 예치한 금액 돌려주기
@@ -64,7 +74,22 @@ public class BidService {
                 .createdAt(bid.getCreatedAt())
                 .build();
 
-        sseService.sendBidUpdate(auctionId, response);
+        sseEventPublisher.publish(
+                "bid-updated",                  // 타입
+                "auction-" + auctionId,         // 키
+                response                        // 데이터
+        );
+
+        if (previousBidderId != null && !previousBidderId.equals(userId)) {
+            notificationService.createNotification(
+                    NotificationRequestDTO.builder()
+                            .userId(previousBidderId)
+                            .type(SysCommonCodes.NotificationType.BID_FAILED)
+                            .relatedId(auctionId)
+                            .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
+                            .build()
+            );
+        }
     }
 
     public List<BidResponseDTO> getBids(Integer auctionId) {

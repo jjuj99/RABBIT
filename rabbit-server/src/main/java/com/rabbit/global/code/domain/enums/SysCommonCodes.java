@@ -211,4 +211,65 @@ public class SysCommonCodes {
         }
     }
 
+    /*
+    * 알림 타입
+    * */
+    @Getter
+    @RequiredArgsConstructor
+    public enum NotificationType implements SysCommonCodeEnum {
+
+        AUCTION_FAILED("경매 유찰", "경매에 낙찰자가 없어 유찰되었습니다.", 1),
+        AUCTION_SUCCESS("경매 낙찰 성공", "경매에 낙찰되었습니다. NFT가 곧 전송됩니다.", 2),
+        AUCTION_TRANSFERRED("NFT 전송 예정", "경매가 완료되어 NFT가 낙찰자에게 전송됩니다.", 3),
+        BID_FAILED("입찰 실패", "다른 입찰자가 더 높은 금액을 입찰했습니다.", 4);
+
+        private final String codeName;
+        private final String description;
+        private final int displayOrder;
+
+        private static final String CODE_TYPE = "NOTIFICATION_TYPE";
+
+        @Override
+        public String getCode() {
+            return this.name();
+        }
+
+        @Override
+        public String getCodeType() {
+            return CODE_TYPE;
+        }
+
+        public static NotificationType fromCode(String code) {
+            return fromCodeCommon(values(), code, CODE_TYPE);
+        }
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    public enum NotificationRelatedType implements SysCommonCodeEnum {
+
+        AUCTION("경매", "경매 관련 알림", 1),
+        CONTRACT("계약", "계약 관련 알림", 2);
+
+        private final String codeName;
+        private final String description;
+        private final int displayOrder;
+
+        private static final String CODE_TYPE = "NOTIFICATION_RELATED_TYPE";
+
+        @Override
+        public String getCode() {
+            return this.name();
+        }
+
+        @Override
+        public String getCodeType() {
+            return CODE_TYPE;
+        }
+
+        public static NotificationRelatedType fromCode(String code) {
+            return fromCodeCommon(values(), code, CODE_TYPE);
+        }
+    }
+
 }

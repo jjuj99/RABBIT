@@ -12,6 +12,10 @@ import com.rabbit.global.code.service.SysCommonCodeService;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.response.PageResponseDTO;
+import com.rabbit.notification.domain.dto.request.NotificationRequestDTO;
+import com.rabbit.notification.service.NotificationService;
+import com.rabbit.sse.domain.dto.response.NotiResponseDTO;
+import com.rabbit.sse.service.SseEventPublisher;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +35,9 @@ public class AuctionService {
     private final AuctionRepository auctionRepository;
     private final BidRepository bidRepository;
     private final AuctionScheduler auctionScheduler;
+    private final SseEventPublisher sseEventPublisher;
+    private final NotificationService notificationService;
+
     private final SysCommonCodeService sysCommonCodeService;
 
     // 코드 타입 상수 정의
@@ -138,10 +145,40 @@ public class AuctionService {
 
         if (bids.isEmpty()) {   //낙찰자가 없는 경우
             auction.setAuctionStatus(SysCommonCodes.Auction.FAILED);
+
+            //양도자에게 알림
+            notificationService.createNotification(
+                    NotificationRequestDTO.builder()
+                            .userId(auction.getUserId())
+                            .type(SysCommonCodes.NotificationType.AUCTION_FAILED)
+                            .relatedId(auctionId)
+                            .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
+                            .build()
+            );
         } else {
             Bid winningBid = bids.get(0);   //최고가
             auction.updatePriceAndBidder(winningBid.getBidAmount(), winningBid.getUserId());
             auction.setAuctionStatus(SysCommonCodes.Auction.COMPLETED);
+
+            // 낙찰자에게 성공 알림
+            notificationService.createNotification(
+                    NotificationRequestDTO.builder()
+                            .userId(winningBid.getUserId())
+                            .type(SysCommonCodes.NotificationType.AUCTION_SUCCESS)
+                            .relatedId(auctionId)
+                            .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
+                            .build()
+            );
+
+            // 양도자에게 전송 예정 알림
+            notificationService.createNotification(
+                    NotificationRequestDTO.builder()
+                            .userId(auction.getUserId())
+                            .type(SysCommonCodes.NotificationType.AUCTION_TRANSFERRED)
+                            .relatedId(auctionId)
+                            .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
+                            .build()
+            );
         }
 
         auctionRepository.save(auction);

@@ -31,7 +31,7 @@ export const MyNFTcard = ({ item }: NFTCardProps) => {
         </div>
         <div className="flex w-full justify-between">
           <span>만기일</span>
-          <span>{dateFormat(item.mat_dt)}</span>
+          <span>{dateFormat(item.matDt)}</span>
         </div>
         <div className="flex w-full justify-between">
           <span>원금</span>
@@ -44,7 +44,7 @@ export const MyNFTcard = ({ item }: NFTCardProps) => {
         <Separator />
         <div className="flex w-full justify-between">
           <span> 만기 총 수취액</span>
-          <span>{item.total_amount.toLocaleString()}원</span>
+          <span>{item.totalAmount.toLocaleString()}원</span>
         </div>
       </div>
     </div>
@@ -66,7 +66,7 @@ export const MyNFTCardInfo = ({ className, item }: NFTcardInfoProps) => {
     >
       <div className="flex justify-between">
         <span>종류</span>
-        <span>{item.repay_type}</span>
+        <span>{item.repayType}</span>
       </div>
 
       <div className="flex justify-between">
@@ -76,16 +76,16 @@ export const MyNFTCardInfo = ({ className, item }: NFTcardInfoProps) => {
         </div>
       </div>
       <div className="flex justify-between">
-        <span>{item.earlypay_flag ? `중도 상환 수수료` : "중도 상환"}</span>
-        <span>{item.earlypay_flag ? `${item.earlypay_fee}%` : "불가"}</span>
+        <span>{item.earlypayFlag ? `중도 상환 수수료` : "중도 상환"}</span>
+        <span>{item.earlypayFlag ? `${item.earlypayFee}%` : "불가"}</span>
       </div>
       <div className="flex justify-between">
         <span>신용 점수</span>
-        <span>{item.credit_score}</span>
+        <span>{item.creditScore}</span>
       </div>
       <div className="flex justify-between">
         <span>연체</span>
-        <span>{item.def_cnt}</span>
+        <span>{item.defCnt}</span>
       </div>
     </div>
   );

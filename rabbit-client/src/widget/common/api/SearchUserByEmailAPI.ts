@@ -10,7 +10,7 @@ export const SearchUserByEmailAPI = async (
 ): Promise<ApiResponse<SearchUserResponse>> => {
   const res = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/users?searchEmail=${email}`,
-    fetchOption("GET", undefined, "access"),
+    fetchOption("GET", undefined),
   );
   const data = await res.json();
   return data;

@@ -14,7 +14,7 @@ export function formatDateToYMD(dateStr: string) {
   return `${year}년 ${month}월 ${day}일`;
 }
 
-export const getBidStatusColor = (status: BidHistoryResponse["bid_status"]) => {
+export const getBidStatusColor = (status: BidHistoryResponse["bidStatus"]) => {
   switch (status) {
     case "WON":
       return "text-brand-primary";

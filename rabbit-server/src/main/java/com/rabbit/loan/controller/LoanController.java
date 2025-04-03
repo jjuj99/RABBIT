@@ -1,6 +1,7 @@
 package com.rabbit.loan.controller;
 
 import com.rabbit.global.response.CustomApiResponse;
+import com.rabbit.loan.domain.dto.response.BorrowDetailResponseDTO;
 import com.rabbit.loan.domain.dto.response.BorrowListResponseDTO;
 import com.rabbit.loan.domain.dto.response.BorrowSummaryResponseDTO;
 import com.rabbit.loan.service.LoanService;
@@ -9,6 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,6 +44,14 @@ public class LoanController {
     public ResponseEntity<CustomApiResponse<List<BorrowListResponseDTO>>> borrowList(@RequestParam int pageNumber, @RequestParam int pageSize, Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
         List<BorrowListResponseDTO> response = loanService.borrowList(Integer.parseInt(userId));
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
+
+    @GetMapping("/borrow/{contractId}")
+    public ResponseEntity<CustomApiResponse<BorrowDetailResponseDTO>> borrowDetail(@PathVariable int contracId, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+        BorrowDetailResponseDTO response = loanService.borrowDetail(contracId, Integer.parseInt(userId));
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }

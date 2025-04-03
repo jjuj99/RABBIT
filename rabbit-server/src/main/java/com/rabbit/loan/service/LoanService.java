@@ -7,6 +7,10 @@ import com.rabbit.blockchain.service.RepaymentSchedulerService;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.blockchain.util.BlockChainUtil;
+import com.rabbit.loan.domain.dto.response.BorrowDetailResponseDTO;
+import com.rabbit.loan.domain.dto.response.BorrowListResponseDTO;
+import com.rabbit.loan.domain.dto.response.BorrowSummaryResponseDTO;
+import com.rabbit.loan.util.DateUtils;
 import com.rabbit.loan.domain.dto.response.BorrowListResponseDTO;
 import com.rabbit.loan.domain.dto.response.BorrowSummaryResponseDTO;
 import com.rabbit.loan.util.DateUtils;
@@ -140,5 +144,45 @@ public class LoanService {
 //            log.error("❌ NFT 목록 조회 실패 - userId={}, wallet={}", 1, walletAddress, e);
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "NFT 목록 조회 중 오류가 발생했습니다.");
         }
+    }
+
+    public BorrowDetailResponseDTO borrowDetail(int contractId, int userId) {
+        // 1. 해당 차용증 Id에서 token Id를 가져온다.
+        BigInteger tokenId = null;
+
+        try {
+            // 2. tokenId로 NFT의 정보를 조회
+            PromissoryMetadataDTO dto = promissoryNoteService.getPromissoryMetadata(tokenId);
+
+            BorrowDetailResponseDTO response = BorrowDetailResponseDTO.builder()
+                    .contractId("1") // <-- 객체에서 가져오기
+                    .tokenId(String.valueOf(tokenId))
+                    .nftImage(dto.getNftImage())
+                    .crName(dto.getCreditorName())
+                    .crWallet(dto.getCreditorWalletAddress())
+                    .la(dto.getLoanAmount())
+                    .ir(dto.getInterestRate())
+                    .matDt(dto.getMaturityDate())
+                    .remainTerms(DateUtils.calculateRemainTerms(dto.getMaturityDate())) // 확인
+                    .pnStatus(null) // 확인
+                    .nextMpDt(null) // 확인
+                    .nextAmount(null) // 확인
+                    .aoi(null) // 확인
+                    .aoiDays(null) // 확인
+                    .earlypayFlag(null)
+                    .earlypayFee(null)
+                    .accel(null)
+                    .accelDir(null)
+                    .addTerms(null)
+                    .eventList(null) // <- 이벤트 리스트 내역 담기
+                    .build();
+
+            // 3. 결과 반환
+            return response;
+        } catch (Exception e) {
+//            log.error("❌ NFT 목록 조회 실패 - userId={}, wallet={}", 1, walletAddress, e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "NFT 목록 조회 중 오류가 발생했습니다.");
+        }
+
     }
 }

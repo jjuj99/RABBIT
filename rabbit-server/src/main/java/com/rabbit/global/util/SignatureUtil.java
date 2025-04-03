@@ -9,6 +9,7 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 import static java.util.Arrays.copyOfRange;
@@ -16,6 +17,14 @@ import static java.util.Arrays.copyOfRange;
 @Slf4j
 @Component
 public class SignatureUtil {
+
+    /**
+     * nonce 생성
+     */
+    public static String createNonce() {
+        SecureRandom random = new SecureRandom();
+        return new BigInteger(130, random).toString(32);
+    }
 
     /**
      * 서명된 메시지에서 지갑 주소를 복원합니다.

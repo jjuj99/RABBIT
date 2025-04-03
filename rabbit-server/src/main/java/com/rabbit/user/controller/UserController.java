@@ -1,6 +1,7 @@
 package com.rabbit.user.controller;
 
 import com.rabbit.global.response.CustomApiResponse;
+import com.rabbit.global.response.MessageResponse;
 import com.rabbit.user.controller.swagger.UserControllerSwagger;
 import com.rabbit.user.domain.dto.response.*;
 import com.rabbit.user.service.UserService;
@@ -9,10 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "User", description = "유저 관련 API")
 @RestController
@@ -48,5 +46,12 @@ public class UserController {
         SearchUserResponseDTO response = userService.searchUserByEmail(searchEmail);
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<CustomApiResponse<MessageResponse>> deleteByUserId(@PathVariable int userId) {
+        userService.deleteByUserId(userId);
+
+        return ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("회원을 삭제했습니다.")));
     }
 }

@@ -76,4 +76,9 @@ public class UserService {
                 })
                 .orElseGet(() -> null);
     }
+
+    @Transactional
+    public void deleteByUserId(int userId) {
+        userRepository.deleteById(userId);
+    }
 }

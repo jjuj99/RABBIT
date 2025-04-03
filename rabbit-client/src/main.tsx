@@ -1,7 +1,9 @@
+import React from "react";
+import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
+import { Web3Provider } from "@/shared/lib/web3/context/Web3Context.tsx";
 import App from "./app/App.tsx";
 import "./index.css";
 import { AuthProvider } from "./entities/auth/provider/AuthProvider.tsx";
@@ -27,16 +29,20 @@ async function enableMocking() {
 
 // MSW 초기화 후 앱 렌더링
 enableMocking().then(() => {
-  createRoot(document.getElementById("root")!).render(
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
-          <App />
-          <Toaster />
-        </BrowserRouter>
-      </AuthProvider>
-      {/* 개발 환경에서만 DevTools 표시 */}
-      {import.meta.env.DEV && <ReactQueryDevtools />}
-    </QueryClientProvider>,
+  ReactDOM.createRoot(document.getElementById("root")!).render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <Web3Provider>
+          <AuthProvider>
+            <BrowserRouter>
+              <App />
+              <Toaster />
+            </BrowserRouter>
+          </AuthProvider>
+        </Web3Provider>
+        {/* 개발 환경에서만 DevTools 표시 */}
+        {import.meta.env.DEV && <ReactQueryDevtools />}
+      </QueryClientProvider>
+    </React.StrictMode>,
   );
 });

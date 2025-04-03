@@ -1,6 +1,10 @@
 import { Button } from "@/shared/ui/button";
+import { useLocation, useNavigate } from "react-router";
 
 const ContractRequestSuccess = () => {
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  console.log(state);
   return (
     <main className="flex h-full flex-col items-center justify-center gap-16 bg-gray-900 py-24">
       <img
@@ -68,11 +72,15 @@ const ContractRequestSuccess = () => {
         </div>
       </div>
       <div className="flex gap-4">
-        <Button className="w-[170px] font-bold" variant="primary" size="lg">
+        <Button
+          className="w-[170px] font-bold"
+          onClick={() => {
+            navigate("/contract/sent");
+          }}
+          variant="primary"
+          size="lg"
+        >
           확인
-        </Button>
-        <Button className="w-[170px] font-bold" variant="secondary" size="lg">
-          제안 취소
         </Button>
       </div>
     </main>

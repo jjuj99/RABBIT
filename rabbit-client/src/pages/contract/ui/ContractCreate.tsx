@@ -6,11 +6,20 @@ import { Textarea } from "@/shared/ui/textarea";
 import { InputForm, SelectRepayType } from "@/entities/contract";
 import { useContractForm } from "@/features/contract";
 import { Checkbox } from "@/shared/ui/checkbox";
-import { Form, FormField } from "@/shared/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/shared/ui/form";
 import PASSDialog from "@/widget/common/ui/PASSDialog";
 import BasicDialog from "@/widget/common/ui/BasicDialog";
 import { useState } from "react";
 import EmailSearchDialog from "@/widget/common/ui/EmailSearchDialog";
+import { Calendar } from "@/shared/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
+import dateFormat from "@/shared/utils/dateFormat";
 
 const ContractCreate = () => {
   const {
@@ -55,7 +64,7 @@ const ContractCreate = () => {
                 <h3 className="text-xl font-bold md:text-2xl">채무자 정보</h3>
                 <FormField
                   control={form.control}
-                  name="DR_PHONE"
+                  name="drPhone"
                   render={({ field }) => (
                     <PASSDialog
                       isOpen={isPassDialogOpen}
@@ -70,7 +79,7 @@ const ContractCreate = () => {
                         type="tel"
                         label="휴대폰 번호"
                         readOnly
-                        id="DR-PHONE"
+                        id="drPhone"
                         placeholder="휴대폰 번호를 입력하세요."
                         buttonText={field.value ? "완료" : "인증받기"}
                         onInputClick={
@@ -94,12 +103,12 @@ const ContractCreate = () => {
                 <div className="flex w-full items-center gap-3">
                   <FormField
                     control={form.control}
-                    name="DR_NAME"
+                    name="drName"
                     render={({ field }) => (
                       <InputForm
                         type="text"
                         label="이름"
-                        id="DR-NAME"
+                        id="drName"
                         placeholder="이름을 입력하세요."
                         readOnly
                         {...field}
@@ -109,12 +118,12 @@ const ContractCreate = () => {
 
                   <FormField
                     control={form.control}
-                    name="DR_WALLET"
+                    name="drWallet"
                     render={({ field }) => (
                       <InputForm
                         type="text"
                         label="지갑 정보"
-                        id="DR-WALLET"
+                        id="drWallet"
                         placeholder="지갑 정보를 입력하세요."
                         readOnly
                         {...field}
@@ -128,7 +137,7 @@ const ContractCreate = () => {
                 <h3 className="text-xl font-bold md:text-2xl">채권자 정보</h3>
                 <FormField
                   control={form.control}
-                  name="CR_EMAIL"
+                  name="crEmail"
                   render={({ field }) => (
                     <EmailSearchDialog
                       title="사용자 검색"
@@ -136,15 +145,15 @@ const ContractCreate = () => {
                       open={isSearchUserDialogOpen}
                       setOpen={setIsSearchUserDialogOpen}
                       onUserSelect={(user) => {
-                        form.setValue("CR_EMAIL", user.email);
-                        form.setValue("CR_NAME", user.userName);
-                        form.setValue("CR_WALLET", user.walletAddress);
+                        form.setValue("crEmail", user.email);
+                        form.setValue("crName", user.userName);
+                        form.setValue("crWallet", user.walletAddress);
                       }}
                     >
                       <InputForm
                         label="이메일"
                         type="email"
-                        id="CR-EMAIL"
+                        id="crEmail"
                         readOnly
                         placeholder="이메일을 입력하세요."
                         onInputClick={() => setIsSearchUserDialogOpen(true)}
@@ -158,12 +167,12 @@ const ContractCreate = () => {
                 <div className="flex w-full items-center gap-3">
                   <FormField
                     control={form.control}
-                    name="CR_NAME"
+                    name="crName"
                     render={({ field }) => (
                       <InputForm
                         type="text"
                         label="이름"
-                        id="CR-NAME"
+                        id="crName"
                         placeholder="이름을 입력하세요."
                         readOnly
                         {...field}
@@ -173,12 +182,12 @@ const ContractCreate = () => {
 
                   <FormField
                     control={form.control}
-                    name="CR_WALLET"
+                    name="crWallet"
                     render={({ field }) => (
                       <InputForm
                         type="text"
                         label="지갑 정보"
-                        id="CR-WALLET"
+                        id="crWallet"
                         placeholder="지갑 정보를 입력하세요."
                         readOnly
                         {...field}
@@ -194,14 +203,14 @@ const ContractCreate = () => {
               <div className="grid grid-cols-2 items-center gap-3 md:grid-cols-4">
                 <FormField
                   control={form.control}
-                  name="LA"
+                  name="la"
                   render={({ field }) => (
                     <InputForm
                       label="대출 금액"
                       unit="RAB"
                       placeholder="100,000원 이상"
                       type="number"
-                      id="LA"
+                      id="la"
                       {...field}
                       onChange={(e) =>
                         field.onChange(
@@ -215,14 +224,14 @@ const ContractCreate = () => {
                 />
                 <FormField
                   control={form.control}
-                  name="IR"
+                  name="ir"
                   render={({ field }) => (
                     <InputForm
                       label="이자율(연)"
                       unit="%"
                       type="number"
                       placeholder="20% 이하(법정 최고)"
-                      id="IR"
+                      id="ir"
                       {...field}
                       onChange={(e) =>
                         field.onChange(
@@ -236,7 +245,7 @@ const ContractCreate = () => {
                 />
                 <FormField
                   control={form.control}
-                  name="LT"
+                  name="lt"
                   render={({ field }) => (
                     <InputForm
                       min={1}
@@ -244,7 +253,7 @@ const ContractCreate = () => {
                       unit="개월"
                       type="number"
                       placeholder="대출 기간을 입력하세요."
-                      id="LT"
+                      id="lt"
                       {...field}
                       onChange={(e) =>
                         field.onChange(
@@ -258,7 +267,7 @@ const ContractCreate = () => {
                 />
                 <FormField
                   control={form.control}
-                  name="REPAY_TYPE"
+                  name="repayType"
                   render={({ field }) => (
                     <SelectRepayType
                       {...field}
@@ -269,14 +278,14 @@ const ContractCreate = () => {
                 />
                 <FormField
                   control={form.control}
-                  name="MP_DT"
+                  name="mpDt"
                   render={({ field }) => (
                     <InputForm
                       label="상환일"
                       unit="일"
                       placeholder="상환일을 입력하세요."
                       type="number"
-                      id="MP_DT"
+                      id="mpDt"
                       {...field}
                       onChange={(e) =>
                         field.onChange(
@@ -290,14 +299,14 @@ const ContractCreate = () => {
                 />
                 <FormField
                   control={form.control}
-                  name="DIR"
+                  name="dir"
                   render={({ field }) => (
                     <InputForm
                       label="연체 이자율(연)"
                       unit="%"
                       placeholder="20% 이하(법정 최고)"
                       type="number"
-                      id="DIR"
+                      id="dir"
                       {...field}
                       onChange={(e) =>
                         field.onChange(
@@ -307,6 +316,46 @@ const ContractCreate = () => {
                         )
                       }
                     />
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="contractDt"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="text-lg md:text-xl">
+                        계약 시행일
+                      </FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              className="rounded-sm bg-gray-600 font-medium"
+                              variant={"outline"}
+                            >
+                              {field.value
+                                ? dateFormat(String(field.value))
+                                : "날짜 선택"}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            id="contractDt"
+                            mode="single"
+                            {...field}
+                            initialFocus
+                            disabled={(date) => date < new Date()}
+                            selected={field.value}
+                            onSelect={(e: Date | undefined) => {
+                              if (e) {
+                                field.onChange(e);
+                              }
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </FormItem>
                   )}
                 />
               </div>
@@ -323,12 +372,12 @@ const ContractCreate = () => {
                   <span>{"\u2022"} 원금 또는 이자를 </span>
                   <FormField
                     control={form.control}
-                    name="DEF_CNT"
+                    name="defCnt"
                     render={({ field }) => (
                       <UnitInput
                         wrapperClassName="w-[80px] inline-flex"
                         unit="회"
-                        id="DEF_CNT"
+                        id="defCnt"
                         type="number"
                         {...field}
                       />
@@ -357,17 +406,17 @@ const ContractCreate = () => {
                 <div className="border-border-primary flex items-center gap-2 border-b-2 pb-3">
                   <FormField
                     control={form.control}
-                    name="PN_TRANS"
+                    name="pnTransFlag"
                     render={({ field }) => (
                       <Checkbox
                         checkboxType="brand"
-                        id="PN_TRANS"
+                        id="pnTransFlag"
                         checked={field.value}
                         onCheckedChange={field.onChange}
                       />
                     )}
                   />
-                  <label htmlFor="PN_TRANS">
+                  <label htmlFor="pnTransFlag">
                     채권자가 본 차용증을 자유롭게 양도할 수 있음에 동의하며,
                     등록한 이메일로 양도 통지를 받는 것에 동의합니다.
                   </label>
@@ -380,11 +429,11 @@ const ContractCreate = () => {
                 <div className="border-border-primary flex items-center gap-2 border-b-2 pb-3">
                   <FormField
                     control={form.control}
-                    name="EARLYPAY"
+                    name="earlypay"
                     render={({ field }) => (
                       <Checkbox
                         checkboxType="brand"
-                        id="EARLYPAY"
+                        id="earlypay"
                         checked={field.value}
                         onCheckedChange={field.onChange}
                       />
@@ -392,7 +441,7 @@ const ContractCreate = () => {
                   />
                   <div>
                     <label
-                      htmlFor="EARLYPAY"
+                      htmlFor="earlypay"
                       className="flex flex-wrap items-center gap-1"
                     >
                       <span>
@@ -401,17 +450,17 @@ const ContractCreate = () => {
                       </span>
                       <FormField
                         control={form.control}
-                        name="EARLYPAY_FEE"
+                        name="earlypayFee"
                         render={({ field }) => (
                           <UnitInput
-                            disabled={!form.watch("EARLYPAY")}
-                            {...form.register("EARLYPAY_FEE", {
+                            disabled={!form.watch("earlypay")}
+                            {...form.register("earlypayFee", {
                               valueAsNumber: true,
                             })}
                             wrapperClassName="w-[80px] inline-flex"
                             unit="%"
                             type="number"
-                            id="EARLYPAY_FEE"
+                            id="earlypayFee"
                             {...field}
                           />
                         )}
@@ -428,10 +477,10 @@ const ContractCreate = () => {
               </h3>
               <FormField
                 control={form.control}
-                name="ADD_TERMS"
+                name="addTerms"
                 render={({ field }) => (
                   <Textarea
-                    id="ADD_TERMS"
+                    id="addTerms"
                     className="border-border-primary w-full rounded-md border bg-gray-600 p-3 md:text-xl"
                     placeholder="추가조항을 입력하세요."
                     {...field}
@@ -443,10 +492,10 @@ const ContractCreate = () => {
               <h3 className="text-xl font-bold md:text-2xl">5. 메세지(선택)</h3>
               <FormField
                 control={form.control}
-                name="MESSAGE"
+                name="message"
                 render={({ field }) => (
                   <Textarea
-                    id="MESSAGE"
+                    id="message"
                     className="border-border-primary w-full rounded-md border bg-gray-600 p-3 md:text-xl"
                     placeholder="채권자에게 전달할 메세지를 입력하세요."
                     {...field}

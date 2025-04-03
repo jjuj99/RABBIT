@@ -10,7 +10,7 @@ const AuctionBidHistoryMobile = ({ data }: AuctionBidHistoryMobileProps) => {
   return (
     <>
       {data.map((item) => (
-        <div key={item.auction_id} className="mb-4 rounded-sm bg-gray-800 p-4">
+        <div key={item.auctionId} className="mb-4 rounded-sm bg-gray-800 p-4">
           <div className="flex flex-row gap-4">
             <div className="flex w-fit flex-col gap-3">
               <div className="flex flex-col">
@@ -18,7 +18,7 @@ const AuctionBidHistoryMobile = ({ data }: AuctionBidHistoryMobileProps) => {
                   RABBIT
                 </span>
                 <span className="font-bit text-brand-primary text-xs font-medium sm:text-base">
-                  #{item.auction_id}
+                  #{item.auctionId}
                 </span>
               </div>
               <div className="h-[64px] w-[64px] sm:h-[84px] sm:w-[84px]">
@@ -32,14 +32,14 @@ const AuctionBidHistoryMobile = ({ data }: AuctionBidHistoryMobileProps) => {
             <div className="flex w-full flex-col gap-2">
               <div className="flex flex-row items-center justify-between">
                 <span className="text-xs font-light text-white sm:text-base">
-                  {formatDateToYMD(item.bid_date)}
+                  {formatDateToYMD(item.bidDate)}
                 </span>
                 <span
-                  className={`text-xs font-medium sm:text-base ${getBidStatusColor(item.bid_status)}`}
+                  className={`text-xs font-medium sm:text-base ${getBidStatusColor(item.bidStatus)}`}
                 >
-                  {item.bid_status === "WON"
+                  {item.bidStatus === "WON"
                     ? "낙찰"
-                    : item.bid_status === "LOST"
+                    : item.bidStatus === "LOST"
                       ? "유찰"
                       : "입찰중"}
                 </span>
@@ -59,7 +59,7 @@ const AuctionBidHistoryMobile = ({ data }: AuctionBidHistoryMobileProps) => {
                     경매 상태
                   </span>
                   <div className="flex items-center gap-2 text-xs font-medium sm:text-base">
-                    {item.auction_status === "IN_PROGRESS" ? (
+                    {item.auctionStatus === "IN_PROGRESS" ? (
                       <span>경매 진행중</span>
                     ) : (
                       <span>경매 마감</span>
@@ -71,7 +71,7 @@ const AuctionBidHistoryMobile = ({ data }: AuctionBidHistoryMobileProps) => {
                     내 입찰가
                   </span>
                   <span className="text-xs font-medium text-white sm:text-base">
-                    {item.bid_amount.toLocaleString()} RAB
+                    {item.bidAmount.toLocaleString()} RAB
                   </span>
                 </div>
                 <div className="flex flex-row justify-between"></div>

@@ -20,7 +20,7 @@ export const getAuctionListAPI = async (
 
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") {
-      if (key === "repay_type" && Array.isArray(value)) {
+      if (key === "repayType" && Array.isArray(value)) {
         value.forEach((type) => queryParams.append(key, type));
       } else {
         queryParams.append(key, value.toString());
@@ -30,16 +30,16 @@ export const getAuctionListAPI = async (
 
   const queryString = queryParams.toString();
   const url = `${VITE_API_URL}/${VITE_API_VERSION}/auctions${queryString ? `?${queryString}` : ""}`;
-  const res = await fetch(url, fetchOption("GET", {}, "access"));
+  const res = await fetch(url, fetchOption("GET"));
   const data = await res.json();
   return data;
 };
 
 export const getPNInfoListAPI = async (
-  auction_id: number,
+  auctionId: number,
 ): Promise<ApiResponse<PNInfoListResponse>> => {
   const res = await fetch(
-    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/${auction_id}`,
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/${auctionId}`,
     fetchOption("GET"),
   );
   const data = await res.json();
@@ -47,10 +47,10 @@ export const getPNInfoListAPI = async (
 };
 
 export const getBidListAPI = async (
-  auction_id: number,
+  auctionId: number,
 ): Promise<ApiResponse<BidListResponse[]>> => {
   const res = await fetch(
-    `${VITE_API_URL}/${VITE_API_VERSION}/bids/auction/${auction_id}`,
+    `${VITE_API_URL}/${VITE_API_VERSION}/bids/auction/${auctionId}`,
     fetchOption("GET"),
   );
   const data = await res.json();
@@ -58,35 +58,35 @@ export const getBidListAPI = async (
 };
 
 export const SubmitAuctionBidAPI = async (
-  auction_id: number,
-  bid_amount: number,
+  auctionId: number,
+  bidAmount: number,
 ): Promise<ApiResponse<SubmitAuctionBidResponse>> => {
   const res = await fetch(
-    `${VITE_API_URL}/${VITE_API_VERSION}/bids/auction/${auction_id}`,
-    fetchOption("POST", { bid_amount }),
+    `${VITE_API_URL}/${VITE_API_VERSION}/bids/auction/${auctionId}`,
+    fetchOption("POST", { bidAmount }),
   );
   const data = await res.json();
   return data;
 };
 
 export const createAuctionAPI = async ({
-  minimum_bid,
-  end_date,
-  token_id,
-  seller_sign,
+  minimumBid,
+  endDate,
+  tokenId,
+  sellerSign,
 }: {
-  minimum_bid: number;
-  end_date: string;
-  token_id: string;
-  seller_sign: string;
+  minimumBid: number;
+  endDate: string;
+  tokenId: string;
+  sellerSign: string;
 }): Promise<ApiResponse<CreateAuctionResponse>> => {
   const res = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/auctions`,
     fetchOption("POST", {
-      minimum_bid,
-      end_date,
-      token_id,
-      seller_sign,
+      minimumBid,
+      endDate,
+      tokenId,
+      sellerSign,
     }),
   );
   const data = await res.json();

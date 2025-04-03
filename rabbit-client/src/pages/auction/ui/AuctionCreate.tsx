@@ -74,25 +74,25 @@ const AuctionCreate = () => {
 
   // 임시 데이터
   const mockItem: PNInfoListResponse = {
-    auction_id: 1,
+    auctionId: 1,
     price: 1000000,
-    end_date: "2025-12-31T23:59:59",
+    endDate: "2025-12-31T23:59:59",
     ir: 5.5,
-    created_at: "2024-01-01T00:00:00",
-    repay_type: "BULLET",
-    total_amount: 10000000,
-    mat_dt: "2025-01-01",
+    createdAt: "2024-01-01T00:00:00",
+    repayType: "BULLET",
+    totalAmount: 10000000,
+    matDt: "2025-01-01",
     dir: 100,
     la: 1000000,
-    earlypay_flag: false,
-    earlypay_fee: 0,
-    credit_score: 800,
-    def_cnt: 0,
+    earlypayFlag: false,
+    earlypayFee: 0,
+    creditScore: 800,
+    defCnt: 0,
   };
 
   const handleCardClick = (item: PNInfoListResponse) => {
     setSelectedItem(item);
-    setStartPrice(item.total_amount);
+    setStartPrice(item.totalAmount);
     setIsOpen(true);
   };
 
@@ -116,10 +116,10 @@ const AuctionCreate = () => {
     if (!selectedItem) return;
     try {
       await createAuctionAPI({
-        minimum_bid: startPrice,
-        end_date: calculateEndDate().toISOString(),
-        token_id: "selectedItem.token_id",
-        seller_sign: "selectedItem.seller_sign",
+        minimumBid: startPrice,
+        endDate: calculateEndDate().toISOString(),
+        tokenId: "selectedItem.tokenId",
+        sellerSign: "selectedItem.sellerSign",
       });
       handleClose();
     } catch (error) {

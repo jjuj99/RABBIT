@@ -1,36 +1,30 @@
-// API 응답 타입
+import { Pagination } from "@/shared/type/PaginationResponse";
 
-export interface AuctionListResponse {
-  content: PNInfoListResponse[];
-  pageNumber: number;
-  pageSize: number;
-  totalElements: number;
-  totalPages: number;
-  last: boolean;
-  hasNext: boolean;
-}
+//경매 리스트
+export type AuctionListResponse = Pagination<PNInfoListResponse>;
 
 export interface PNInfoListResponse {
-  auction_id: number;
+  //경매 정보..
+  auctionId: number;
   price: number;
-  end_date: string;
+  endDate: string;
   ir: number; //
-  created_at: string;
-  repay_type: string; //
-  total_amount: number; //
-  mat_dt: string; //
+  createdAt: string;
+  repayType: string; //
+  totalAmount: number; //
+  matDt: string; //
   dir: number; //
   la: number; //
-  earlypay_flag: boolean; //
-  earlypay_fee: number; //
-  credit_score: number; //
-  def_cnt: number; //
+  earlypayFlag: boolean; //
+  earlypayFee: number; //
+  creditScore: number; //
+  defCnt: number; //
 }
 
 export interface BidListResponse {
-  bid_id: number;
-  bid_amount: number;
-  created_at: string;
+  bidId: number;
+  bidAmount: number;
+  createdAt: string;
 }
 
 export interface SubmitAuctionBidResponse {
@@ -41,10 +35,12 @@ export interface CreateAuctionResponse {
 }
 
 export interface BidHistoryResponse {
-  auction_id: number;
-  bid_date: string;
-  auction_status: "COMPLETED" | "IN_PROGRESS";
+  auctionId: number;
+  bidDate: string;
+  auctionStatus: "COMPLETED" | "IN_PROGRESS";
   price: number;
-  bid_amount: number;
-  bid_status: "WON" | "LOST" | "PENDING";
+  bidAmount: number;
+  bidStatus: "WON" | "LOST" | "PENDING";
+  bidStatusName: "입찰중" | "낙찰" | "낙찰 실패";
+  bidderNum: number;
 }

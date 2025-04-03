@@ -63,7 +63,7 @@ const AuctionDetail = () => {
         <div className="flex h-fit w-full items-center justify-center gap-4 rounded-sm bg-gray-600 py-4 sm:h-[82px]">
           <span className="font-medium sm:text-2xl">경매 종료까지</span>
           <span className="sm-font-bold w-[100px] text-2xl font-bold sm:text-4xl">
-            <CountdownTimer endDate={PNInfo.data.end_date} />
+            <CountdownTimer endDate={PNInfo.data.endDate} />
           </span>
         </div>
         <div className="flex flex-col gap-4 rounded-lg sm:bg-gray-900 sm:p-4 sm:pt-4 sm:pb-6">

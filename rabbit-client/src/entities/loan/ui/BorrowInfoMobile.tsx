@@ -2,13 +2,22 @@ import { Circle, Copy, Check } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import { Separator } from "@/shared/ui/Separator";
-import { BorrowInfoResponse } from "../types/response";
+import { BorrowListResponse } from "../types/response";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/shared/ui/pagination";
 
 interface BorrowInfoMobileProps {
-  data?: BorrowInfoResponse[];
+  data?: BorrowListResponse;
+  onPageChange?: (page: number) => void;
 }
 
-const BorrowInfoMobile = ({ data = [] }: BorrowInfoMobileProps) => {
+const BorrowInfoMobile = ({ data, onPageChange }: BorrowInfoMobileProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState("");
@@ -23,7 +32,7 @@ const BorrowInfoMobile = ({ data = [] }: BorrowInfoMobileProps) => {
     }
   };
 
-  if (data.length === 0) {
+  if (!data || data.content.length === 0) {
     return (
       <div className="flex h-[200px] items-center justify-center rounded-sm bg-gray-900">
         <div className="text-base text-gray-400">대출 정보가 없습니다.</div>
@@ -33,7 +42,7 @@ const BorrowInfoMobile = ({ data = [] }: BorrowInfoMobileProps) => {
 
   return (
     <>
-      {data.map((item) => (
+      {data.content.map((item) => (
         <div key={item.tokenId} className="mb-4 rounded-sm bg-gray-800 p-4">
           <div className="flex flex-row gap-4">
             <div className="flex w-fit flex-col gap-3">
@@ -47,7 +56,7 @@ const BorrowInfoMobile = ({ data = [] }: BorrowInfoMobileProps) => {
               </div>
               <div className="h-[64px] w-[64px] sm:h-[84px] sm:w-[84px]">
                 <img
-                  src={item.tokenImage}
+                  src={item.nftImage}
                   alt="NFT"
                   className="h-full w-full rounded-sm object-cover"
                 />
@@ -56,12 +65,12 @@ const BorrowInfoMobile = ({ data = [] }: BorrowInfoMobileProps) => {
             <div className="flex w-full flex-col gap-2">
               <div className="flex flex-row items-center justify-between">
                 <span className="text-xs font-light text-white sm:text-base">
-                  만기일 {item.endDate}
+                  만기일 {item.matDt}
                 </span>
                 <div className="flex items-center gap-2">
                   <Circle
                     className={
-                      item.isOverdue
+                      item.pnStatus === "연체"
                         ? "fill-fail text-fail"
                         : "text-brand-primary fill-brand-primary"
                     }
@@ -69,7 +78,7 @@ const BorrowInfoMobile = ({ data = [] }: BorrowInfoMobileProps) => {
                     height={8}
                   />
                   <span className="text-xs font-medium sm:text-base">
-                    {item.isOverdue ? "연체" : "정상"}
+                    {item.pnStatus}
                   </span>
                 </div>
               </div>
@@ -81,17 +90,17 @@ const BorrowInfoMobile = ({ data = [] }: BorrowInfoMobileProps) => {
                   </span>
                   <div className="flex flex-col items-end">
                     <span className="text-xs font-medium text-white sm:text-base">
-                      {item.creditorName}
+                      {item.drName}
                     </span>
                     <span
                       className="hover:text-brand-primary cursor-pointer text-xs font-light text-gray-200 sm:text-sm"
                       onClick={() => {
-                        setSelectedWallet(item.creditorWallet);
+                        setSelectedWallet(item.drWallet);
                         setIsOpen(true);
                       }}
                     >
-                      {item.creditorWallet
-                        ? `${item.creditorWallet.slice(0, 6)}...${item.creditorWallet.slice(-4)}`
+                      {item.drWallet
+                        ? `${item.drWallet.slice(0, 6)}...${item.drWallet.slice(-4)}`
                         : "-"}
                     </span>
                   </div>
@@ -101,7 +110,7 @@ const BorrowInfoMobile = ({ data = [] }: BorrowInfoMobileProps) => {
                     대출금액
                   </span>
                   <span className="text-xs font-medium text-white sm:text-base">
-                    {item.loanAmount.toLocaleString()}₩
+                    {item.la.toLocaleString()}₩
                   </span>
                 </div>
                 <div className="flex flex-row justify-between">
@@ -109,7 +118,7 @@ const BorrowInfoMobile = ({ data = [] }: BorrowInfoMobileProps) => {
                     이자율
                   </span>
                   <span className="text-xs font-medium text-white sm:text-base">
-                    {item.interestRate}%
+                    {item.ir}%
                   </span>
                 </div>
                 <div className="flex flex-row justify-between">
@@ -117,16 +126,16 @@ const BorrowInfoMobile = ({ data = [] }: BorrowInfoMobileProps) => {
                     다음 납부일
                   </span>
                   <span className="text-xs font-medium text-white sm:text-base">
-                    {item.nextDueDate}
+                    {item.nextMpDt}
                   </span>
                 </div>
-                {item.isOverdue && item.overDueAmount && item.overdueDays && (
+                {item.pnStatus === "연체" && item.aoi && item.aoiDays && (
                   <div className="flex flex-row justify-between">
                     <span className="text-xs font-light text-red-500 sm:text-base">
                       연체금액
                     </span>
                     <span className="text-xs font-medium text-red-500 sm:text-base">
-                      {item.overDueAmount.toLocaleString()}₩
+                      {item.aoi.toLocaleString()}₩
                     </span>
                   </div>
                 )}
@@ -158,6 +167,47 @@ const BorrowInfoMobile = ({ data = [] }: BorrowInfoMobileProps) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Pagination className="mt-4">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => onPageChange?.(data.pageNumber - 1)}
+              className={
+                data.pageNumber === 0 ? "pointer-events-none opacity-50" : ""
+              }
+            />
+          </PaginationItem>
+          {(() => {
+            const startPage = Math.max(
+              0,
+              Math.min(data.pageNumber - 2, data.totalPages - 4),
+            );
+            const endPage = Math.min(data.totalPages - 1, startPage + 4);
+            const pages = Array.from(
+              { length: endPage - startPage + 1 },
+              (_, i) => startPage + i,
+            );
+
+            return pages.map((pageNum) => (
+              <PaginationItem key={pageNum}>
+                <PaginationLink
+                  onClick={() => onPageChange?.(pageNum)}
+                  isActive={pageNum === data.pageNumber}
+                >
+                  {pageNum + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ));
+          })()}
+          <PaginationItem>
+            <PaginationNext
+              onClick={() => onPageChange?.(data.pageNumber + 1)}
+              className={data.last ? "pointer-events-none opacity-50" : ""}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </>
   );
 };

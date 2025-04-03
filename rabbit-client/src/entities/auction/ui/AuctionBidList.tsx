@@ -26,9 +26,9 @@ const AuctionBidList = ({ data }: AuctionBidList) => {
   const BidList = (
     <ul className="flex flex-col">
       {data.map((bid, index) => {
-        const [date, time] = bid.created_at.split("T");
+        const [date, time] = bid.createdAt.split("T");
         return (
-          <li key={bid.bid_id} className="flex flex-col">
+          <li key={bid.bidId} className="flex flex-col">
             <div className="flex w-full flex-col justify-between gap-2 rounded-sm bg-gray-800 px-4 py-2 sm:flex-row sm:gap-4">
               <div className="flex flex-row gap-1 sm:gap-2">
                 <span className="text-sm font-medium text-gray-100 sm:text-lg">
@@ -39,7 +39,7 @@ const AuctionBidList = ({ data }: AuctionBidList) => {
                 </span>
               </div>
               <span className="text-lg font-medium text-white">
-                {bid.bid_amount.toLocaleString()} RAB
+                {bid.bidAmount.toLocaleString()} RAB
               </span>
             </div>
             {index < data.length - 1 && (

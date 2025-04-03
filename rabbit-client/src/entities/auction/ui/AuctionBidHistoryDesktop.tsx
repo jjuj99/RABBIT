@@ -33,7 +33,7 @@ const AuctionBidHistoryDesktop = ({ data }: AuctionBidHistoryDesktopProps) => {
       </thead>
       <tbody>
         {data.map((item) => (
-          <tr key={item.auction_id} className="border-b border-gray-800">
+          <tr key={item.auctionId} className="border-b border-gray-800">
             <td className="px-4 py-3">
               <div className="flex flex-col items-center gap-2">
                 <div className="flex flex-wrap items-center justify-center">
@@ -41,7 +41,7 @@ const AuctionBidHistoryDesktop = ({ data }: AuctionBidHistoryDesktopProps) => {
                     RABBIT
                   </span>
                   <span className="font-bit text-base font-medium text-white">
-                    #{item.auction_id}
+                    #{item.auctionId}
                   </span>
                 </div>
                 <img
@@ -53,7 +53,7 @@ const AuctionBidHistoryDesktop = ({ data }: AuctionBidHistoryDesktopProps) => {
             </td>
             <td className="px-4 py-3 text-center">
               <div className="flex items-center justify-center gap-2 text-base font-medium">
-                {item.auction_status === "IN_PROGRESS" ? (
+                {item.auctionStatus === "IN_PROGRESS" ? (
                   <>
                     <Circle
                       className="text-brand-primary fill-brand-primary"
@@ -75,22 +75,22 @@ const AuctionBidHistoryDesktop = ({ data }: AuctionBidHistoryDesktopProps) => {
             </td>
             <td className="px-4 py-3 text-center">
               <div className="text-base text-white">
-                {item.bid_amount.toLocaleString()} RAB
+                {item.bidAmount.toLocaleString()} RAB
               </div>
             </td>
             <td className="px-4 py-3 text-center">
               <div
-                className={`mx-auto w-fit text-base font-medium ${getBidStatusColor(item.bid_status)}`}
+                className={`mx-auto w-fit text-base font-medium ${getBidStatusColor(item.bidStatus)}`}
               >
-                {item.bid_status === "WON"
+                {item.bidStatus === "WON"
                   ? "낙찰"
-                  : item.bid_status === "LOST"
+                  : item.bidStatus === "LOST"
                     ? "유찰"
                     : "입찰중"}
               </div>
             </td>
             <td className="px-4 py-3 text-center text-base text-white">
-              {formatDateToYMD(item.bid_date)}
+              {formatDateToYMD(item.bidDate)}
             </td>
           </tr>
         ))}

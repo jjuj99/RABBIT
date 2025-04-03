@@ -1,34 +1,64 @@
-import { mockLentData } from "@/entities/loan/mocks/data";
 import LentInfo from "@/entities/loan/ui/LentInfo";
 import LentInfoMobile from "@/entities/loan/ui/LentInfoMobile";
-import LoanSummaryCarousel from "@/features/loan/ui/LoanSummaryCarousel";
-import LoanSummaryList from "@/features/loan/ui/LoanSummaryList";
+import LoanSummaryCarousel from "@/features/loan/ui/LentSummaryCarousel";
+import LoanSummaryList from "@/features/loan/ui/LentSummaryList";
 import useMediaQuery from "@/shared/hooks/useMediaQuery";
+import { useQuery } from "@tanstack/react-query";
+import { getLentListAPI, getLentSummaryAPI } from "@/entities/loan/api/loanApi";
+import { useState, useEffect } from "react";
 
 const LentList = () => {
   const isDesktop = useMediaQuery("lg");
+  const [page, setPage] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return Number(params.get("page")) || 0;
+  });
 
-  if (!mockLentData || mockLentData.length === 0) {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("page", page.toString());
+    window.history.replaceState({}, "", `?${params.toString()}`);
+  }, [page]);
+
+  const { data: LentSummary } = useQuery({
+    queryKey: ["LentSummary"],
+    queryFn: () => getLentSummaryAPI(),
+  });
+
+  const { data: LentList, isLoading: LentListLoading } = useQuery({
+    queryKey: ["LentList", page],
+    queryFn: () => getLentListAPI({ pageNumber: page, pageSize: 10 }),
+  });
+
+  if (!LentList?.data || LentList.data.content.length === 0) {
     return (
       <div className="w-full overflow-hidden rounded-lg bg-gray-900 p-4">
         <div className="text-center text-base text-gray-400">
-          대출 내역이 없습니다.
+          보유한 채권이 없습니다.
         </div>
       </div>
     );
   }
 
+  if (LentListLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <section className="flex flex-col gap-8">
       <div className="relative">
-        {isDesktop ? <LoanSummaryList /> : <LoanSummaryCarousel />}
+        {isDesktop ? (
+          <LoanSummaryList summary={LentSummary?.data} />
+        ) : (
+          <LoanSummaryCarousel summary={LentSummary?.data} />
+        )}
       </div>
       <h2 className="text-xl font-semibold">빌려준 내역</h2>
       <div className="w-full overflow-hidden rounded-lg bg-gray-900">
         {isDesktop ? (
-          <LentInfo data={mockLentData} />
+          <LentInfo data={LentList.data} onPageChange={setPage} />
         ) : (
-          <LentInfoMobile data={mockLentData} />
+          <LentInfoMobile data={LentList.data} onPageChange={setPage} />
         )}
       </div>
     </section>

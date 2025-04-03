@@ -272,4 +272,56 @@ public class SysCommonCodes {
         }
     }
 
+    @Getter
+    @RequiredArgsConstructor
+    public enum MailTemplateType {
+
+        /**
+         * 경매 낙찰 알림 (낙찰자에게)
+         */
+        AUCTION_SUCCESS_WINNER(
+                "[Rabbit] NFT 경매 낙찰을 축하드립니다!",
+                "%s님, NFT [%s] 경매에 낙찰되셨습니다.\n곧 NFT가 전송됩니다. 감사합니다."
+        ),
+
+        /**
+         * 경매 낙찰 알림 (양도인에게)
+         */
+        AUCTION_SUCCESS_SELLER(
+                "[Rabbit] NFT 경매가 완료되었습니다.",
+                "%s님, NFT [%s] 경매가 성공적으로 낙찰되었습니다.\nNFT는 곧 낙찰자에게 전송됩니다."
+        ),
+
+        /**
+         * NFT 양도 완료 통지
+         */
+        TRANSFER_NOTIFY_DEBTOR(
+                "[Rabbit] 채권 양도 통지서",
+                """
+                %s님께,
+    
+                귀하의 대출과 관련된 채권이 기존 채권자 [%s]로부터 새로운 채권자 [%s]에게 양도되었음을 알려드립니다.
+    
+                - 채권 ID: %s
+                - 만기일: %s
+                - 기존 채권자: %s
+                - 신규 채권자: %s
+    
+                해당 채권에 대한 권리는 이제 새로운 채권자에게 있으며,
+                상환 및 기타 문의는 새로운 채권자를 통해 진행해 주시기 바랍니다.
+    
+                감사합니다.
+                Rabbit 팀 드림.
+                """
+        );
+
+        private final String subject;
+        private final String bodyFormat;
+
+        public String buildBody(Object... args) {
+            return String.format(bodyFormat, args);
+        }
+    }
+
+
 }

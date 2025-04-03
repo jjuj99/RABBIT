@@ -81,4 +81,9 @@ public class UserService {
     public void deleteByUserId(int userId) {
         userRepository.deleteById(userId);
     }
+
+    public User findById(Integer userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 유저를 찾을 수 없습니다."));
+    }
 }

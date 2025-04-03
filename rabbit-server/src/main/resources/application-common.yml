@@ -85,21 +85,21 @@ spring:
       timeout: 3600  # 세션 만료 시간 (초)
     cookie:
       http-only: true  # 보안 강화를 위해 HttpOnly 설정
-#  mail:
-#    host: smtp.gmail.com
-#    port: 587
-#    username: ${GMAIL_USERNAME}
-#    password: ${GMAIL_PASSWORD}
-#    properties:
-#      mail:
-#        smtp:
-#          auth: true
-#          starttls:
-#            enable: true
-#            required: true
-#          connection-timeout: 5000
-#          timeout: 5000
-#          write-timeout: 5000
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_USERNAME}
+    password: ${GMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connection-timeout: 5000
+          timeout: 5000
+          write-timeout: 5000
   web:
     resources:
       static-path-pattern: /file/**

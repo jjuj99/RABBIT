@@ -14,12 +14,8 @@ import java.time.ZonedDateTime;
 @AllArgsConstructor
 @Getter
 public class SsafyAccount {
-
+    
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer ssafyAccountId;
-
-    @Column(nullable = false)
     private String email;
 
     @Column(nullable = false)

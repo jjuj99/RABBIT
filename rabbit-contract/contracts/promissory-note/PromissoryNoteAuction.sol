@@ -114,4 +114,58 @@ contract PromissoryNoteAuction is IPromissoryNoteAuction, ERC721, Ownable {
         // 이벤트 발생
         emit RABDeposited(tokenId, bidder, amount, block.timestamp);
     }
+
+    // ========== 경매 종료 ==========
+
+    // 경매 낙찰 처리 함수
+    function finalizeAuction(
+        uint256 tokenId,
+        address buyer,
+        uint256 bidAmount,
+        IPromissoryNote.AppendixMetadata memory metadata
+    ) external onlyOwner {
+        address seller = nftDepositors[tokenId];
+        require(seller != address(0), "Auction does not exist");
+        require(tokenId == metadata.tokenId, "Metadata tokenId mismatch");
+        require(currentBidders[tokenId] == buyer, "Buyer is not the current bidder");
+        require(biddingAmounts[tokenId] == bidAmount, "Bid amount does not match");
+        
+        // 부속 NFT 발행 및 본 차용증 NFT에 번들로 등록
+        IPromissoryNote promissoryNote = IPromissoryNote(promissoryNoteAddress);
+        promissoryNote.mintAppendixNFT(tokenId, metadata, address(this));
+        
+        // 차용증 NFT를 낙찰자에게 전송
+        promissoryNote.transferFrom(address(this), buyer, tokenId);
+        
+        // 입찰 금액을 경매 컨트랙트에서 판매자에게 전송
+        IRabbitCoin rabbitCoin = IRabbitCoin(rabbitCoinAddress);
+        require(rabbitCoin.transfer(seller, bidAmount), "Token transfer to seller failed");
+
+        // 예치 정보 삭제
+        delete nftDepositors[tokenId];
+        delete currentBidders[tokenId];
+        delete biddingAmounts[tokenId];
+        
+        emit AuctionFinalized(tokenId, seller, buyer, bidAmount, block.timestamp);
+    }
+
+    // 경매 취소 함수 (입찰이 없을 때만 가능)
+    function cancelAuction(uint256 tokenId) external onlyOwner {
+        address seller = nftDepositors[tokenId];
+        require(seller != address(0), "Auction does not exist");
+        
+        // 해당 토큰에 대한 입찰 정보가 없는지 확인
+        require(currentBidders[tokenId] == address(0), "Auction has active bids");
+        require(biddingAmounts[tokenId] == 0, "Auction has active bids");
+        
+        // NFT를 원래 소유자에게 반환
+        IPromissoryNote promissoryNote = IPromissoryNote(promissoryNoteAddress);
+        promissoryNote.transferFrom(address(this), seller, tokenId);
+        
+        // 예치 정보 삭제
+        delete nftDepositors[tokenId];
+        
+        emit AuctionCancelled(tokenId, seller, block.timestamp);
+    }
+
 }

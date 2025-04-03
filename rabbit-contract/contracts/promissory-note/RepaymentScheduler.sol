@@ -287,6 +287,10 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         
         // 활성 상환 목록에서 제거
         removeFromActiveRepayments(tokenId);
+
+        // NFT 소각 전 burn 권한 확인 및 부여
+        IPromissoryNote promissoryNote = IPromissoryNote(promissoryNoteAddress);
+        promissoryNote.addBurnAuthorization(address(this));
         
         // NFT 소각 (실패하면 오류 발생 - 권한이 없거나 NFT가 이미 소각된 경우)
         try IPromissoryNote(promissoryNoteAddress).burn(tokenId) {
@@ -571,6 +575,7 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         
         // 전액 상환 시 상환 완료 처리
         if (isFullRepayment) {
+            promissoryNote.addBurnAuthorization(address(this));
             completeRepayment(tokenId);
         }
     }

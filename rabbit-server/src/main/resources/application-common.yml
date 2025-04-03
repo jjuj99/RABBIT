@@ -177,6 +177,25 @@ toss:
 ssafy:
   api-key: ${SSAFY_API_KEY}
 
+# Block Chain Contract 설정
+blockchain:
+  rpcUrl: https://sepolia.infura.io/v3/${INFURA_API_KEY}
+  privateKey: ${BLOCKCHAIN_PRIVATE_KEY}
+
+  rabbitCoin:
+    address: ${RABBIT_COIN_ADDRESS}
+
+  promissoryNote:
+    address: ${PROMISSORY_NOTE_ADDRESS}
+
+  promissoryNoteAuction:
+    address: ${PROMISSORY_NOTE_AUCTION}
+
+  repaymentScheduler:
+    address: ${REPAYMENT_SCHEDULER}
+
+
+
 # 파일 설정
 app:
   file:

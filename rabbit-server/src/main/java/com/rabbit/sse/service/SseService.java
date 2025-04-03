@@ -35,12 +35,7 @@ public class SseService {
         return emitter;
     }
 
-    public void sendBidUpdate(Integer auctionId, BidResponseDTO bidResponseDTO) {
-        String key = "auction-" + auctionId;
-        publish(key, "bid-update", bidResponseDTO);
-    }
-
-    private void publish(String key, String eventName, Object data) {
+    public void publish(String key, String eventName, Object data) {
         List<SseEmitter> list = emitters.getOrDefault(key, List.of());
         for (SseEmitter emitter : list) {
             try {

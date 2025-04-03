@@ -4,7 +4,8 @@ import {
   statusConfig,
 } from "@/entities/contract/constant/statusConfig";
 import { repaymentTypeConfig } from "@/entities/contract/types/repaymentTypeConfig";
-import { ContractListResponse } from "@/entities/contract/types/response";
+import { ContractSentListResponse } from "@/entities/contract/types/response";
+
 import ContactStatusBadge from "@/entities/contract/ui/ContactStatusBadge";
 import FilterOptions, {
   SelectedFilters,
@@ -21,7 +22,7 @@ import { X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 // 목데이터 수정
-const mockData: ContractListResponse[] = [
+const mockData: ContractSentListResponse[] = [
   {
     id: "1",
     debtorName: "홍길동",
@@ -100,7 +101,7 @@ const ContractSentList = () => {
     setSelectedFilters(newFilters);
   };
 
-  const handleRowClick = (contract: ContractListResponse) => {
+  const handleRowClick = (contract: ContractSentListResponse) => {
     console.log("Contract clicked:", contract);
     // 필요한 경우 상위 컴포넌트로 이벤트를 전달하거나
     // 페이지 이동 등의 로직을 구현

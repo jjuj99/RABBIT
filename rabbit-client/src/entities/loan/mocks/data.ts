@@ -2,6 +2,7 @@ import { BorrowInfoResponse, LentInfoResponse } from "../types/response";
 
 export const mockLentData: LentInfoResponse[] = [
   {
+    contractId: "1",
     tokenId: "4001",
     nftImage: "/images/NFT.png",
     drName: "강민재",
@@ -17,6 +18,7 @@ export const mockLentData: LentInfoResponse[] = [
     aoiDays: null,
   },
   {
+    contractId: "2",
     tokenId: "4002",
     nftImage: "/images/NFT.png",
     drName: "윤하린",
@@ -32,6 +34,7 @@ export const mockLentData: LentInfoResponse[] = [
     aoiDays: 8,
   },
   {
+    contractId: "3",
     tokenId: "4003",
     nftImage: "/images/NFT.png",
     drName: "이준혁",
@@ -47,6 +50,7 @@ export const mockLentData: LentInfoResponse[] = [
     aoiDays: null,
   },
   {
+    contractId: "4",
     tokenId: "4004",
     nftImage: "/images/NFT.png",
     drName: "김나영",
@@ -62,6 +66,7 @@ export const mockLentData: LentInfoResponse[] = [
     aoiDays: 18,
   },
   {
+    contractId: "5",
     tokenId: "4005",
     nftImage: "/images/NFT.png",
     drName: "최예준",
@@ -77,6 +82,7 @@ export const mockLentData: LentInfoResponse[] = [
     aoiDays: null,
   },
   {
+    contractId: "6",
     tokenId: "4006",
     nftImage: "/images/NFT.png",
     drName: "정하늘",
@@ -92,6 +98,7 @@ export const mockLentData: LentInfoResponse[] = [
     aoiDays: 5,
   },
   {
+    contractId: "7",
     tokenId: "4007",
     nftImage: "/images/NFT.png",
     drName: "문지후",
@@ -107,6 +114,7 @@ export const mockLentData: LentInfoResponse[] = [
     aoiDays: null,
   },
   {
+    contractId: "8",
     tokenId: "4008",
     nftImage: "/images/NFT.png",
     drName: "신다은",
@@ -122,6 +130,7 @@ export const mockLentData: LentInfoResponse[] = [
     aoiDays: 25,
   },
   {
+    contractId: "9",
     tokenId: "4009",
     nftImage: "/images/NFT.png",
     drName: "홍지성",
@@ -137,6 +146,7 @@ export const mockLentData: LentInfoResponse[] = [
     aoiDays: null,
   },
   {
+    contractId: "10",
     tokenId: "4010",
     nftImage: "/images/NFT.png",
     drName: "배서윤",
@@ -155,6 +165,7 @@ export const mockLentData: LentInfoResponse[] = [
 
 export const mockBorrowData: BorrowInfoResponse[] = [
   {
+    contractId: "11",
     tokenId: "4011",
     nftImage: "/images/NFT.png",
     drName: "한태민",
@@ -170,6 +181,7 @@ export const mockBorrowData: BorrowInfoResponse[] = [
     aoiDays: null,
   },
   {
+    contractId: "12",
     tokenId: "4012",
     nftImage: "/images/NFT.png",
     drName: "서은채",
@@ -185,6 +197,7 @@ export const mockBorrowData: BorrowInfoResponse[] = [
     aoiDays: 28,
   },
   {
+    contractId: "13",
     tokenId: "4013",
     nftImage: "/images/NFT.png",
     drName: "남지민",
@@ -200,6 +213,7 @@ export const mockBorrowData: BorrowInfoResponse[] = [
     aoiDays: null,
   },
   {
+    contractId: "14",
     tokenId: "4014",
     nftImage: "/images/NFT.png",
     drName: "조서우",
@@ -215,6 +229,7 @@ export const mockBorrowData: BorrowInfoResponse[] = [
     aoiDays: 45,
   },
   {
+    contractId: "15",
     tokenId: "4015",
     nftImage: "/images/NFT.png",
     drName: "이도윤",
@@ -230,6 +245,7 @@ export const mockBorrowData: BorrowInfoResponse[] = [
     aoiDays: null,
   },
   {
+    contractId: "16",
     tokenId: "4016",
     nftImage: "/images/NFT.png",
     drName: "김가온",
@@ -245,6 +261,7 @@ export const mockBorrowData: BorrowInfoResponse[] = [
     aoiDays: 3,
   },
   {
+    contractId: "17",
     tokenId: "4017",
     nftImage: "/images/NFT.png",
     drName: "박시후",
@@ -260,6 +277,7 @@ export const mockBorrowData: BorrowInfoResponse[] = [
     aoiDays: null,
   },
   {
+    contractId: "18",
     tokenId: "4018",
     nftImage: "/images/NFT.png",
     drName: "노아인",

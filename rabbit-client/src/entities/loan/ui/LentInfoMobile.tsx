@@ -11,6 +11,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/shared/ui/pagination";
+import { useNavigate } from "react-router";
 
 interface LentInfoMobileProps {
   data?: LentListResponse;
@@ -21,6 +22,7 @@ const LentInfoMobile = ({ data, onPageChange }: LentInfoMobileProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState("");
+  const navigate = useNavigate();
 
   const handleCopy = async (walletAddress: string) => {
     try {
@@ -43,7 +45,11 @@ const LentInfoMobile = ({ data, onPageChange }: LentInfoMobileProps) => {
   return (
     <>
       {data.content.map((item) => (
-        <div key={item.tokenId} className="mb-4 rounded-sm bg-gray-800 p-4">
+        <div
+          key={item.tokenId}
+          className="mb-4 cursor-pointer rounded-sm bg-gray-800 p-4 transition-colors hover:bg-gray-700"
+          onClick={() => navigate(`/loan/lent/${item.contractId}`)}
+        >
           <div className="flex flex-row gap-4">
             <div className="flex w-fit flex-col gap-3">
               <div className="flex flex-col">
@@ -94,7 +100,8 @@ const LentInfoMobile = ({ data, onPageChange }: LentInfoMobileProps) => {
                     </span>
                     <span
                       className="hover:text-brand-primary cursor-pointer text-xs font-light text-gray-200 sm:text-sm"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setSelectedWallet(item.drWallet);
                         setIsOpen(true);
                       }}

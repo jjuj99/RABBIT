@@ -59,7 +59,7 @@ const AuctionBidHistoryMobile = ({ data }: AuctionBidHistoryMobileProps) => {
                     경매 상태
                   </span>
                   <div className="flex items-center gap-2 text-xs font-medium sm:text-base">
-                    {item.auctionStatus === "IN_PROGRESS" ? (
+                    {item.auctionStatus === "ING" ? (
                       <span>경매 진행중</span>
                     ) : (
                       <span>경매 마감</span>

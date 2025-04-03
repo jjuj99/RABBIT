@@ -9,8 +9,8 @@ interface PriceSectionProps {
 }
 
 const PriceSection = ({ triggerApi }: PriceSectionProps) => {
-  const minPrice = useAuctionFilterStore((state) => state.min_price);
-  const maxPrice = useAuctionFilterStore((state) => state.max_price);
+  const minPrice = useAuctionFilterStore((state) => state.minPrice);
+  const maxPrice = useAuctionFilterStore((state) => state.maxPrice);
   const setMinPrice = useAuctionFilterStore((state) => state.setMinPrice);
   const setMaxPrice = useAuctionFilterStore((state) => state.setMaxPrice);
 

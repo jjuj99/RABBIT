@@ -9,6 +9,7 @@ const generateMockBorrowListData = (): BorrowInfoResponse[] => {
   return Array.from({ length: TOTAL_ELEMENTS }, (_, i) => {
     const id = (i + 1).toString();
     return {
+      contractId: id,
       tokenId: id,
       nftImage: "/images/NFT.png", // Lent와 구분되는 이미지 경로
       drName: `차입자${id}`, // 차입자 이름으로 설정

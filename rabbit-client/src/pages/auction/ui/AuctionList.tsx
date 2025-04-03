@@ -10,15 +10,15 @@ import { useNavigate } from "react-router";
 const AuctionList = () => {
   const queryClient = useQueryClient();
 
-  const minPrice = useAuctionFilterStore((state) => state.min_price);
-  const maxPrice = useAuctionFilterStore((state) => state.max_price);
-  const maxIr = useAuctionFilterStore((state) => state.max_ir);
-  const minIr = useAuctionFilterStore((state) => state.min_ir);
-  const maxRate = useAuctionFilterStore((state) => state.max_rate);
-  const repayType = useAuctionFilterStore((state) => state.repay_type);
-  const matTerm = useAuctionFilterStore((state) => state.mat_term);
-  const matStart = useAuctionFilterStore((state) => state.mat_start);
-  const matEnd = useAuctionFilterStore((state) => state.mat_end);
+  const minPrice = useAuctionFilterStore((state) => state.minPrice);
+  const maxPrice = useAuctionFilterStore((state) => state.maxPrice);
+  const maxIr = useAuctionFilterStore((state) => state.maxIr);
+  const minIr = useAuctionFilterStore((state) => state.minIr);
+  const maxRate = useAuctionFilterStore((state) => state.maxRate);
+  const repayType = useAuctionFilterStore((state) => state.repayType);
+  const matTerm = useAuctionFilterStore((state) => state.matTerm);
+  const matStart = useAuctionFilterStore((state) => state.matStart);
+  const matEnd = useAuctionFilterStore((state) => state.matEnd);
   const navigate = useNavigate();
 
   const { data: auctionData, isLoading } = useQuery({

@@ -1,44 +1,99 @@
 import { InfoRow } from "@/entities/common/ui/InfoRow";
 import LoanInfo from "@/features/loan/ui/LoanInfo";
 import { Separator } from "@/shared/ui/Separator";
-import { ProgressBar } from "@/entities/common/ui/ProgressBar";
-import AuctionNFTEventList from "@/features/auction/ui/AuctionNFTEventList";
+import { ContractPeriod } from "@/entities/loan/ui/ContractPeriod";
+import { Button } from "@/shared/ui/button";
+import NFTEventList from "@/entities/common/ui/NFTEventList";
+import NFTEventListMobile from "@/entities/common/ui/NFTEventListMobile";
+import useMediaQuery from "@/shared/hooks/useMediaQuery";
+import { useQuery } from "@tanstack/react-query";
+import { getBorrowDetailAPI } from "@/entities/loan/api/loanApi";
+import { useNavigate, useParams } from "react-router";
 
 const BorrowDetail = () => {
-  const startDate = "2024-04-30";
-  const endDate = "2025-04-30";
+  const isDesktop = useMediaQuery("lg");
+
+  const { contractId } = useParams();
+  const navigate = useNavigate();
+
+  const { data } = useQuery({
+    queryKey: ["borrowDetail", contractId],
+    queryFn: () => getBorrowDetailAPI(contractId!),
+    enabled: !!contractId,
+  });
+
+  if (!contractId) {
+    navigate("/loan");
+    return null;
+  }
+
+  if (!data?.data) {
+    return <div>데이터가 없습니다.</div>;
+  }
 
   return (
     <div className="flex flex-col gap-8">
-      <h2 className="text-2xl font-bold">채무 상세</h2>
-      <div className="flex h-fit flex-row gap-4">
-        <img src="/images/NFT.png" className="h-[466px] w-[466px] rounded-sm" />
+      <h2 className="text-xl font-bold sm:text-2xl">채무 상세</h2>
+      <div className="flex h-fit flex-col items-center gap-4 md:flex-row md:items-start">
+        <img
+          src={data.data.nftImage}
+          className="w-full rounded-sm md:h-[350px] md:w-[350px] lg:h-[466px] lg:w-[466px]"
+        />
         <div className="flex w-full flex-col gap-2">
-          <LoanInfo />
+          <LoanInfo
+            tokenId={data.data.tokenId}
+            crName={data.data.crName}
+            crWallet={data.data.crWallet}
+            la={data.data.la}
+            totalAmount={data.data.totalAmount}
+            repayType={data.data.repayType}
+            ir={data.data.ir}
+            dir={data.data.dir}
+            defCnt={data.data.defCnt}
+            contractDt={data.data.contractDt}
+            pnStatus={data.data.pnStatus}
+          />
           <div>
-            <div className="flex h-fit w-full flex-col gap-2 rounded-sm bg-gray-800 px-6 py-4">
-              <InfoRow label="다음 상환 일자" value="2025-04-30" />
-              <InfoRow label="상환 금액" value="100,000₩" />
+            <div className="flex h-full flex-col gap-2 lg:flex-row">
+              <div className="flex h-full w-full flex-col justify-center gap-2 rounded-sm bg-gray-800 px-4 py-3">
+                <InfoRow label="다음 상환 일자" value={data.data.nextMpDt} />
+                <InfoRow
+                  label="상환 금액"
+                  value={data.data.nextAmount.toLocaleString()}
+                />
+              </div>
+              <div className="flex h-full w-full flex-col justify-center gap-2 rounded-sm bg-gray-800 px-4 py-3">
+                <InfoRow
+                  label="중도 상환 수수료"
+                  value={`${data.data.earlypayFee}%`}
+                />
+                {data.data.earlypayFlag ? (
+                  <Button variant="primary" size="sm" className="w-full">
+                    중도 상환
+                  </Button>
+                ) : (
+                  <div className="text-center text-sm text-gray-400">
+                    중도 상환 불가능
+                  </div>
+                )}
+              </div>
             </div>
-            <Separator className="w-full" />
+            <Separator />
           </div>
         </div>
       </div>
-      <div className="flex flex-col gap-4 rounded-sm bg-gray-800 p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <span className="text-sm text-gray-400">계약일</span>
-            <span className="text-xl font-bold text-white">{startDate}</span>
-          </div>
-          <div className="flex flex-col items-end gap-1">
-            <span className="text-sm text-gray-400">계약일</span>
-            <span className="text-xl font-bold text-white">{endDate}</span>
-          </div>
-        </div>
-        <ProgressBar startDate={startDate} endDate={endDate} />
+      <ContractPeriod
+        startDate={data.data.contractDt}
+        endDate={data.data.matDt}
+      />
+      <h2 className="text-xl font-bold sm:text-2xl">이벤트 리스트</h2>
+      <div className="w-full rounded-sm bg-gray-900">
+        {isDesktop ? (
+          <NFTEventList data={data.data.eventList} />
+        ) : (
+          <NFTEventListMobile data={data.data.eventList} />
+        )}
       </div>
-      <h2 className="text-2xl font-bold">이벤트 리스트</h2>
-      <AuctionNFTEventList />
     </div>
   );
 };

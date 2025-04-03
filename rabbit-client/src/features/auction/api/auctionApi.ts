@@ -9,6 +9,7 @@ import {
   SubmitAuctionBidResponse,
 } from "../types/response";
 import { ApiResponse } from "@/shared/type/ApiResponse";
+import { NFTEventListResponse } from "@/shared/type/NFTEventList";
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 const VITE_API_VERSION = import.meta.env.VITE_API_VERSION;
@@ -99,6 +100,17 @@ export const getBidHistoryAPI = async (): Promise<
   const res = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/auction/my-bids`,
     fetchOption("GET", undefined, "access"),
+  );
+  const data = await res.json();
+  return data;
+};
+
+export const getNFTEventListAPI = async (
+  auctionId: number,
+): Promise<ApiResponse<NFTEventListResponse>> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/${auctionId}/event`,
+    fetchOption("GET"),
   );
   const data = await res.json();
   return data;

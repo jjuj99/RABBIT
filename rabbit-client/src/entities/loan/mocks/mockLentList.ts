@@ -9,6 +9,7 @@ const generateMockLentListData = (): LentInfoResponse[] => {
   return Array.from({ length: TOTAL_ELEMENTS }, (_, i) => {
     const id = (i + 1).toString();
     return {
+      contractId: id,
       tokenId: id,
       nftImage: "/images/NFT.png",
       drName: `채권자${id}`,

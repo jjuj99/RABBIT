@@ -1,23 +1,21 @@
 import {
   getBidListAPI,
+  getNFTEventListAPI,
   getPNInfoListAPI,
 } from "@/features/auction/api/auctionApi";
 import AuctionBidList from "@/entities/auction/ui/AuctionBidList";
-import AuctionNFTEventList from "@/features/auction/ui/AuctionNFTEventList";
 import AuctionBidPanel from "@/entities/auction/ui/AuctionBidPanel";
-import {
-  ScrollArea,
-  ScrollAreaScrollbar,
-  ScrollAreaThumb,
-  ScrollAreaViewport,
-} from "@radix-ui/react-scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router";
 import PNInfoList from "@/entities/auction/ui/PNInfoList";
 import CountdownTimer from "@/shared/ui/CountdownTimer";
+import useMediaQuery from "@/shared/hooks/useMediaQuery";
+import NFTEventListMobile from "@/entities/common/ui/NFTEventListMobile";
+import NFTEventList from "@/entities/common/ui/NFTEventList";
 
 const AuctionDetail = () => {
   const { auctionId } = useParams<{ auctionId: string }>();
+  const isDesktop = useMediaQuery("lg");
 
   const { data: PNInfo, isLoading: PNInfoLoading } = useQuery({
     queryKey: ["PNInfoList", auctionId],
@@ -28,6 +26,19 @@ const AuctionDetail = () => {
     queryKey: ["bidList", auctionId],
     queryFn: () => getBidListAPI(Number(auctionId)),
   });
+
+  const { data: EventList, isLoading: EventListLoading } = useQuery({
+    queryKey: ["NFTEventList", auctionId],
+    queryFn: () => getNFTEventListAPI(Number(auctionId)),
+  });
+
+  if (EventListLoading) {
+    return <div>로딩중...</div>;
+  }
+
+  if (!EventList?.data) {
+    return <div>데이터가 없습니다.</div>;
+  }
 
   if (PNInfoLoading || bidListLoading) {
     return <div>로딩중...</div>;
@@ -60,14 +71,14 @@ const AuctionDetail = () => {
           </div>
         </div>
 
-        <div className="flex h-fit w-full items-center justify-center gap-4 rounded-sm bg-gray-600 py-4 sm:h-[82px]">
+        <div className="flex h-fit w-full items-center justify-center gap-4 rounded-sm bg-gray-900 py-4 sm:h-[82px]">
           <span className="font-medium sm:text-2xl">경매 종료까지</span>
           <span className="sm-font-bold w-[100px] text-2xl font-bold sm:text-4xl">
             <CountdownTimer endDate={PNInfo.data.endDate} />
           </span>
         </div>
         <div className="flex flex-col gap-4 rounded-lg sm:bg-gray-900 sm:p-4 sm:pt-4 sm:pb-6">
-          <h3 className="rounded-sm px-3 py-2 text-lg font-semibold text-white sm:text-2xl">
+          <h3 className="rounded-sm px-3 py-2 text-lg font-semibold text-white sm:text-xl">
             차용증 정보
           </h3>
           <div className="flex w-full justify-center">
@@ -78,29 +89,17 @@ const AuctionDetail = () => {
             )}
           </div>
         </div>
-        <div className="flex flex-col gap-4 rounded-lg sm:bg-gray-900 sm:p-4">
-          <h3 className="bg-succecss px-3 text-lg font-semibold text-white sm:py-2 sm:text-2xl">
+        <div className="flex flex-col gap-1 sm:rounded-lg sm:bg-gray-900 sm:p-4">
+          <h3 className="bg-succecss px-3 py-2 text-lg font-semibold text-white sm:py-2 sm:text-xl">
             차용증 기록
           </h3>
-          <ScrollArea className="h-[300px] w-full md:px-4">
-            <ScrollAreaViewport className="h-full w-full">
-              <AuctionNFTEventList />
-            </ScrollAreaViewport>
-            {/* 수직 스크롤바*/}
-            <ScrollAreaScrollbar
-              orientation="vertical"
-              className="w-1 bg-gray-600 py-1 opacity-100"
-            >
-              <ScrollAreaThumb className="rounded-sm bg-white" />
-            </ScrollAreaScrollbar>
-            {/* 수평 스크롤바*/}
-            <ScrollAreaScrollbar
-              orientation="horizontal"
-              className="h-2 bg-gray-600 py-1 opacity-100"
-            >
-              <ScrollAreaThumb className="rounded-sm bg-white" />
-            </ScrollAreaScrollbar>
-          </ScrollArea>
+          <div className="w-full rounded-sm bg-gray-900">
+            {isDesktop ? (
+              <NFTEventList data={EventList.data} />
+            ) : (
+              <NFTEventListMobile data={EventList.data} />
+            )}
+          </div>
         </div>
       </div>
     </section>

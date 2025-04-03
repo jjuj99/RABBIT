@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, ReactNode } from "react";
 
 interface InfoRowProps {
   label: string;
-  value: string;
+  value: string | ReactNode;
 }
 
 export const InfoRow = ({ label, value }: InfoRowProps) => {
@@ -10,12 +10,12 @@ export const InfoRow = ({ label, value }: InfoRowProps) => {
 
   return (
     <div className="flex flex-row justify-between">
-      <span className="text-xs font-light text-gray-100 sm:text-base">
+      <span className="text-sm font-light text-gray-100 sm:text-base">
         {label}
       </span>
       <div className="relative">
         <span
-          className="cursor-help text-xs font-medium text-white sm:text-base"
+          className="cursor-help text-sm font-medium text-white sm:text-base"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >

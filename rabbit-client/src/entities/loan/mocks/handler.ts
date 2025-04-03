@@ -5,9 +5,13 @@ import {
   LentListResponse,
   BorrowSummaryResponse,
   LentSummaryResponse,
+  BorrowDetailResponse,
+  LentDetailResponse,
 } from "../types/response";
 import { generateMockLentList } from "./mockLentList";
 import { generateMockBorrowList } from "./mockBorrowList";
+import { mockBorrowDetail } from "./mockBorrowDetail";
+import { mockLentDetail } from "./mockLentDetail";
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 const VITE_API_VERSION = import.meta.env.VITE_API_VERSION;
@@ -72,4 +76,30 @@ export const handlers = [
       },
     });
   }),
+
+  http.get(
+    `${VITE_API_URL}/${VITE_API_VERSION}/loans/borrow/:contractId`,
+    ({ params }) => {
+      const contractId = params.contractId;
+      return HttpResponse.json<ApiResponse<BorrowDetailResponse>>({
+        status: "SUCCESS",
+        data: mockBorrowDetail.find(
+          (item) => item.contractId.toString() == contractId,
+        ),
+      });
+    },
+  ),
+
+  http.get(
+    `${VITE_API_URL}/${VITE_API_VERSION}/loans/lent/:contractId`,
+    ({ params }) => {
+      const contractId = params.contractId;
+      return HttpResponse.json<ApiResponse<LentDetailResponse>>({
+        status: "SUCCESS",
+        data: mockLentDetail.find(
+          (item) => item.contractId.toString() == contractId,
+        ),
+      });
+    },
+  ),
 ];

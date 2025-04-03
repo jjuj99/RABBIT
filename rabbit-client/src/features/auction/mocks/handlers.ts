@@ -8,6 +8,8 @@ import {
   SubmitAuctionBidResponse,
 } from "../types/response";
 import { mockAuctionList, mockBidHistoryData, mockBidList } from "./data";
+import { nftEvents } from "@/entities/common/mocks/data";
+import { NFTEventListResponse } from "@/shared/type/NFTEventList";
 
 interface CreateAuctionRequest {
   minimumBid: number;
@@ -54,27 +56,25 @@ export const handlers = [
 
     let filteredList = [...mockAuctionList.content];
 
-    console.log(1231123);
-
-    if (params.minPrice) {
+    if (params.minPrice && Number(params.minPrice) !== 0) {
       filteredList = filteredList.filter(
         (item) => item.price >= Number(params.minPrice),
       );
     }
 
-    if (params.maxPrice) {
+    if (params.maxPrice && Number(params.maxPrice) !== 0) {
       filteredList = filteredList.filter(
         (item) => item.price <= Number(params.maxPrice),
       );
     }
 
-    if (params.maxIr) {
+    if (params.maxIr && Number(params.maxIr) !== 0) {
       filteredList = filteredList.filter(
         (item) => item.ir <= Number(params.maxIr),
       );
     }
 
-    if (params.minIr) {
+    if (params.minIr && Number(params.minIr) !== 0) {
       filteredList = filteredList.filter(
         (item) => item.ir >= Number(params.minIr),
       );
@@ -97,16 +97,26 @@ export const handlers = [
       });
     }
 
+    // 페이지네이션 적용
+    const pageNumber = params.pageNumber ? Number(params.pageNumber) : 0;
+    const pageSize = params.pageSize ? Number(params.pageSize) : 10;
+    const startIndex = pageNumber * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedList = filteredList.slice(startIndex, endIndex);
+    const totalElements = filteredList.length;
+    const totalPages = Math.ceil(totalElements / pageSize);
+    const isLastPage = pageNumber >= totalPages - 1;
+
     const response: ApiResponse<AuctionListResponse> = {
       status: "SUCCESS",
       data: {
-        content: filteredList,
-        pageNumber: 0,
-        pageSize: 10,
-        totalElements: filteredList.length,
-        totalPages: Math.ceil(filteredList.length / 10),
-        last: true,
-        hasNext: false,
+        content: paginatedList,
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+        totalElements: totalElements,
+        totalPages: totalPages,
+        last: isLastPage,
+        hasNext: !isLastPage,
       },
     };
 
@@ -314,4 +324,31 @@ export const handlers = [
     };
     return HttpResponse.json(response);
   }),
+
+  // 경매 이벤트 목록 조회
+  http.get(
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/:auctionId/event`,
+    () => {
+      const auction = {
+        eventList: nftEvents,
+      };
+
+      if (!auction) {
+        return HttpResponse.json({
+          status: "ERROR",
+          error: {
+            statusCode: 404,
+            message: "경매를 찾을 수 없습니다.",
+          },
+        });
+      }
+
+      const response: ApiResponse<NFTEventListResponse> = {
+        status: "SUCCESS",
+        data: auction,
+      };
+
+      return HttpResponse.json(response);
+    },
+  ),
 ];

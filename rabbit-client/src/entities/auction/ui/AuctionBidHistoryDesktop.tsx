@@ -53,7 +53,7 @@ const AuctionBidHistoryDesktop = ({ data }: AuctionBidHistoryDesktopProps) => {
             </td>
             <td className="px-4 py-3 text-center">
               <div className="flex items-center justify-center gap-2 text-base font-medium">
-                {item.auctionStatus === "IN_PROGRESS" ? (
+                {item.auctionStatus === "ING" ? (
                   <>
                     <Circle
                       className="text-brand-primary fill-brand-primary"
@@ -85,7 +85,7 @@ const AuctionBidHistoryDesktop = ({ data }: AuctionBidHistoryDesktopProps) => {
                 {item.bidStatus === "WON"
                   ? "낙찰"
                   : item.bidStatus === "LOST"
-                    ? "유찰"
+                    ? "입찰 실패"
                     : "입찰중"}
               </div>
             </td>

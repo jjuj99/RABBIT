@@ -8,4 +8,6 @@ export interface AuctionListRequest {
   matTerm?: number; // maturity
   matStart?: string; // startDate
   matEnd?: string; // endDate
+  pageNumber?: number; // pageNumber
+  pageSize?: number; // pageSize
 }

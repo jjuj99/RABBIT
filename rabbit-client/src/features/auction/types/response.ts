@@ -1,6 +1,11 @@
 import { Pagination } from "@/shared/type/PaginationResponse";
+import {
+  auctionStatus,
+  auctionStatusName,
+  bidStatus,
+  bidStatusName,
+} from "@/shared/type/Types";
 
-//경매 리스트
 export type AuctionListResponse = Pagination<PNInfoListResponse>;
 
 export interface PNInfoListResponse {
@@ -37,10 +42,11 @@ export interface CreateAuctionResponse {
 export interface BidHistoryResponse {
   auctionId: number;
   bidDate: string;
-  auctionStatus: "COMPLETED" | "IN_PROGRESS";
+  auctionStatus: auctionStatus;
+  auctionStatusName: auctionStatusName;
   price: number;
   bidAmount: number;
-  bidStatus: "WON" | "LOST" | "PENDING";
-  bidStatusName: "입찰중" | "낙찰" | "낙찰 실패";
+  bidStatus: bidStatus;
+  bidStatusName: bidStatusName;
   bidderNum: number;
 }

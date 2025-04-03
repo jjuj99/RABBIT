@@ -19,12 +19,10 @@ const AuctionFilter = ({ className, onFilterChange }: AuctionFilterProps) => {
     const combinedError = Object.values(errors)
       .filter((e) => e !== "")
       .join(", ");
-
     if (combinedError) {
       console.error(combinedError);
       return;
     }
-
     onFilterChange();
   }, [errors, onFilterChange]);
 

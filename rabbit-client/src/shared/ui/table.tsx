@@ -68,7 +68,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "text-foreground h-10 px-10 py-3 text-left align-middle text-base font-bold whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "text-foreground h-10 px-6 py-3 text-left align-middle text-base font-bold whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className,
       )}
       {...props}
@@ -85,13 +85,13 @@ function TableCell({
     <td
       data-slot="table-cell"
       className={cn(
-        "px-10 py-2 align-middle text-base font-light whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "px- max-w-[100px] truncate px-6 py-2 align-middle text-base font-light whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className,
       )}
       {...props}
     >
       {/* 고정 높이와/또는 너비를 지정해 스크롤 영역 생성 */}
-      <div className="h-full w-full overflow-auto">{children}</div>
+      <div className="h-full w-full">{children}</div>
     </td>
   );
 }

@@ -10,6 +10,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/shared/ui/pagination";
+import { useNavigate } from "react-router";
 
 interface BorrowInfoProps {
   data?: BorrowListResponse;
@@ -20,6 +21,7 @@ const BorrowInfo = ({ data, onPageChange }: BorrowInfoProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState("");
+  const navigate = useNavigate();
 
   const handleCopy = async (walletAddress: string) => {
     try {
@@ -47,19 +49,19 @@ const BorrowInfo = ({ data, onPageChange }: BorrowInfoProps) => {
             <th className="w-[120px] px-4 py-3 text-center text-base font-medium text-gray-200">
               NFT
             </th>
-            <th className="w-[70px] px-4 py-3 text-center text-base font-medium text-gray-200">
+            <th className="w-[60px] px-4 py-3 text-center text-base font-medium text-gray-200">
               채권자
             </th>
-            <th className="w-[180px] px-4 py-3 text-center text-base font-medium text-gray-200">
+            <th className="w-[80px] px-4 py-3 text-center text-base font-medium text-gray-200">
               지갑 주소
             </th>
             <th className="w-[120px] px-4 py-3 text-center text-base font-medium text-gray-200">
               금액
             </th>
-            <th className="w-[70px] px-4 py-3 text-center text-base font-medium text-gray-200">
+            <th className="w-[60px] px-4 py-3 text-center text-base font-medium text-gray-200">
               이자율
             </th>
-            <th className="w-[120px] px-4 py-3 text-center text-base font-medium text-gray-200">
+            <th className="w-[90px] px-4 py-3 text-center text-base font-medium text-gray-200">
               만기일
             </th>
             <th className="w-[120px] px-4 py-3 text-center text-base font-medium text-gray-200">
@@ -69,7 +71,11 @@ const BorrowInfo = ({ data, onPageChange }: BorrowInfoProps) => {
         </thead>
         <tbody>
           {data.content.map((item) => (
-            <tr key={item.tokenId} className="border-b border-gray-800">
+            <tr
+              key={item.tokenId}
+              className="cursor-pointer border-b border-gray-800 transition-colors hover:bg-gray-800"
+              onClick={() => navigate(`/loan/borrow/${item.contractId}`)}
+            >
               <td className="px-4 py-3">
                 <div className="flex flex-col items-center gap-2">
                   <div className="flex flex-wrap items-center justify-center">
@@ -95,7 +101,8 @@ const BorrowInfo = ({ data, onPageChange }: BorrowInfoProps) => {
               <td className="px-4 py-3 text-center text-base text-white">
                 <div
                   className="hover:text-brand-primary mx-auto max-w-[180px] cursor-pointer truncate"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setSelectedWallet(item.drWallet);
                     setIsOpen(true);
                   }}
@@ -135,12 +142,12 @@ const BorrowInfo = ({ data, onPageChange }: BorrowInfoProps) => {
                     />
                     <div>{item.pnStatus}</div>
                   </div>
-                  <div className="flex flex-wrap gap-1 text-sm text-gray-200">
+                  <div className="flex flex-wrap justify-center gap-1 text-sm text-gray-200">
                     <span className="text-gray-300">다음 납부일 </span>
                     <span>{item.nextMpDt} </span>
                   </div>
                   {item.pnStatus === "연체" && item.aoi && item.aoiDays && (
-                    <div className="text-sm text-red-500">
+                    <div className="text-center text-sm text-red-500">
                       연체금액: {item.aoi.toLocaleString()}₩
                       <br />
                       연체일수: {item.aoiDays}일

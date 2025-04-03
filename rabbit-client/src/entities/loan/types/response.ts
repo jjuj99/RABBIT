@@ -1,11 +1,13 @@
 import { Pagination } from "@/shared/type/PaginationResponse";
 import { NFTEvent } from "@/shared/type/NFTEventList";
+import { pnStatus } from "@/shared/type/Types";
 //페이지네이션
 export type BorrowListResponse = Pagination<BorrowInfoResponse>;
 export type LentListResponse = Pagination<LentInfoResponse>;
 
 //채무 정보
 export interface BorrowInfoResponse {
+  contractId: string;
   tokenId: string;
   nftImage: string;
   drName: string;
@@ -14,7 +16,7 @@ export interface BorrowInfoResponse {
   ir: number;
   matDt: string;
   remainTerms: number;
-  pnStatus: string;
+  pnStatus: pnStatus;
   nextMpDt: string;
   nextAmount: number;
   aoi: number | null;
@@ -23,6 +25,7 @@ export interface BorrowInfoResponse {
 
 //채권 정보
 export interface LentInfoResponse {
+  contractId: string;
   tokenId: string;
   nftImage: string;
   drName: string;
@@ -31,7 +34,7 @@ export interface LentInfoResponse {
   ir: number;
   matDt: string;
   remainTerms: number;
-  pnStatus: string;
+  pnStatus: pnStatus;
   nextMpDt: string;
   nextAmount: number;
   aoi: number | null;
@@ -54,6 +57,7 @@ export interface BorrowSummaryResponse {
 
 //채무 상세
 export interface BorrowDetailResponse {
+  contractId: number; //추후 삭제
   tokenId: string;
   nftImage: string;
   crName: string;
@@ -68,7 +72,7 @@ export interface BorrowDetailResponse {
   matDt: string;
   remainTerms: number;
   progressRage: number;
-  pnStatus: string;
+  pnStatus: pnStatus;
   nextMpDt: string;
   nextAmount: number;
   aoi: number | null;
@@ -83,6 +87,7 @@ export interface BorrowDetailResponse {
 
 //채권 상세
 export interface LentDetailResponse {
+  contractId: number; //추후 삭제
   tokenId: string;
   nftImage: string;
   drName: string;
@@ -97,7 +102,7 @@ export interface LentDetailResponse {
   matDt: string;
   remainTerms: number;
   progressRage: number;
-  pnStatus: string;
+  pnStatus: pnStatus;
   nextMpDt: string;
   nextAmount: number;
   aoi: number | null;

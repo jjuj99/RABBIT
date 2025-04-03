@@ -11,6 +11,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/shared/ui/pagination";
+import { useNavigate } from "react-router";
 
 interface BorrowInfoMobileProps {
   data?: BorrowListResponse;
@@ -21,6 +22,7 @@ const BorrowInfoMobile = ({ data, onPageChange }: BorrowInfoMobileProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState("");
+  const navigate = useNavigate();
 
   const handleCopy = async (walletAddress: string) => {
     try {
@@ -43,7 +45,11 @@ const BorrowInfoMobile = ({ data, onPageChange }: BorrowInfoMobileProps) => {
   return (
     <>
       {data.content.map((item) => (
-        <div key={item.tokenId} className="mb-4 rounded-sm bg-gray-800 p-4">
+        <div
+          key={item.tokenId}
+          className="mb-4 cursor-pointer rounded-sm bg-gray-800 p-4 transition-colors hover:bg-gray-700"
+          onClick={() => navigate(`/loan/borrow/${item.contractId}`)}
+        >
           <div className="flex flex-row gap-4">
             <div className="flex w-fit flex-col gap-3">
               <div className="flex flex-col">
@@ -94,7 +100,8 @@ const BorrowInfoMobile = ({ data, onPageChange }: BorrowInfoMobileProps) => {
                     </span>
                     <span
                       className="hover:text-brand-primary cursor-pointer text-xs font-light text-gray-200 sm:text-sm"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setSelectedWallet(item.drWallet);
                         setIsOpen(true);
                       }}
@@ -153,7 +160,10 @@ const BorrowInfoMobile = ({ data, onPageChange }: BorrowInfoMobileProps) => {
             <div className="flex items-center gap-2 rounded-lg bg-gray-800 p-3">
               <div className="flex-1 break-all">{selectedWallet}</div>
               <button
-                onClick={() => handleCopy(selectedWallet)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCopy(selectedWallet);
+                }}
                 className="flex items-center gap-1 rounded-lg bg-gray-700 px-3 py-1 hover:bg-gray-600"
               >
                 {isCopied ? (
@@ -192,7 +202,10 @@ const BorrowInfoMobile = ({ data, onPageChange }: BorrowInfoMobileProps) => {
             return pages.map((pageNum) => (
               <PaginationItem key={pageNum}>
                 <PaginationLink
-                  onClick={() => onPageChange?.(pageNum)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPageChange?.(pageNum);
+                  }}
                   isActive={pageNum === data.pageNumber}
                 >
                   {pageNum + 1}

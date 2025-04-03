@@ -115,31 +115,32 @@ contract PromissoryNoteAuction is IPromissoryNoteAuction, ERC721, Ownable {
         emit RABDeposited(tokenId, bidder, amount, block.timestamp);
     }
 
-    // ========== 경매 낙찰 ==========
+    // ========== 경매 종료 ==========
 
     // 경매 낙찰 처리 함수
     function finalizeAuction(
         uint256 tokenId,
         address buyer,
         uint256 bidAmount,
-        AppendixMetadata memory metadata
+        IPromissoryNote.AppendixMetadata memory metadata
     ) external onlyOwner {
         address seller = nftDepositors[tokenId];
         require(seller != address(0), "Auction does not exist");
+        require(tokenId == metadata.tokenId, "Metadata tokenId mismatch");
         require(currentBidders[tokenId] == buyer, "Buyer is not the current bidder");
         require(biddingAmounts[tokenId] == bidAmount, "Bid amount does not match");
         
-        // 부속 NFT 발행 (추후 구현)
-        // TODO: 부속 NFT 발행 및 본 차용증 NFT에 번들로 등록
+        // 부속 NFT 발행 및 본 차용증 NFT에 번들로 등록
+        IPromissoryNote promissoryNote = IPromissoryNote(promissoryNoteAddress);
+        promissoryNote.mintAppendixNFT(tokenId, metadata, address(this));
         
         // 차용증 NFT를 낙찰자에게 전송
-        IPromissoryNote promissoryNote = IPromissoryNote(promissoryNoteAddress);
         promissoryNote.transferFrom(address(this), buyer, tokenId);
         
         // 입찰 금액을 경매 컨트랙트에서 판매자에게 전송
         IRabbitCoin rabbitCoin = IRabbitCoin(rabbitCoinAddress);
         require(rabbitCoin.transfer(seller, bidAmount), "Token transfer to seller failed");
-        
+
         // 예치 정보 삭제
         delete nftDepositors[tokenId];
         delete currentBidders[tokenId];

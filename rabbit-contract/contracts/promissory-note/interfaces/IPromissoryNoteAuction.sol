@@ -1,28 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "./IPromissoryNote.sol";
+
 /**
  * @title IPromissoryNoteAuction
  * @dev 차용증 NFT 경매 및 부속 NFT 관리를 위한 인터페이스
  */
 interface IPromissoryNoteAuction {
-
-    struct AppendixMetadata {
-        uint256 tokenId;                  // 원본 NFT 토큰 ID
-        string grantorSign;               // 양도인 서명
-        string grantorName;               // 양도인 이름  
-        address grantorWalletAddress;     // 양도인 메타마스크 계좌
-        string grantorInfoHash;           // 양도인 정보 해시
-
-        string granteeSign;               // 양수인 서명
-        string granteeName;               // 양수인 이름  
-        address granteeWalletAddress;     // 양수인 메타마스크 계좌
-        string granteeInfoHash;           // 양수인 정보 해시
-
-        uint256 la;                       // 차용 금액 (남은 원금)
-        string contractDate;              // 계약일
-        string originalText;              // 계약서 원문 해시
-    }
 
     // NFT 예치 이벤트
     event NFTDeposited(uint256 indexed tokenId, address indexed depositor, uint256 timestamp);
@@ -77,7 +62,7 @@ interface IPromissoryNoteAuction {
     */
     function depositRAB(uint256 tokenId, uint256 amount, address bidder) external;
 
-    // ========== 경매 낙찰 ==========
+    // ========== 경매 종료 ==========
 
     /**
     * @dev 경매 낙찰 처리 함수
@@ -90,7 +75,7 @@ interface IPromissoryNoteAuction {
         uint256 tokenId,
         address buyer,
         uint256 bidAmount,
-        AppendixMetadata memory metadata
+        IPromissoryNote.AppendixMetadata memory metadata
     ) external;
 
     /**

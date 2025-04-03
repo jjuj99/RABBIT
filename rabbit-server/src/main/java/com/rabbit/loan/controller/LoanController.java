@@ -1,6 +1,7 @@
 package com.rabbit.loan.controller;
 
 import com.rabbit.global.response.CustomApiResponse;
+import com.rabbit.loan.domain.dto.response.BorrowListResponseDTO;
 import com.rabbit.loan.domain.dto.response.BorrowSummaryResponseDTO;
 import com.rabbit.loan.service.LoanService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,6 +11,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Loan", description = "나의 채무, 채권 정보 관련 API")
@@ -29,4 +35,11 @@ public class LoanController {
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }
 
+    @GetMapping("/borrow/me")
+    public ResponseEntity<CustomApiResponse<List<BorrowListResponseDTO>>> borrowList(@RequestParam int pageNumber, @RequestParam int pageSize, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+        List<BorrowListResponseDTO> response = loanService.borrowList(Integer.parseInt(userId));
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
 }

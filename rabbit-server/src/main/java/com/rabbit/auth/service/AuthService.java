@@ -6,9 +6,12 @@ import com.rabbit.auth.domain.dto.request.SignupRequestDTO;
 import com.rabbit.auth.domain.dto.response.CheckNicknameResponseDTO;
 import com.rabbit.auth.domain.dto.response.NonceResponseDTO;
 import com.rabbit.auth.domain.dto.response.RefreshResponseDTO;
+import com.rabbit.auth.domain.entity.SsafyAccount;
 import com.rabbit.auth.domain.entity.UserToken;
+import com.rabbit.auth.repository.SsafyAccountRepository;
 import com.rabbit.auth.repository.UserTokenRepository;
 import com.rabbit.auth.service.dto.LoginServiceResult;
+import com.rabbit.bankApi.service.BankApiService;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.util.JwtUtil;
@@ -26,10 +29,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.util.WebUtils;
 
-import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.time.ZonedDateTime;
 
 @Slf4j
@@ -41,7 +41,9 @@ public class AuthService {
     private final UserTokenRepository userTokenRepository;
     private final RefundAccountRepository refundAccountRepository;
     private final MetamaskWalletRepository metamaskWalletRepository;
+    private final SsafyAccountRepository ssafyAccountRepository;
 
+    private final BankApiService bankApiService;
     private final JwtUtil jwtUtil;
 
     public NonceResponseDTO nonce(NonceRequestDTO request) {
@@ -52,15 +54,10 @@ public class AuthService {
                 })
                 .findFirst()
                 .map(wallet -> NonceResponseDTO.builder()
-                        .nonce(createNonce())
+                        .nonce(SignatureUtil.createNonce())
                         .build()
                 )
                 .orElseGet(() -> null);
-    }
-
-    private String createNonce() {
-        SecureRandom random = new SecureRandom();
-        return new BigInteger(130, random).toString(32);
     }
 
     @Transactional
@@ -125,6 +122,14 @@ public class AuthService {
             throw new BusinessException(ErrorCode.ALREADY_EXISTS, "이미 등록된 지갑 주소입니다.");
         }
 
+        // 싸피 은행 계정 정보 호출
+        SsafyAccount ssafyAccount = ssafyAccountRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED, "계좌 인증을 다시 시도해주세요."));
+
+        if (ssafyAccount.getUserKey() == null || ssafyAccount.getAccountNo() == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "계좌 인증을 다시 시도해주세요.");
+        }
+
         // 유저 엔티티 생성
         User user = userRepository.save(User.builder()
                 .email(request.getEmail())
@@ -149,10 +154,8 @@ public class AuthService {
         );
 
         // 메타마스크 지갑 엔티티 생성
-
         // 표준 체크섬 주소로 변환
         String checksumAddress = WalletAddressUtil.toChecksumAddress(request.getWalletAddress());
-
         metamaskWalletRepository.save(MetamaskWallet.builder()
                 .user(user)
                 .walletAddress(checksumAddress)

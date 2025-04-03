@@ -19,7 +19,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import jnr.ffi.annotations.In;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -121,7 +120,7 @@ public class AuthController {
 
     @AuthControllerSwagger.refreshApi
     @PostMapping("/refresh")
-    public ResponseEntity<CustomApiResponse<?>> refresh(HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<RefreshResponseDTO>> refresh(HttpServletRequest request) {
         String refreshToken = getRefreshTokenFromCookie(request)
                 .orElseThrow(() -> new BusinessException(ErrorCode.JWT_REQUIRED));
 

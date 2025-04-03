@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class NonceRequestDTO {
 
-    @Schema(description = "메타마스크 지갑 주소", example = "0xdbd1cb333978e1f6774e759d9742e8955cad3f6b")
+    @Schema(description = "메타마스크 지갑 주소", example = "0x1234abcd5678ef901234abcd5678ef901234abcd")
     @NotBlank(message = "지갑 주소를 입력하지 않았습니다.")
     @Pattern(regexp = "^0x[a-fA-F0-9]{40}$", message = "지갑 주소 형식이 올바르지 않습니다.")
     private String walletAddress;

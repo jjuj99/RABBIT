@@ -173,6 +173,10 @@ cookie:
 toss:
   secret: ${TOSS_SECRET}
 
+# SSAFY BANK 설정
+ssafy:
+  api-key: ${SSAFY_API_KEY}
+
 # 파일 설정
 app:
   file:

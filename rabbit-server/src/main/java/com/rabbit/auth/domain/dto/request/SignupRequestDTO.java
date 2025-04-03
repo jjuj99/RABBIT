@@ -39,7 +39,7 @@ public class SignupRequestDTO {
     @Size(max = 30, message = "닉네임은 30자 이하로 입력해야 합니다.")
     private String refundAccount;
 
-    @Schema(description = "메타마스크 지갑 주소", example = "0x1234abcd5678efgh")
+    @Schema(description = "메타마스크 지갑 주소", example = "0x1234abcd5678ef901234abcd5678ef901234abcd")
     @NotBlank(message = "메타마스크 지갑 주소를 입력하지 않았습니다.")
     @Pattern(regexp = "^0x[a-fA-F0-9]{40}$", message = "지갑 주소 형식이 올바르지 않습니다.")
     private String walletAddress;

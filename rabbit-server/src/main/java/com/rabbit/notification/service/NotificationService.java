@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -48,4 +50,12 @@ public class NotificationService {
         return saved;
     }
 
+    public List<NotificationResponseDTO> getUserNotifications(Integer userId) {
+        List<Notification> notifications = notificationRepository
+                .findAllByUserIdOrderByCreatedAtDesc(userId);
+
+        return notifications.stream()
+                .map(NotificationResponseDTO::from)
+                .toList();
+    }
 }

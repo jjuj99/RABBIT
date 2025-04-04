@@ -52,7 +52,10 @@ public class ContractListResponseDTO {
     private Integer mpDt;
 
     @Schema(description = "상환방식", example = "BP")
-    private String repayType;
+    private SysCommonCodes.Repayment repayType;
+
+    @Schema(description = "상환방식명", example = "원리금균등상환")
+    private String repayTypeName;
 
     @Schema(description = "계약 상태", example = "REQUESTED")
     private SysCommonCodes.Contract contractStatus;
@@ -80,8 +83,9 @@ public class ContractListResponseDTO {
                 .matDt(contract.getMaturityDate())
                 .mpDt(contract.getMonthlyPaymentDate())
                 .repayType(contract.getRepaymentType())
+                .repayTypeName(contract.getRepaymentType().getCodeName())
                 .contractStatus(contract.getContractStatus())
-                .contractStatusName(contract.getContractStatus().name())
+                .contractStatusName(contract.getContractStatus().getCodeName())
                 .build();
     }
 }

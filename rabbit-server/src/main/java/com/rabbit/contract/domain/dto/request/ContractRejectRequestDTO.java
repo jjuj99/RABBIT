@@ -19,14 +19,14 @@ public class ContractRejectRequestDTO {
     @Builder.Default
     private boolean isCanceled = false;
 
-    @Schema(description = "패스 인증 토큰", example = "token123")
-    private String passAuthToken;
-
-    @Schema(description = "트랜잭션 ID", example = "tx_abc123")
-    private String txId;
-
-    @Schema(description = "인증 결과 코드", example = "SUCCESS")
-    private String authResultCode;
+//    @Schema(description = "패스 인증 토큰", example = "token123")
+//    private String passAuthToken;
+//
+//    @Schema(description = "트랜잭션 ID", example = "tx_abc123")
+//    private String txId;
+//
+//    @Schema(description = "인증 결과 코드", example = "SUCCESS")
+//    private String authResultCode;
 
     @Size(max = 500, message = "반려 메시지는 500자 이내로 작성해야 합니다.")
     public String getRejectMessage() {

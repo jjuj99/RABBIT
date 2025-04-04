@@ -2,6 +2,7 @@ package com.rabbit.contract.domain.dto.response;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -63,7 +64,10 @@ public class ContractDetailResponseDTO {
     private BigDecimal earlypayFee;
 
     @Schema(description = "상환방식", example = "EPIP")
-    private String repayType;
+    private SysCommonCodes.Repayment repayType;
+
+    @Schema(description = "상환방식명", example = "원리금균등상환")
+    private String repayTypeName;
 
     @Schema(description = "월 납입일", example = "15")
     private Integer mpDt;
@@ -80,17 +84,8 @@ public class ContractDetailResponseDTO {
     @Schema(description = "차용증 양도 가능 여부", example = "true")
     private Boolean pnTransFlag;
 
-    @Schema(description = "납부 유예 일수", example = "7")
-    private Integer graceLineDays;
-
     @Schema(description = "계약 조항", example = "이 계약의 조항은...")
     private String addTerms;
-
-    @Schema(description = "NFT 토큰 ID", example = "123456")
-    private BigInteger tokenId;
-
-    @Schema(description = "NFT 이미지 URL", example = "https://example.com/nft.png")
-    private String nftImageUrl;
 
     @Schema(description = "계약 상태", example = "REQUESTED")
     private SysCommonCodes.Contract contractStatus;
@@ -109,6 +104,9 @@ public class ContractDetailResponseDTO {
 
     @Schema(description = "만기 시 총 상환 금액", example = "1050000")
     private BigDecimal matAmt;
+
+    @Schema(description = "메시지", example = "잘 부탁드립니다.")
+    private String message;
 
     @Schema(description = "반려 메시지", example = "이자율이 너무 낮습니다.")
     private String rejectMessage;
@@ -149,21 +147,20 @@ public class ContractDetailResponseDTO {
                 .lt(contract.getLoanTerm())
                 .earlypayFee(contract.getPrepaymentInterestRate())
                 .repayType(contract.getRepaymentType())
+                .repayTypeName(contract.getRepaymentType().getCodeName())
                 .mpDt(contract.getMonthlyPaymentDate())
                 .dir(contract.getDefaultInterestRate())
                 .defCnt(contract.getDefaultCount())
                 .earlypay(contract.getEarlyPayment())
                 .pnTransFlag(contract.getPromissoryNoteTransferabilityFlag())
-                .graceLineDays(contract.getGraceLineDays())
                 .addTerms(contract.getContractTerms())
-                .tokenId(contract.getTokenId())
-                .nftImageUrl(contract.getNftImageUrl())
                 .contractStatus(contract.getContractStatus())
                 .contractStatusName(contract.getContractStatus().getCodeName())
                 .createdAt(contract.getCreatedAt())
                 .updatedAt(contract.getUpdatedAt())
                 .remainingDays(remainingDays)
                 .matAmt(totalRepayment)
+                .message(contract.getMessage())
                 .rejectMessage(contract.getRejectMessage())
                 .rejectedAt(contract.getRejectedAt())
                 .build();

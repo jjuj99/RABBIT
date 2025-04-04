@@ -101,12 +101,6 @@ public class Contract {
     private BigInteger tokenId;
 
     /**
-     * NFT 이미지 URL
-     */
-    @Column(nullable = true)
-    private String nftImageUrl;
-
-    /**
      * 계약 조항 (추가 조항)
      */
     @Column(nullable = true, length = 1000)
@@ -115,8 +109,9 @@ public class Contract {
     /**
      * 상환 방식 (EPIP: 원리금균등상환, EPP: 원금균등상환, BP: 만기일시상환)
      */
-    @Column(nullable = true)
-    private String repaymentType;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "repayment_type", nullable = false, length = 50)
+    private SysCommonCodes.Repayment repaymentType;
 
     /**
      * 월 납입일 (매월 n일)
@@ -180,6 +175,12 @@ public class Contract {
     private boolean deletedFlag;
 
     /**
+     * 메시지 (채무자)
+     */
+    @Column(nullable = true, length = 500)
+    private String message;
+
+    /**
      * 반려 메시지
      */
     @Column(nullable = true, length = 500)
@@ -225,11 +226,11 @@ public class Contract {
     /**
      * NFT 정보 설정
      * @param tokenId NFT 토큰 ID
-     * @param imageUrl NFT 이미지 URL
+//     * @param imageUrl NFT 이미지 URL
      */
-    public void setNftInfo(BigInteger tokenId, String imageUrl) {
+    public void setNftInfo(BigInteger tokenId /*, String imageUrl*/ ) {
         this.tokenId = tokenId;
-        this.nftImageUrl = imageUrl;
+//        this.nftImageUrl = imageUrl;
     }
 
     /**
@@ -300,13 +301,14 @@ public class Contract {
                 .prepaymentInterestRate(dto.getEarlypayFee())
                 .graceLineDays(7) // 기본값 설정 또는 설정 정보에서 가져옴
                 .contractTerms(dto.getAddTerms())
-                .repaymentType(dto.getRepayType())
+                .repaymentType(SysCommonCodes.Repayment.fromCode(dto.getRepayType()))
                 .monthlyPaymentDate(dto.getMpDt())
                 .defaultInterestRate(dto.getDir())
                 .defaultCount(dto.getDefCnt())
                 .earlyPayment(dto.getEarlypay())
                 .promissoryNoteTransferabilityFlag(dto.getPnTransFlag())
                 .loanTerm(dto.getLt())
+                .message(dto.getMessage())
                 .contractStatus(SysCommonCodes.Contract.REQUESTED) // 초기 상태는 REQUESTED
                 .createdAt(ZonedDateTime.now())
                 .deletedFlag(false)

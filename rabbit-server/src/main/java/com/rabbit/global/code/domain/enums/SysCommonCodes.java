@@ -34,7 +34,8 @@ public class SysCommonCodes {
                 PromissoryNote.values()[0].getCodeType(),
                 CoinLog.values()[0].getCodeType(),
                 Bid.values()[0].getCodeType(),
-                Contract.values()[0].getCodeType() // 계약 상태 코드 추가
+                Contract.values()[0].getCodeType(),
+                Repayment.values()[0].getCodeType()
                 // 새 코드 타입 추가 시 여기에 추가
         );
     }
@@ -306,6 +307,38 @@ public class SysCommonCodes {
         }
 
         public static NotificationRelatedType fromCode(String code) {
+            return fromCodeCommon(values(), code, CODE_TYPE);
+        }
+    }
+
+
+    /**
+     * 상환 방식 타입 코드 열거형
+     */
+    @Getter
+    @RequiredArgsConstructor
+    public enum Repayment implements SysCommonCodeEnum {
+        EPIP("원리금균등상환", "원금과 이자를 매월 동일한 금액으로 상환", 1),
+        EPP("원금균등상환", "원금을 매월 동일한 금액으로 상환하고 이자는 잔액에 따라 계산", 2),
+        BP("만기일시상환", "만기일에 원금을 일시 상환하고 이자는 정기적으로 납부", 3);
+
+        private final String codeName;
+        private final String description;
+        private final int displayOrder;
+
+        private static final String CODE_TYPE = "REPAYMENT_TYPE";
+
+        @Override
+        public String getCode() {
+            return this.name();
+        }
+
+        @Override
+        public String getCodeType() {
+            return CODE_TYPE;
+        }
+
+        public static Repayment fromCode(String code) {
             return fromCodeCommon(values(), code, CODE_TYPE);
         }
     }

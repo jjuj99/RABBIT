@@ -2,6 +2,7 @@ package com.rabbit.contract.service;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -48,6 +49,7 @@ public class ContractService {
 
     // 코드 타입 상수 정의
     private static final String CONTRACT_STATUS = SysCommonCodes.Contract.values()[0].getCodeType();
+    private static final String REPAYMENT_TYPE = SysCommonCodes.Repayment.values()[0].getCodeType();
 
     /**
      * 계약 설정 정보 조회
@@ -117,13 +119,23 @@ public class ContractService {
                         dto.setContractStatusName(sysCommonCodeService.getCodeName(
                                 CONTRACT_STATUS, dto.getContractStatus().getCode()));
                     }
+                    if (dto.getRepayType() != null) {
+                        dto.setRepayTypeName(sysCommonCodeService.getCodeName(
+                                REPAYMENT_TYPE, dto.getRepayType().getCode()));
+                    }
 
                     // 지갑 주소 설정 (채무자 또는 채권자)
                     if ("sent".equals(type)) {
                         // 채무자인 경우 채권자 정보
                         dto.setName(contract.getCreditor().getUserName());
                         dto.setWalletAddress(walletService.getUserPrimaryWalletAddress(contract.getCreditor()));
+                        // 채무자인 경우 채권자 정보
+                        dto.setName(contract.getCreditor().getUserName());
+                        dto.setWalletAddress(walletService.getUserPrimaryWalletAddress(contract.getCreditor()));
                     } else {
+                        // 채권자인 경우 채무자 정보
+                        dto.setName(contract.getDebtor().getUserName());
+                        dto.setWalletAddress(walletService.getUserPrimaryWalletAddress(contract.getDebtor()));
                         // 채권자인 경우 채무자 정보
                         dto.setName(contract.getDebtor().getUserName());
                         dto.setWalletAddress(walletService.getUserPrimaryWalletAddress(contract.getDebtor()));
@@ -184,6 +196,9 @@ public class ContractService {
         // 기본 DTO 생성
         ContractDetailResponseDTO dto = ContractDetailResponseDTO.from(contract);
 
+        //
+
+
         // 지갑 정보 설정
         dto.setCrWallet(walletService.getUserPrimaryWalletAddress(contract.getCreditor()));
         dto.setDrWallet(walletService.getUserPrimaryWalletAddress(contract.getDebtor()));
@@ -196,19 +211,48 @@ public class ContractService {
         // 채무자 조회
         User debtor = findUserById(userId);
 
-        // 채권자 조회
+        // 채권자 조회 (이메일로)
         User creditor = findCreditorByEmail(requestDTO.getCrEmail());
 
         // 자기 자신과의 계약 생성 방지
         validateSelfContract(userId, creditor.getUserId());
+
+        // 수정 요청인 경우 (계약 ID가 있는 경우)
+        Integer contractIdParam = requestDTO.getContractId();
+        if (contractIdParam != null) {
+            // 이전 계약 조회
+            Contract originalContract = findContractById(contractIdParam);
+
+            // 권한 검증 - 채무자만 수정 가능
+            if (!Objects.equals(originalContract.getDebtor().getUserId(), userId)) {
+                log.warn("[계약 수정 권한 없음] 사용자 ID: {}, 원본 계약 ID: {}", userId, contractIdParam);
+                throw new BusinessException(ErrorCode.ACCESS_DENIED, "원본 계약의 채무자만 계약을 수정할 수 있습니다");
+            }
+
+            // 원본 계약 상태 검증 - MODIFICATION_REQUESTED 상태인지 확인
+            if (originalContract.getContractStatus() != SysCommonCodes.Contract.MODIFICATION_REQUESTED) {
+                log.warn("[잘못된 계약 상태] 원본 계약 ID: {}, 상태: {}",
+                        contractIdParam, originalContract.getContractStatus());
+                throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR,
+                        "수정 요청된 계약만 수정할 수 있습니다");
+            }
+
+            // 원본 계약 취소 처리
+            originalContract.updateStatus(SysCommonCodes.Contract.CANCELED);
+            originalContract.setUpdatedAt(ZonedDateTime.now());
+            contractRepository.save(originalContract);
+
+            log.info("[원본 계약 취소 처리] 원본 계약 ID: {}, 새 상태: {}",
+                    contractIdParam, SysCommonCodes.Contract.CANCELED);
+        }
 
         // 계약 엔티티 생성
         Contract contract = Contract.from(requestDTO, creditor, debtor);
 
         // 계약 저장
         Contract savedContract = contractRepository.save(contract);
-        log.info("[계약 생성 완료] 계약 ID: {}, 채권자: {}, 채무자: {}",
-                savedContract.getContractId(), creditor.getUserId(), debtor.getUserId());
+        log.info("[계약 생성 완료] 계약 ID: {}, 채권자: {}, 채무자: {}, 원본 계약 ID: {}",
+                savedContract.getContractId(), creditor.getUserId(), debtor.getUserId(), contractIdParam);
 
         // 응답 생성
         ContractResponseDTO responseDTO = ContractResponseDTO.from(savedContract);
@@ -459,10 +503,10 @@ public class ContractService {
         // 실제 NFT 생성 로직 구현 필요
         // 예시 코드
         BigInteger tokenId = new BigInteger("1");
-        String imageUrl = "https://example.com/nft/" + tokenId + ".png";
+//        String imageUrl = "https://example.com/nft/" + tokenId + ".png";
 
         // 생성된 NFT 정보 설정
-        contract.setNftInfo(tokenId, imageUrl);
+        contract.setNftInfo(tokenId/* , imageUrl */);
 
         return tokenId;
     }

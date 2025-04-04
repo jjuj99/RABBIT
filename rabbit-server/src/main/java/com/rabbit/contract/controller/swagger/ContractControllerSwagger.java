@@ -96,12 +96,12 @@ public interface ContractControllerSwagger {
                                             @ExampleObject(
                                                     name = "성공 응답 - 계약 목록",
                                                     summary = "페이징된 계약 목록",
-                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"content\": [\n      {\n        \"id\": 1,\n        \"la\": 1000000,\n        \"contractDt\": \"2025-04-10 00:00:00\",\n        \"createdAt\": \"2025-04-01 12:00:00\",\n        \"name\": \"김철수\",\n        \"walletAddress\": \"0x456...\",\n        \"ir\": 5.0,\n        \"lt\": 12,\n        \"matDt\": \"2025-10-10 00:00:00\",\n        \"mpDt\": 15,\n        \"repayType\": \"EPIP\",\n        \"contractStatus\": \"REQUESTED\",\n        \"contractStatusName\": \"요청됨\"\n      },\n      {\n        \"id\": 2,\n        \"la\": 500000,\n        \"contractDt\": \"2025-04-15 00:00:00\",\n        \"createdAt\": \"2025-04-02 14:30:00\",\n        \"name\": \"이영희\",\n        \"walletAddress\": \"0x789...\",\n        \"ir\": 4.5,\n        \"lt\": 6,\n        \"matDt\": \"2025-07-15 00:00:00\",\n        \"mpDt\": 10,\n        \"repayType\": \"BP\",\n        \"contractStatus\": \"CONTRACTED\",\n        \"contractStatusName\": \"체결됨\"\n      }\n    ],\n    \"pageNumber\": 0,\n    \"pageSize\": 10,\n    \"totalElements\": 2\n  },\n  \"error\": null\n}"
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"content\": [\n      {\n        \"id\": 1,\n        \"la\": 5000000,\n        \"contractDt\": \"2025-04-01 00:00:00\",\n        \"createdAt\": \"2025-04-01 10:30:00\",\n        \"name\": \"관리자\",\n        \"walletAddress\": \"0xdbd1cb333978e1f6774e759d9742e8955cad3f6b\",\n        \"ir\": 5.5,\n        \"lt\": 12,\n        \"matDt\": \"2026-04-01 00:00:00\",\n        \"mpDt\": 15,\n        \"repayType\": \"EPP\",\n        \"repayTypeName\": \"원금균등상환\",\n        \"contractStatus\": \"CONTRACTED\",\n        \"contractStatusName\": \"체결\"\n      }\n    ],\n    \"pageNumber\": 0,\n    \"pageSize\": 2147483647,\n    \"totalElements\": 1,\n    \"totalPages\": 1,\n    \"last\": true,\n    \"hasNext\": false\n  },\n  \"error\": null\n}"
                                             ),
                                             @ExampleObject(
                                                     name = "성공 응답 - 빈 목록",
                                                     summary = "계약이 없는 경우",
-                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"content\": [],\n    \"pageNumber\": 0,\n    \"pageSize\": 10,\n    \"totalElements\": 0\n  },\n  \"error\": null\n}"
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"content\": [],\n    \"pageNumber\": 0,\n    \"pageSize\": 2147483647,\n    \"totalElements\": 0,\n    \"totalPages\": 0,\n    \"last\": true,\n    \"hasNext\": false\n  },\n  \"error\": null\n}"
                                             )
                                     }
                             )
@@ -216,7 +216,7 @@ public interface ContractControllerSwagger {
                                             @ExampleObject(
                                                     name = "성공 응답 - 계약 상세 정보",
                                                     summary = "계약 상세 정보 조회 성공",
-                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 1,\n    \"crId\": 1,\n    \"crName\": \"홍길동\",\n    \"crWallet\": \"0x123...\",\n    \"drId\": 2,\n    \"drName\": \"김철수\",\n    \"drWallet\": \"0x456...\",\n    \"la\": 1000000,\n    \"ir\": 5.0,\n    \"contractDt\": \"2025-04-10 00:00:00\",\n    \"matDt\": \"2025-10-10 00:00:00\",\n    \"lt\": 12,\n    \"earlypayFee\": 2.0,\n    \"repayType\": \"EPIP\",\n    \"mpDt\": 15,\n    \"dir\": 15.0,\n    \"defCnt\": 3,\n    \"earlypay\": true,\n    \"pnTransFlag\": true,\n    \"graceLineDays\": 7,\n    \"addTerms\": \"본 계약은 다음 조건으로 체결됩니다...\",\n    \"tokenId\": \"0x123...\",\n    \"nftImageUrl\": \"https://example.com/nft.png\",\n    \"contractStatus\": \"REQUESTED\",\n    \"contractStatusName\": \"요청됨\",\n    \"createdAt\": \"2025-04-01 12:00:00\",\n    \"updatedAt\": \"2025-04-01 12:00:00\",\n    \"remainingDays\": 120,\n    \"matAmt\": 1025000,\n    \"rejectMessage\": null,\n    \"rejectedAt\": null\n  },\n  \"error\": null\n}"
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 1,\n    \"crId\": 1,\n    \"crName\": \"홍길동\",\n    \"crWallet\": \"0x123...\",\n    \"drId\": 2,\n    \"drName\": \"김철수\",\n    \"drWallet\": \"0x456...\",\n    \"la\": 1000000,\n    \"ir\": 5.0,\n    \"contractDt\": \"2025-04-10 00:00:00\",\n    \"matDt\": \"2025-10-10 00:00:00\",\n    \"lt\": 12,\n    \"earlypayFee\": 2.0,\n    \"repayType\": \"EPIP\",\n    \"repayTypeName\": \"원금균등상환\",\n    \"mpDt\": 15,\n    \"dir\": 15.0,\n    \"defCnt\": 3,\n    \"earlypay\": true,\n    \"pnTransFlag\": true,\n    \"addTerms\": \"본 계약은 다음 조건으로 체결됩니다...\",\n    \"contractStatus\": \"REQUESTED\",\n    \"contractStatusName\": \"요청됨\",\n    \"createdAt\": \"2025-04-01 12:00:00\",\n    \"updatedAt\": \"2025-04-01 12:00:00\",\n    \"remainingDays\": 120,\n    \"matAmt\": 1025000,\n    \"message\": \"잘 부탁드립니다\",\n    \"rejectMessage\": null,\n    \"message\": null,\n    \"rejectedAt\": null\n  },\n  \"error\": null\n}"
                                             )
                                     }
                             )
@@ -287,7 +287,7 @@ public interface ContractControllerSwagger {
                                     @ExampleObject(
                                             name = "계약 생성 요청",
                                             summary = "새 계약 생성 요청 예시",
-                                            value = "{\n  \"drPhone\": \"01012345678\",\n  \"drName\": \"김철수\",\n  \"drWallet\": \"0x1234567890abcdef\",\n  \"crEmail\": \"creditor@example.com\",\n  \"crName\": \"홍길동\",\n  \"crWallet\": \"0xabcdef1234567890\",\n  \"la\": 1000000,\n  \"ir\": 5.0,\n  \"lt\": 12,\n  \"repayType\": \"EPIP\",\n  \"mpDt\": 15,\n  \"dir\": 15.0,\n  \"contractDt\": \"2025-04-10 00:00:00\",\n  \"defCnt\": 3,\n  \"pnTransFlag\": true,\n  \"earlypay\": true,\n  \"earlypayFee\": 2.0,\n  \"addTerms\": \"본 계약은 다음 조건으로 체결됩니다...\",\n  \"message\": \"잘 부탁드립니다.\",\n  \"passAuthToken\": \"token123\",\n  \"txId\": \"tx_abc123\",\n  \"authResultCode\": \"SUCCESS\"\n}"
+                                            value = "{\n  \"drPhone\": \"01012345678\",\n  \"drName\": \"김철수\",\n  \"drWallet\": \"0x1234567890abcdef\",\n  \"crEmail\": \"creditor@example.com\",\n  \"crName\": \"홍길동\",\n  \"crWallet\": \"0xabcdef1234567890\",\n  \"la\": 1000000,\n  \"ir\": 5.0,\n  \"lt\": 12,\n  \"repayType\": \"EPIP\",\n  \"mpDt\": 15,\n  \"dir\": 15.0,\n  \"contractDt\": \"2025-04-10 00:00:00\",\n  \"defCnt\": 3,\n  \"pnTransFlag\": true,\n  \"earlypay\": true,\n  \"earlypayFee\": 2.0,\n  \"addTerms\": \"본 계약은 다음 조건으로 체결됩니다...\",\n  \"message\": \"잘 부탁드립니다.\",\n  \"passAuthToken\": \"token123\",\n  \"txId\": \"tx_abc123\",\n  \"authResultCode\": \"SUCCESS\",\n  \"passAuthToken\": \"token123\",\n  \"txId\": \"tx_abc123\",\n  \"authResultCode\": \"SUCCESS\"\n}"
                                     )
                             }
                     )
@@ -303,7 +303,7 @@ public interface ContractControllerSwagger {
                                             @ExampleObject(
                                                     name = "성공 응답 - 계약 생성",
                                                     summary = "계약 생성 성공",
-                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 3,\n    \"crId\": 1,\n    \"crName\": \"홍길동\",\n    \"drId\": 2,\n    \"drName\": \"김철수\",\n    \"la\": 1000000,\n    \"ir\": 5.0,\n    \"contractDt\": \"2025-04-10 00:00:00\",\n    \"matDt\": \"2026-04-10 00:00:00\",\n    \"earlypayFee\": 2.0,\n    \"repayType\": \"EPIP\",\n    \"mpDt\": 15,\n    \"dir\": 15.0,\n    \"defCnt\": 3,\n    \"earlypay\": true,\n    \"pnTransFlag\": true,\n    \"graceLineDays\": 7,\n    \"addTerms\": \"본 계약은 다음 조건으로 체결됩니다...\",\n    \"contractStatus\": \"REQUESTED\",\n    \"contractStatusName\": \"요청됨\",\n    \"createdAt\": \"2025-04-05 15:30:00\"\n  },\n  \"error\": null\n}"
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 3,\n    \"crId\": 2,\n    \"crName\": \"clapsheep\",\n    \"drId\": 1,\n    \"drName\": \"열정두배\",\n    \"la\": 1000000,\n    \"ir\": 5,\n    \"contractDt\": \"2025-04-10 00:00:00\",\n    \"matDt\": \"2026-04-09 00:00:00\",\n    \"lt\": 12,\n    \"earlypayFee\": 2,\n    \"repayType\": \"EPIP\",\n    \"repayTypeName\": \"원리금균등상환\",\n    \"mpDt\": 15,\n    \"dir\": 15,\n    \"defCnt\": 3,\n    \"earlypay\": true,\n    \"pnTransFlag\": true,\n    \"graceLineDays\": 7,\n    \"addTerms\": \"본 계약은 다음 조건으로 체결됩니다...\",\n    \"contractStatus\": \"REQUESTED\",\n    \"contractStatusName\": \"요청\",\n    \"createdAt\": \"2025-04-04 17:01:34\"\n  },\n  \"error\": null\n}"
                                             )
                                     }
                             ),
@@ -379,7 +379,7 @@ public interface ContractControllerSwagger {
                                             @ExampleObject(
                                                     name = "성공 응답 - 계약 취소",
                                                     summary = "계약 취소 성공",
-                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 1,\n    \"crId\": 1,\n    \"crName\": \"홍길동\",\n    \"drId\": 2,\n    \"drName\": \"김철수\",\n    \"la\": 1000000,\n    \"ir\": 5.0,\n    \"contractDt\": \"2025-04-10 00:00:00\",\n    \"matDt\": \"2025-10-10 00:00:00\",\n    \"contractStatus\": \"CANCELED\",\n    \"contractStatusName\": \"취소됨\",\n    \"updatedAt\": \"2025-04-06 09:15:00\",\n    \"passAuthToken\": \"token123\",\n    \"txId\": \"tx_abc123\",\n    \"authResultCode\": \"SUCCESS\"\n  },\n  \"error\": null\n}"
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 1,\n    \"crId\": 1,\n    \"crName\": \"홍길동\",\n    \"drId\": 2,\n    \"drName\": \"김철수\",\n    \"la\": 1000000,\n    \"ir\": 5.0,\n    \"contractDt\": \"2025-04-10 00:00:00\",\n    \"matDt\": \"2025-10-10 00:00:00\",\n    \"contractStatus\": \"CANCELED\",\n    \"contractStatusName\": \"취소됨\",\n    \"updatedAt\": \"2025-04-06 09:15:00\",\n    \"passAuthToken\": \"token123\",\n    \"txId\": \"tx_abc123\",\n    \"authResultCode\": \"SUCCESS\",\n    \"passAuthToken\": \"token123\",\n    \"txId\": \"tx_abc123\",\n    \"authResultCode\": \"SUCCESS\"\n  },\n  \"error\": null\n}"
                                             )
                                     }
                             )
@@ -552,7 +552,7 @@ public interface ContractControllerSwagger {
                                     @ExampleObject(
                                             name = "계약 반려 요청",
                                             summary = "반려 요청 예시",
-                                            value = "{\n  \"rejectMessage\": \"계약 조건 재검토 필요\",\n  \"isCanceled\": false,\n  \"passAuthToken\": \"token123\",\n  \"txId\": \"tx_abc123\",\n  \"authResultCode\": \"SUCCESS\"\n}"
+                                            value = "{\n  \"rejectMessage\": \"계약 조건 재검토 필요\",\n  \"isCanceled\": false\n}"
                                     )
                             }
                     )
@@ -568,12 +568,12 @@ public interface ContractControllerSwagger {
                                             @ExampleObject(
                                                     name = "성공 응답 - 계약 반려",
                                                     summary = "계약 반려 처리 성공",
-                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 1,\n    \"crId\": 1,\n    \"crName\": \"홍길동\",\n    \"drId\": 2,\n    \"drName\": \"김철수\",\n    \"la\": 1000000,\n    \"ir\": 5.0,\n    \"contractStatus\": \"MODIFICATION_REQUESTED\",\n    \"contractStatusName\": \"수정 요청됨\",\n    \"rejectMessage\": \"계약 조건 재검토 필요\",\n    \"rejectedAt\": \"2025-04-07 10:15:00\",\n    \"updatedAt\": \"2025-04-07 10:15:00\"\n  },\n  \"error\": null\n}"
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 1,\n    \"crId\": 2,\n    \"crName\": \"clapsheep\",\n    \"drId\": 1,\n    \"drName\": \"열정두배\",\n    \"la\": 1000000,\n    \"ir\": 5.0,\n    \"contractStatus\": \"MODIFICATION_REQUESTED\",\n    \"contractStatusName\": \"수정 요청\",\n    \"message\": \"잘 부탁드립니다\",\n    \"rejectMessage\": \"계약 조건 재검토 필요\",\n    \"rejectedAt\": \"2025-04-07 10:15:00\",\n    \"updatedAt\": \"2025-04-07 10:15:00\"\n  },\n  \"error\": null\n}"
                                             ),
                                             @ExampleObject(
                                                     name = "성공 응답 - 계약 취소",
                                                     summary = "계약 취소 처리 성공",
-                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 1,\n    \"crId\": 1,\n    \"crName\": \"홍길동\",\n    \"drId\": 2,\n    \"drName\": \"김철수\",\n    \"la\": 1000000,\n    \"ir\": 5.0,\n    \"contractStatus\": \"CANCELED\",\n    \"contractStatusName\": \"취소됨\",\n    \"rejectMessage\": \"수정이 불가능하여 취소 처리합니다\",\n    \"rejectedAt\": \"2025-04-07 10:15:00\",\n    \"updatedAt\": \"2025-04-07 10:15:00\"\n  },\n  \"error\": null\n}"
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 1,\n    \"crId\": 2,\n    \"crName\": \"clapsheep\",\n    \"drId\": 1,\n    \"drName\": \"열정두배\",\n    \"la\": 1000000,\n    \"ir\": 5.0,\n    \"contractStatus\": \"CANCELED\",\n    \"contractStatusName\": \"취소\",\n    \"message\": \"잘 부탁드립니다\",\n    \"rejectMessage\": \"수정이 불가능하여 취소 처리합니다\",\n    \"rejectedAt\": \"2025-04-07 10:15:00\",\n    \"updatedAt\": \"2025-04-07 10:15:00\"\n  },\n  \"error\": null\n}"
                                             )
                                     }
                             )
@@ -588,7 +588,7 @@ public interface ContractControllerSwagger {
                                             @ExampleObject(
                                                     name = "실패 응답 - 상태 오류",
                                                     summary = "반려할 수 없는 상태",
-                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 400,\n    \"message\": \"요청됨 상태의 계약만 반려할 수 있습니다\"\n  }\n}"
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 400,\n    \"message\": \"요청 상태의 계약만 반려할 수 있습니다\"\n  }\n}"
                                             )
                                     }
                             )

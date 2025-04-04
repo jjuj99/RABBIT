@@ -24,6 +24,9 @@ import java.time.ZonedDateTime;
 @AllArgsConstructor
 public class ContractRequestDTO {
 
+    @Schema(description = "원본 계약 ID (수정 요청인 경우에만 사용)", example = "1")
+    private Integer contractId;
+
     // 채무자 정보
     @Schema(description = "채무자 휴대폰 번호", example = "01012345678", required = true)
     @NotBlank(message = "휴대폰 번호를 입력해주세요")

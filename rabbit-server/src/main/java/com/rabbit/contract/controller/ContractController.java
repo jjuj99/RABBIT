@@ -5,6 +5,7 @@ import com.rabbit.contract.domain.dto.response.ContractListResponseDTO;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -191,10 +192,10 @@ public class ContractController implements ContractControllerSwagger {
         log.debug("[계약 반려 요청] ID: {}, 메시지: {}, 취소 여부: {}, 인증 토큰: {}, TxID: {}, 결과 코드: {}",
                 contractId,
                 request.getRejectMessage(),
-                request.isCanceled(),
-                request.getPassAuthToken(),
-                request.getTxId(),
-                request.getAuthResultCode());
+                request.isCanceled());
+//                request.getPassAuthToken(),
+//                request.getTxId(),
+//                request.getAuthResultCode());
 
         ContractResponseDTO response = contractService.rejectContract(
                 contractId,

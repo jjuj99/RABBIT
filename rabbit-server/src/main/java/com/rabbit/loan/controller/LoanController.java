@@ -1,10 +1,7 @@
 package com.rabbit.loan.controller;
 
 import com.rabbit.global.response.CustomApiResponse;
-import com.rabbit.loan.domain.dto.response.BorrowDetailResponseDTO;
-import com.rabbit.loan.domain.dto.response.BorrowListResponseDTO;
-import com.rabbit.loan.domain.dto.response.BorrowSummaryResponseDTO;
-import com.rabbit.loan.domain.dto.response.LentSummaryResponseDTO;
+import com.rabbit.loan.domain.dto.response.*;
 import com.rabbit.loan.service.LoanService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.*;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +20,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.RestController;
+import org.web3j.abi.FunctionReturnDecoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Bool;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.Utf8String;
+import org.web3j.abi.datatypes.generated.Uint256;
 
 @Tag(name = "Loan", description = "나의 채무, 채권 정보 관련 API")
 @RestController
@@ -50,9 +54,9 @@ public class LoanController {
     }
 
     @GetMapping("/borrow/{contractId}")
-    public ResponseEntity<CustomApiResponse<BorrowDetailResponseDTO>> borrowDetail(@PathVariable int contracId, Authentication authentication) {
+    public ResponseEntity<CustomApiResponse<BorrowDetailResponseDTO>> borrowDetail(@PathVariable int contractId, Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
-        BorrowDetailResponseDTO response = loanService.borrowDetail(contracId, Integer.parseInt(userId));
+        BorrowDetailResponseDTO response = loanService.borrowDetail(contractId, Integer.parseInt(userId));
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }
@@ -61,6 +65,22 @@ public class LoanController {
     public ResponseEntity<CustomApiResponse<LentSummaryResponseDTO>> lentSummary(Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
         LentSummaryResponseDTO response = loanService.lentSummary(Integer.parseInt(userId));
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
+
+    @GetMapping("/lent/me")
+    public ResponseEntity<CustomApiResponse<List<LentListResponseDTO>>> lentList(@RequestParam int pageNumber, @RequestParam int pageSize, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+        List<LentListResponseDTO> response = loanService.lentList(Integer.parseInt(userId));
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
+
+    @GetMapping("/lent/{contractId}")
+    public ResponseEntity<CustomApiResponse<LentDetailResponseDTO>> lentDetail(@PathVariable int contractId, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+        LentDetailResponseDTO response = loanService.lentDetail(contractId, Integer.parseInt(userId));
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }

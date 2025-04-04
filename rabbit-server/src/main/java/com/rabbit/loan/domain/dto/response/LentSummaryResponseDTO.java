@@ -15,7 +15,7 @@ import java.math.BigInteger;
 @AllArgsConstructor
 public class LentSummaryResponseDTO {
 
-    private int totalIncomingLa;
-    private int monthlyIncomingLa;
+    private Long totalIncomingLa;
+    private Long monthlyIncomingLa;
     private String nextIncomingDt;
 }

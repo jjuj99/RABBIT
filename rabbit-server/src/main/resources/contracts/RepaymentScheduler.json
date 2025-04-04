@@ -507,9 +507,9 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum IRepaymentScheduler.RepaymentType",
+            "internalType": "string",
             "name": "repayType",
-            "type": "uint8"
+            "type": "string"
           },
           {
             "internalType": "address",
@@ -739,9 +739,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum IRepaymentScheduler.RepaymentType",
+        "internalType": "string",
         "name": "repayType",
-        "type": "uint8"
+        "type": "string"
       },
       {
         "internalType": "address",

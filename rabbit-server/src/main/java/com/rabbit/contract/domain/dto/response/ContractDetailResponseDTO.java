@@ -1,6 +1,7 @@
 package com.rabbit.contract.domain.dto.response;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -85,8 +86,8 @@ public class ContractDetailResponseDTO {
     @Schema(description = "계약 조항", example = "이 계약의 조항은...")
     private String addTerms;
 
-    @Schema(description = "NFT 토큰 ID", example = "0x123...")
-    private String tokenId;
+    @Schema(description = "NFT 토큰 ID", example = "123456")
+    private BigInteger tokenId;
 
     @Schema(description = "NFT 이미지 URL", example = "https://example.com/nft.png")
     private String nftImageUrl;

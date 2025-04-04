@@ -1,6 +1,7 @@
 package com.rabbit.contract.service;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -8,7 +9,6 @@ import java.util.stream.Collectors;
 
 import com.rabbit.contract.domain.dto.request.ContractRejectRequestDTO;
 import com.rabbit.contract.domain.dto.response.ContractListResponseDTO;
-import com.rabbit.user.domain.entity.MetamaskWallet;
 import com.rabbit.user.service.WalletService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import com.rabbit.contract.domain.dto.request.ContractRequestDTO;
 import com.rabbit.contract.domain.dto.request.ContractSearchRequestDTO;
-import com.rabbit.contract.domain.dto.request.ContractStatusUpdateDTO;
 import com.rabbit.contract.domain.dto.response.ContractConfigResponseDTO;
 import com.rabbit.contract.domain.dto.response.ContractDetailResponseDTO;
 import com.rabbit.contract.domain.dto.response.ContractResponseDTO;
@@ -91,11 +90,9 @@ public class ContractService {
 
         if ("sent".equals(type)) {
             // 사용자가 채권자(대출해주는 사람)인 계약 조회
-            // Page<Contract> contractPage = contractRepository.findByCreditorAndDeletedFlagFalse(user, pageable);
             contracts = contractRepository.findByCreditor(user);
         } else if ("received".equals(type)) {
             // 사용자가 채무자(대출받는 사람)인 계약 조회
-            // Page<Contract> contractPage = contractRepository.findByDebtorAndDeletedFlagFalse(user, pageable);
             contracts = contractRepository.findByDebtor(user);
         } else {
             log.warn("유효하지 않은 계약 유형: {}", type);
@@ -115,13 +112,21 @@ public class ContractService {
                 .map(contract -> {
                     ContractListResponseDTO dto = ContractListResponseDTO.from(contract);
 
+                    // 국제화된 상태명 설정
+                    if (dto.getContractStatus() != null) {
+                        dto.setContractStatusName(sysCommonCodeService.getCodeName(
+                                CONTRACT_STATUS, dto.getContractStatus().getCode()));
+                    }
+
                     // 지갑 주소 설정 (채무자 또는 채권자)
                     if ("sent".equals(type)) {
-                        // 채권자인 경우 채무자의 지갑 주소 설정
-                        dto.setDrWallet(walletService.getUserPrimaryWalletAddress(contract.getDebtor()));
+                        // 채무자인 경우 채권자 정보
+                        dto.setName(contract.getCreditor().getUserName());
+                        dto.setWalletAddress(walletService.getUserPrimaryWalletAddress(contract.getCreditor()));
                     } else {
-                        // 채무자인 경우 본인 지갑 주소 설정
-                        dto.setDrWallet(walletService.getUserPrimaryWalletAddress(contract.getDebtor()));
+                        // 채권자인 경우 채무자 정보
+                        dto.setName(contract.getDebtor().getUserName());
+                        dto.setWalletAddress(walletService.getUserPrimaryWalletAddress(contract.getDebtor()));
                     }
 
                     return dto;
@@ -149,9 +154,11 @@ public class ContractService {
         List<ContractResponseDTO> content = contractPage.getContent().stream()
                 .map(contract -> {
                     ContractResponseDTO dto = ContractResponseDTO.from(contract);
-                    // 상태명 설정
-                    dto.setContractStatusName(sysCommonCodeService.getCodeName(
-                            CONTRACT_STATUS, dto.getContractStatus().getCode()));
+                    // 국제화된 상태명 설정
+                    if (dto.getContractStatus() != null) {
+                        dto.setContractStatusName(sysCommonCodeService.getCodeName(
+                                CONTRACT_STATUS, dto.getContractStatus().getCode()));
+                    }
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -434,7 +441,7 @@ public class ContractService {
      */
     private void completeContract(Contract contract) {
         // 1. NFT 생성
-        String tokenId = generateNFT(contract);
+        BigInteger tokenId = generateNFT(contract);
 
         // 2. 자금 전송
         transferFunds(contract);
@@ -448,10 +455,10 @@ public class ContractService {
      * @param contract 계약 엔티티
      * @return 생성된 NFT 토큰 ID
      */
-    private String generateNFT(Contract contract) {
+    private BigInteger generateNFT(Contract contract) {
         // 실제 NFT 생성 로직 구현 필요
         // 예시 코드
-        String tokenId = "nft-" + System.currentTimeMillis();
+        BigInteger tokenId = new BigInteger("1");
         String imageUrl = "https://example.com/nft/" + tokenId + ".png";
 
         // 생성된 NFT 정보 설정

@@ -1,7 +1,6 @@
 package com.rabbit.contract.controller;
 
-import com.rabbit.contract.domain.dto.request.ContractRejectRequestDTO;
-import com.rabbit.contract.domain.dto.request.ContractSearchRequestDTO;
+import com.rabbit.contract.domain.dto.request.*;
 import com.rabbit.contract.domain.dto.response.ContractListResponseDTO;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.data.domain.Pageable;
@@ -13,8 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.rabbit.contract.controller.swagger.ContractControllerSwagger;
-import com.rabbit.contract.domain.dto.request.ContractRequestDTO;
-import com.rabbit.contract.domain.dto.request.ContractStatusUpdateDTO;
 import com.rabbit.contract.domain.dto.response.ContractConfigResponseDTO;
 import com.rabbit.contract.domain.dto.response.ContractDetailResponseDTO;
 import com.rabbit.contract.domain.dto.response.ContractResponseDTO;
@@ -165,7 +162,8 @@ public class ContractController implements ContractControllerSwagger {
     @PostMapping("/{contractId}/complete")
     public ResponseEntity<CustomApiResponse<ContractResponseDTO>> completeContract(
             Authentication authentication,
-            @ContractIdParam @PathVariable("contractId") Integer  contractId) {
+            @ContractIdParam @PathVariable("contractId") Integer  contractId,
+            @Valid @RequestBody ContractCompleteRequestDTO request) {
 
         Integer userId = extractUserIdFromAuthentication(authentication);
         log.debug("[계약 체결 요청] ID: {}", contractId);

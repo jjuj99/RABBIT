@@ -33,11 +33,11 @@ public class ContractListResponseDTO {
     @Schema(description = "생성일", example = "2024-04-05")
     private ZonedDateTime createdAt;
 
-    @Schema(description = "채무자 이름", example = "이영희")
-    private String drName;
+    @Schema(description = "채무자, 채권자 이름", example = "이영희")
+    private String name;
 
-    @Schema(description = "채무자 지갑 주소", example = "0x10045789abcdef0123")
-    private String drWallet;
+    @Schema(description = "채무자, 채권자 지갑 주소", example = "0x10045789abcdef0123")
+    private String walletAddress;
 
     @Schema(description = "연 이자율 (%)", example = "4.2")
     private BigDecimal ir;
@@ -75,7 +75,6 @@ public class ContractListResponseDTO {
                 .la(contract.getLoanAmount())
                 .contractDt(contract.getContractDate())
                 .createdAt(contract.getCreatedAt())
-                .drName(contract.getDebtor().getNickname())
                 .ir(contract.getInterestRate())
                 .lt(contract.getLoanTerm())
                 .matDt(contract.getMaturityDate())

@@ -1,6 +1,7 @@
 package com.rabbit.contract.domain.entity;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 
 import com.rabbit.user.domain.entity.User;
@@ -97,7 +98,7 @@ public class Contract {
      * NFT 토큰 ID
      */
     @Column(nullable = true)
-    private String tokenId;
+    private BigInteger tokenId;
 
     /**
      * NFT 이미지 URL
@@ -226,7 +227,7 @@ public class Contract {
      * @param tokenId NFT 토큰 ID
      * @param imageUrl NFT 이미지 URL
      */
-    public void setNftInfo(String tokenId, String imageUrl) {
+    public void setNftInfo(BigInteger tokenId, String imageUrl) {
         this.tokenId = tokenId;
         this.nftImageUrl = imageUrl;
     }

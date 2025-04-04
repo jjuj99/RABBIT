@@ -1,23 +1,36 @@
 import { UnitInput } from "@/entities/common";
 import { MyNFTcard } from "@/entities/NFT/ui/MyNFTcard";
-import { createAuctionAPI } from "@/features/auction/api/auctionApi";
-import { PNInfoListResponse } from "@/features/auction/types/response";
+import {
+  createAuctionAPI,
+  // getAvailableAuctionsAPI,
+} from "@/features/auction/api/auctionApi";
+import { AvailableAuctionsResponse } from "@/features/auction/types/response";
 import { Button } from "@/shared/ui/button";
 import { Sheet, SheetContent, SheetOverlay } from "@/shared/ui/CustomSheet";
 import { Separator } from "@/shared/ui/Separator";
-
+import generateSignature from "@/entities/wallet/utils/generateSignature";
+import { getMetaMaskProvider } from "@/entities/wallet/utils/getMetaMaskProvider";
+import getWalletAddress from "@/entities/wallet/utils/getWalletAddress";
 import { useState } from "react";
+// import { useQuery } from "@tanstack/react-query";
+import { availableAuctionsMock } from "@/features/auction/mocks/data";
+// import { availableAuctionsMock } from "@/features/auction/mocks/data";
 
 const AuctionCreate = () => {
-  const [selectedItem, setSelectedItem] = useState<PNInfoListResponse | null>(
-    null,
-  );
+  const [selectedItem, setSelectedItem] =
+    useState<AvailableAuctionsResponse | null>(null);
   const [startPrice, setStartPrice] = useState<number>(0);
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [endDateday, setendDateday] = useState(0);
   const [endDatehour, setendDatehour] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  // const { data: availableAuctions } = useQuery({
+  //   queryKey: ["availableAuctions"],
+  //   queryFn: () => getAvailableAuctionsAPI(),
+  // });
+  const availableAuctions = availableAuctionsMock;
 
   const handleDayChange = (value: number) => {
     if (value > 7) {
@@ -72,25 +85,7 @@ const AuctionCreate = () => {
     });
   };
 
-  // 임시 데이터
-  const mockItem: PNInfoListResponse = {
-    auctionId: 1,
-    price: 1000000,
-    endDate: "2025-12-31T23:59:59",
-    ir: 5.5,
-    createdAt: "2024-01-01T00:00:00",
-    repayType: "BULLET",
-    totalAmount: 10000000,
-    matDt: "2025-01-01",
-    dir: 100,
-    la: 1000000,
-    earlypayFlag: false,
-    earlypayFee: 0,
-    creditScore: 800,
-    defCnt: 0,
-  };
-
-  const handleCardClick = (item: PNInfoListResponse) => {
+  const handleCardClick = (item: AvailableAuctionsResponse) => {
     setSelectedItem(item);
     setStartPrice(item.totalAmount);
     setIsOpen(true);
@@ -115,15 +110,39 @@ const AuctionCreate = () => {
   const handleSubmit = async () => {
     if (!selectedItem) return;
     try {
+      const provider = await getMetaMaskProvider();
+      if (!provider) {
+        setError("메타마스크를 찾을 수 없습니다.");
+        return;
+      }
+
+      const walletAddress = await getWalletAddress({ provider });
+      if (!walletAddress || !walletAddress.address) {
+        setError("지갑 주소를 가져올 수 없습니다.");
+        return;
+      }
+
+      const message = `경매 생성: ${selectedItem.tokenId} - ${startPrice} RAB`;
+      const { signature, error: signError } = await generateSignature(
+        walletAddress.address,
+        message,
+      );
+
+      if (signError || !signature) {
+        setError("서명에 실패했습니다.");
+        return;
+      }
+
       await createAuctionAPI({
         minimumBid: startPrice,
         endDate: calculateEndDate().toISOString(),
-        tokenId: "selectedItem.tokenId",
-        sellerSign: "selectedItem.sellerSign",
+        tokenId: selectedItem.tokenId,
+        sellerSign: signature,
       });
       handleClose();
     } catch (error) {
       console.error("경매 생성 실패:", error);
+      setError("경매 생성에 실패했습니다.");
     }
   };
 
@@ -300,42 +319,16 @@ const AuctionCreate = () => {
       <div className="flex w-full flex-col items-start gap-4 px-7">
         <h3 className="text-lg">보유중인 차용증</h3>
         <ul className="flex flex-wrap gap-6">
-          <div
-            onClick={() => handleCardClick(mockItem)}
-            className="cursor-pointer"
-          >
-            <MyNFTcard item={mockItem} />
-          </div>
-          <div
-            onClick={() => handleCardClick(mockItem)}
-            className="cursor-pointer"
-          >
-            <MyNFTcard item={mockItem} />
-          </div>
-          <div
-            onClick={() => handleCardClick(mockItem)}
-            className="cursor-pointer"
-          >
-            <MyNFTcard item={mockItem} />
-          </div>
-          <div
-            onClick={() => handleCardClick(mockItem)}
-            className="cursor-pointer"
-          >
-            <MyNFTcard item={mockItem} />
-          </div>{" "}
-          <div
-            onClick={() => handleCardClick(mockItem)}
-            className="cursor-pointer"
-          >
-            <MyNFTcard item={mockItem} />
-          </div>{" "}
-          <div
-            onClick={() => handleCardClick(mockItem)}
-            className="cursor-pointer"
-          >
-            <MyNFTcard item={mockItem} />
-          </div>
+          {/* {availableAuctions?.data?.map((item) => ( */}
+          {availableAuctions?.map((item) => (
+            <div
+              key={item.tokenId}
+              onClick={() => handleCardClick(item)}
+              className="cursor-pointer"
+            >
+              <MyNFTcard item={item} />
+            </div>
+          ))}
         </ul>
       </div>
       <Sheet

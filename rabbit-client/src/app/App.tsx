@@ -10,6 +10,7 @@ import {
   ContractRoutes,
   LoanRoutes,
 } from "./routes";
+import HeaderMobile from "@/widget/common/ui/HeaderMobile";
 
 const Home = lazy(() => import("@/pages/common/ui/Home"));
 
@@ -18,7 +19,7 @@ function App() {
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 pb-20 sm:px-8">
-      {isDesktop && <Header />}
+      {isDesktop ? <Header /> : <HeaderMobile />}
       {isDesktop && <SubNav />}
       <Routes>
         <Route

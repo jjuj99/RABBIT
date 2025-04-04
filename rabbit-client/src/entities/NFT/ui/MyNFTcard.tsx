@@ -1,17 +1,17 @@
-import { PNInfoListResponse } from "@/features/auction/types/response";
+import { AvailableAuctionsResponse } from "@/features/auction/types/response";
 import { cn } from "@/shared/lib/utils";
 import { Separator } from "@/shared/ui/Separator";
 import dateFormat from "@/shared/utils/dateFormat";
 
 type NFTCardProps = {
-  item: PNInfoListResponse;
+  item: AvailableAuctionsResponse;
 };
 
 export const MyNFTcard = ({ item }: NFTCardProps) => {
   return (
     <div className="group bg-black-glass border-white-glass shadow-glow w- fit flex h-fit w-[300px] flex-col items-center gap-4 rounded-lg border px-3 pt-4 pb-7">
       <div className="text-brand-primary font-bit flex w-full items-center justify-center text-base">
-        <span>RABBIT #1234567890</span>
+        <span>RABBIT#{item.tokenId}</span>
       </div>
       <div className="relative h-[192px] w-full">
         <MyNFTCardInfo item={item} />
@@ -27,7 +27,7 @@ export const MyNFTcard = ({ item }: NFTCardProps) => {
       <div className="bg-radial-accent flex h-fit w-full flex-col items-center gap-2 rounded-sm px-6 py-3">
         <div className="flex w-full justify-between">
           <span>채권자</span>
-          <span>박성문</span>
+          <span>{item.crName}</span>
         </div>
         <div className="flex w-full justify-between">
           <span>만기일</span>
@@ -53,7 +53,7 @@ export const MyNFTcard = ({ item }: NFTCardProps) => {
 
 interface NFTcardInfoProps {
   className?: string;
-  item: PNInfoListResponse;
+  item: AvailableAuctionsResponse;
 }
 
 export const MyNFTCardInfo = ({ className, item }: NFTcardInfoProps) => {

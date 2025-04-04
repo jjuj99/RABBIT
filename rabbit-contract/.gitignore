@@ -60,3 +60,7 @@ ignition/deployments/chain-31337
 
 # 배포 주소 파일
 deployment-addresses.json
+
+# 결과 파일들
+tools/results/*
+!tools/results/.gitkeep

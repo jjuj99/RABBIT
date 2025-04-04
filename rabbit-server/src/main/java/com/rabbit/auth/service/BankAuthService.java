@@ -13,14 +13,18 @@ import com.rabbit.bankApi.domain.dto.response.CheckAccountResponseDTO;
 import com.rabbit.bankApi.domain.dto.response.CreateDemandAccountResponseDTO;
 import com.rabbit.bankApi.domain.dto.response.MemberResponseDTO;
 import com.rabbit.bankApi.service.BankApiService;
+import com.rabbit.bankApi.service.BankService;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.util.TossErrorUtil;
+import com.rabbit.user.domain.entity.Bank;
+import com.rabbit.user.repository.BankRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -28,8 +32,13 @@ import java.time.ZonedDateTime;
 public class BankAuthService {
 
     private final SsafyAccountRepository ssafyBankRepository;
+    private final BankRepository bankRepository;
 
     private final BankApiService bankApiService;
+
+    public List<Bank> findAllBanks() {
+        return bankRepository.findAll();
+    }
 
     public void accountAuthSend(AccountAuthSendRequestDTO request) {
         // 1. 싸피 은행 유저인지 확인

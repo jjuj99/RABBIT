@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+@Schema(description = "차용증 계약 반려 요청 DTO")
 @Getter
 @Setter
 @NoArgsConstructor

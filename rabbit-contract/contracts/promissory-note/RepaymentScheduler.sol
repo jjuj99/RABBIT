@@ -40,20 +40,11 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         IPromissoryNote promissoryNote = IPromissoryNote(promissoryNoteAddress);
         IPromissoryNote.PromissoryMetadata memory metadata = promissoryNote.getPromissoryMetadata(tokenId);
         
-        RepaymentType repayType;
-        if (keccak256(bytes(metadata.repayType)) == keccak256(bytes("EPIP"))) {
-            repayType = RepaymentType.EPIP;
-        } else if (keccak256(bytes(metadata.repayType)) == keccak256(bytes("EPP"))) {
-            repayType = RepaymentType.EPP;
-        } else if (keccak256(bytes(metadata.repayType)) == keccak256(bytes("BP"))){
-            repayType = RepaymentType.BP;
-        }
-        
         uint256 nextPaymentDate = calculateNextPaymentDate(metadata.mpDt);
         
         // EPIP인 경우 고정 납부액 계산
         uint256 fixedPaymentAmount = 0;
-        if (repayType == RepaymentType.EPIP) {
+       if (keccak256(bytes(metadata.repayType)) == keccak256(bytes("EPIP"))) {
             fixedPaymentAmount = calculateFixedPaymentForEPIP(metadata.la, metadata.ir, metadata.lt);
         }
 
@@ -69,7 +60,7 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
             totalPayments: metadata.lt,         // 총 납부 횟수
             remainingPayments: metadata.lt,     // 남은 납부 횟수
             fixedPaymentAmount: fixedPaymentAmount, // EPIP 시 고정 납부액
-            repayType: repayType,               // 상환 방식
+            repayType: metadata.repayType,      // 상환 방식
             drWalletAddress: metadata.drInfo.drWalletAddress,
             activeFlag: true,                   // 활성 상태
             
@@ -188,7 +179,7 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         
         // 현재 NFT 소유자 (채권자) 확인
         IPromissoryNote promissoryNote = IPromissoryNote(promissoryNoteAddress);
-        address currentOwner = promissoryNote.ownerOf(tokenId);
+        address currentOwner = promissoryNote.getLatestCreditorAddress(tokenId);
         
         // 상환 금액 계산
         uint256 paymentAmount;
@@ -198,7 +189,7 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         // 정규 납부액 계산
         if (info.remainingPayments == 1) {
             // 마지막 납부일인 경우
-            if (info.repayType == RepaymentType.BP) {
+            if (keccak256(bytes(info.repayType)) == keccak256(bytes("BP"))) {
                 // 만기 일시 상환인 경우 원금 + 이자
                 uint256 interestAmount = calculateInterestAmount(info);
                 regularPaymentAmount = info.remainingPrincipal + interestAmount;
@@ -255,7 +246,7 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
             info.remainingPrincipal = 0;
         }
         // 만기 일시 상환이 아닌 경우에만 원금 차감
-        else if (info.repayType != RepaymentType.BP) {
+        else if (keccak256(bytes(info.repayType)) != keccak256(bytes("BP"))) {
             uint256 interestAmount = calculateInterestAmount(info);
             
             require(paymentAmount >= interestAmount, "Underflow in principal calculation");
@@ -343,19 +334,19 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
     // 상환 금액 계산 함수
     function calculatePaymentAmount(RepaymentInfo memory info) internal pure returns (uint256) {
         // 원리금 균등 상환 (PMT 공식)
-        if (info.repayType == RepaymentType.EPIP) {
+        if (keccak256(bytes(info.repayType)) == keccak256(bytes("EPIP"))) {
             return info.fixedPaymentAmount;
         }
 
         // 원금 균등 상환
-        else if (info.repayType == RepaymentType.EPP) {
+        else if (keccak256(bytes(info.repayType)) == keccak256(bytes("EPP"))) {
             uint256 principalAmount = info.initialPrincipal / info.totalPayments;
             uint256 interestAmount = calculateInterestAmount(info);
             return principalAmount + interestAmount;
         }
 
         // 만기 일시 상환
-        else if (info.repayType == RepaymentType.BP) { 
+        else if (keccak256(bytes(info.repayType)) == keccak256(bytes("BP"))) { 
             uint256 interestAmount = calculateInterestAmount(info);
             return (info.remainingPayments == 1) ? interestAmount + info.remainingPrincipal : interestAmount;
         }
@@ -520,8 +511,8 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         uint256 expectedFee = (actualPrincipal * metadata.earlyPayFee) / 10000;
         require(feeAmount == expectedFee, "Fee amount mismatch");
         
-        // 현재 NFT 소유자 (채권자) 확인
-        address currentOwner = promissoryNote.ownerOf(tokenId);
+        // 현재 NFT 채권자 확인
+        address currentOwner = promissoryNote.getLatestCreditorAddress(tokenId);
         
         // 상환 처리를 위한 총 금액 (원금 + 수수료)
         uint256 totalAmount = actualPrincipal + feeAmount;
@@ -557,8 +548,8 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
             // 부분 상환 시 상환 금액만큼 원금 감소
             info.remainingPrincipal -= actualPrincipal;
             
-            // 원리금 균등 상환(EPIP)인 경우 새로운 고정 납부액 계산
-            if (info.repayType == RepaymentType.EPIP && info.remainingPayments > 0) {
+            // EPIP(원리금 균등 상환)인 경우 새로운 고정 납부액 계산
+            if (keccak256(bytes(info.repayType)) == keccak256(bytes("EPIP")) && info.remainingPayments > 0) {
                 info.fixedPaymentAmount = calculateFixedPaymentForEPIP(
                     info.remainingPrincipal,
                     info.ir,

@@ -11,6 +11,7 @@ import {
   LoanRoutes,
 } from "./routes";
 import HeaderMobile from "@/widget/common/ui/HeaderMobile";
+import MainNavMobile from "@/features/common/ui/MainNavMobile";
 
 const Home = lazy(() => import("@/pages/common/ui/Home"));
 
@@ -20,7 +21,7 @@ function App() {
   return (
     <div className="mx-auto max-w-[1440px] px-4 pb-20 sm:px-8">
       {isDesktop ? <Header /> : <HeaderMobile />}
-      {isDesktop && <SubNav />}
+      {isDesktop ? <SubNav /> : <SubNav className="pb-0" />}
       <Routes>
         <Route
           path="/"
@@ -36,6 +37,11 @@ function App() {
         <Route path="/contract/*" element={<ContractRoutes />} />
         <Route path="/account/*" element={<AccountRoutes />} />
       </Routes>
+      {!isDesktop && (
+        <div className="fixed right-0 bottom-0 left-0">
+          <MainNavMobile />
+        </div>
+      )}
     </div>
   );
 }

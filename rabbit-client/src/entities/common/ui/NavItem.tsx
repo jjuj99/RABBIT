@@ -1,14 +1,19 @@
 import { cn } from "@/shared/lib/utils";
 import { Link } from "react-router";
 
-interface NavItemProps {
+interface NavItemMobileProps {
   to: string;
   children: React.ReactNode;
   isActive: boolean;
   size?: "main" | "sub";
 }
 
-const NavItem = ({ to, children, isActive, size = "main" }: NavItemProps) => {
+const NavItemMobile = ({
+  to,
+  children,
+  isActive,
+  size = "main",
+}: NavItemMobileProps) => {
   return (
     <Link
       to={to}
@@ -26,4 +31,4 @@ const NavItem = ({ to, children, isActive, size = "main" }: NavItemProps) => {
   );
 };
 
-export default NavItem;
+export default NavItemMobile;

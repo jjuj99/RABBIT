@@ -6,6 +6,7 @@ import com.rabbit.auction.domain.entity.Auction;
 import com.rabbit.auction.domain.entity.Bid;
 import com.rabbit.auction.repository.AuctionRepository;
 import com.rabbit.auction.repository.BidRepository;
+import com.rabbit.blockchain.service.PromissoryNoteAuctionService;
 import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
@@ -13,12 +14,15 @@ import com.rabbit.notification.domain.dto.request.NotificationRequestDTO;
 import com.rabbit.notification.service.NotificationService;
 import com.rabbit.sse.domain.dto.response.NotiResponseDTO;
 import com.rabbit.sse.service.SseEventPublisher;
+import com.rabbit.user.domain.entity.MetamaskWallet;
+import com.rabbit.user.service.UserService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -30,6 +34,8 @@ public class BidService {
     private final AuctionRepository auctionRepository;
     private final SseEventPublisher sseEventPublisher;
     private final NotificationService notificationService;
+    private final UserService userService;
+    private final PromissoryNoteAuctionService promissoryNoteAuctionService;
 
     @Transactional
     public void addBid(@Valid BidRequestDTO bidRequest, Integer auctionId, Integer userId) {
@@ -47,10 +53,26 @@ public class BidService {
             throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "입찰 금액이 현재 경매가보다 낮습니다.");
         }
 
+        // 양도자가 아닌지 확인
+        if(auction.getUserId().equals(userId)){
+            throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "양도자는 경매에 참여할 수 없습니다.");
+        }
+
         //기존 입찰자
-        Integer previousBidderId = 3;
+        Integer previousBidderId = auction.getWinningBidder();
 
         //해당 입찰자에게 금액만큼 잔고가 있는지 확인 -> 서명 후 스마트컨트랙트로 예치
+        MetamaskWallet wallet = userService.getWalletByUserIdAndPrimaryFlagTrue(userId);
+        try {
+            promissoryNoteAuctionService.depositRAB(
+                    auction.getTokenId(),                          // tokenId
+                    BigInteger.valueOf(bidRequest.getBidAmount()),                // amount
+                    wallet.getWalletAddress()                                           // bidder address
+            );
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "블록체인 입찰 처리 중 오류가 발생했습니다.");
+        }
+
         //이전 입찰자에게는 예치한 금액 돌려주기
 
         Bid bid = Bid.builder()

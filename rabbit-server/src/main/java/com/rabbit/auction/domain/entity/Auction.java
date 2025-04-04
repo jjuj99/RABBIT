@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 
 @Table(
@@ -36,7 +37,7 @@ public class Auction {
     private ZonedDateTime endDate;
 
     @Column(nullable = false)
-    private String tokenId;
+    private BigInteger tokenId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "auction_status", nullable = false, length = 50)

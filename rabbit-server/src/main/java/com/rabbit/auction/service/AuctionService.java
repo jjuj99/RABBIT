@@ -7,18 +7,24 @@ import com.rabbit.auction.repository.AuctionRepository;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
 import com.rabbit.auction.domain.entity.Auction;
 import com.rabbit.auction.repository.BidRepository;
+import com.rabbit.blockchain.service.PromissoryNoteAuctionService;
+import com.rabbit.contract.domain.entity.Contract;
+import com.rabbit.contract.repository.ContractRepository;
 import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import com.rabbit.global.code.service.SysCommonCodeService;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.response.PageResponseDTO;
 import com.rabbit.mail.service.MailService;
+import com.rabbit.global.util.SignatureUtil;
 import com.rabbit.notification.domain.dto.request.NotificationRequestDTO;
 import com.rabbit.notification.service.NotificationService;
 import com.rabbit.sse.domain.dto.response.NotiResponseDTO;
 import com.rabbit.sse.service.SseEventPublisher;
 import com.rabbit.user.domain.entity.User;
 import com.rabbit.user.service.UserService;
+import com.rabbit.user.domain.entity.MetamaskWallet;
+import com.rabbit.user.repository.MetamaskWalletRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +34,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -40,8 +48,10 @@ public class AuctionService {
     private final AuctionScheduler auctionScheduler;
     private final SseEventPublisher sseEventPublisher;
     private final NotificationService notificationService;
-    private final MailService mailService;
+    private final PromissoryNoteAuctionService promissoryNoteAuctionService;
     private final UserService userService;
+    private final ContractRepository contractRepository;
+    private final MailService mailService;
 
     private final SysCommonCodeService sysCommonCodeService;
 
@@ -49,8 +59,15 @@ public class AuctionService {
     private static final String AUCTION_STATUS = SysCommonCodes.Auction.values()[0].getCodeType();
     private static final String BID_STATUS = SysCommonCodes.Bid.values()[0].getCodeType();
 
-    public void addAuction(@Valid AuctionRequestDTO auctionRequest) {
+    public void addAuction(@Valid AuctionRequestDTO auctionRequest, Integer userId) {
         //NFT의 소유자가 맞는지 확인
+        Contract contract = contractRepository.findByTokenId(auctionRequest.getTokenId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 tokenId의 계약이 없습니다."));
+
+        if(!contract.getCreditor().getUserId().equals(userId)) {
+           throw new BusinessException(ErrorCode.UNAUTHORIZED, "해당 NFT 경매의 권한이 없습니다.");
+        }
+
         //이미 경매가 진행중인지 확인
         auctionRepository.findByTokenIdAndAuctionStatus(auctionRequest.getTokenId(), SysCommonCodes.Auction.ING)
                 .ifPresent(auction ->{
@@ -58,7 +75,7 @@ public class AuctionService {
                 });
 
         Auction auction= Auction.builder()
-                .userId(3)  //아직 임의로 설정해둠
+                .userId(userId)  //아직 임의로 설정해둠
                 .minimumBid(auctionRequest.getMinimumBid())
                 .endDate(auctionRequest.getEndDate())
                 .tokenId(auctionRequest.getTokenId())
@@ -67,6 +84,15 @@ public class AuctionService {
                 .createdAt(ZonedDateTime.now())
                 .build();
 
+        try {
+            BigInteger deadline = BigInteger.valueOf(Instant.now().getEpochSecond() + 3600); // 1시간 후
+            MetamaskWallet wallet = userService.getWalletByUserIdAndPrimaryFlagTrue(userId);
+            byte[] sign = SignatureUtil.convertSignToByte(auctionRequest.getSellerSign());
+
+            promissoryNoteAuctionService.depositNFTWithPermit(auction.getTokenId(), wallet.getWalletAddress(), deadline, sign);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "NFT 예치 중 오류가 발생했습니다.");
+        }
         Auction savedAuction=auctionRepository.save(auction);
 
         auctionScheduler.scheduleAuctionEnd(savedAuction.getAuctionId(), savedAuction.getEndDate());
@@ -93,6 +119,13 @@ public class AuctionService {
         boolean hasBids=bidRepository.existsByAuction(auction);
         if(hasBids){
             throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "입찰자가 존재해 경매를 취소할 수 없습니다.");
+        }
+
+        //블록체인에서 경매 취소
+        try {
+            promissoryNoteAuctionService.cancelAuction(auction.getTokenId());
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "경매 취소 중 오류가 발생했습니다.");
         }
 
         //cancel로 상태 변경

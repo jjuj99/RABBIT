@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 
 @Getter
@@ -14,6 +15,6 @@ import java.time.ZonedDateTime;
 public class AuctionRequestDTO {
     private Long minimumBid;
     private ZonedDateTime endDate;
-    private String tokenId;
+    private BigInteger tokenId;
     private String sellerSign;
 }

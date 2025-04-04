@@ -1,5 +1,6 @@
 package com.rabbit.contract.repository;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
@@ -68,6 +69,10 @@ public interface ContractRepository extends JpaRepository<Contract, Long>, Contr
     // 채무자가 특정 사용자이고 특정 상태인 계약 조회
     @Query("SELECT c FROM Contract c WHERE c.debtor = :user AND c.contractStatus = :status AND c.deletedFlag = false ORDER BY c.createdAt DESC")
     List<Contract> findByDebtorAndContractStatus(@Param("user") User user, @Param("status") SysCommonCodes.Contract status);
+
+    // nft tokenId로 Contract 조회
+    Optional<Contract> findByTokenId(BigInteger tokenId);
+
 
     // 휴대폰 번호로 채무자 찾기
 //    @Query("SELECT c FROM Contract c WHERE c.debtor.phone = :phone AND c.deletedFlag = false ORDER BY c.createdAt DESC")

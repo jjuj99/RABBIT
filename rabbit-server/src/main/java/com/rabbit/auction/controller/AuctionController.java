@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Pageable;
@@ -34,7 +35,9 @@ public class AuctionController {
 
     @AuctionControllerSwagger.InsertAuctionApi
     @PostMapping
-    public ResponseEntity<CustomApiResponse<?>> addAuction(@Valid @RequestBody AuctionRequestDTO auctionRequest) {
+    public ResponseEntity<CustomApiResponse<?>> addAuction(@Valid @RequestBody AuctionRequestDTO auctionRequest, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+
         //최소 입찰가
         if(auctionRequest.getMinimumBid()<=0){
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "최소 입찰가는 0보다 커야 합니다.");
@@ -49,7 +52,7 @@ public class AuctionController {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "필수 파라미터가 누락되었습니다.");
         }
 
-        auctionService.addAuction(auctionRequest);
+        auctionService.addAuction(auctionRequest, Integer.parseInt(userId));
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(CustomApiResponse.success(MessageResponse.of("경매 등록 성공했습니다.")));

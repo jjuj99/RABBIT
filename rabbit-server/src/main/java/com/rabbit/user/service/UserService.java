@@ -82,6 +82,11 @@ public class UserService {
         userRepository.deleteById(userId);
     }
 
+    public MetamaskWallet getWalletByUserIdAndPrimaryFlagTrue(Integer userId) {
+        return metamaskWalletRepository.findByUser_UserIdAndPrimaryFlagTrue(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 유저의 지갑 정보가 없습니다."));
+    }
+
     public User findById(Integer userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 유저를 찾을 수 없습니다."));

@@ -98,7 +98,7 @@ public interface CommonCodeControllerSwagger {
             parameters = {
                     @Parameter(name = "codeType", description = "코드 타입", required = true, in = ParameterIn.PATH,
                             schema = @Schema(type = "string", example = "AUCTION_STATUS",
-                                    allowableValues = {"AUCTION_STATUS", "BID_STATUS", "EMAIL_LOG_STATUS", "PROMISSORY_NOTE_STATUS", "COIN_LOG_TYPE"}))
+                                    allowableValues = {"AUCTION_STATUS", "BID_STATUS", "EMAIL_LOG_STATUS", "PROMISSORY_NOTE_STATUS", "COIN_LOG_TYPE", "CONTRACT_STATUS", "REPAYMENT_TYPE", "NOTIFICATION_TYPE", "NOTIFICATION_RELATED_TYPE"}))
             },
             responses = {
                     @ApiResponse(
@@ -160,7 +160,7 @@ public interface CommonCodeControllerSwagger {
             parameters = {
                     @Parameter(name = "codeType", description = "코드 타입", required = true, in = ParameterIn.PATH,
                             schema = @Schema(type = "string", example = "AUCTION_STATUS",
-                                    allowableValues = {"AUCTION_STATUS", "BID_STATUS", "EMAIL_LOG_STATUS", "PROMISSORY_NOTE_STATUS", "COIN_LOG_TYPE"})),
+                                    allowableValues = {"AUCTION_STATUS", "BID_STATUS", "EMAIL_LOG_STATUS", "PROMISSORY_NOTE_STATUS", "COIN_LOG_TYPE", "CONTRACT_STATUS", "REPAYMENT_TYPE", "NOTIFICATION_TYPE", "NOTIFICATION_RELATED_TYPE"})),
                     @Parameter(name = "code", description = "코드 값", required = true, in = ParameterIn.PATH,
                             schema = @Schema(type = "string", example = "ING"))
             },
@@ -634,7 +634,7 @@ public interface CommonCodeControllerSwagger {
             required = true,
             in = ParameterIn.PATH,
             schema = @Schema(type = "string", example = "AUCTION_STATUS",
-                    allowableValues = {"AUCTION_STATUS", "BID_STATUS", "EMAIL_LOG_STATUS", "PROMISSORY_NOTE_STATUS", "COIN_LOG_TYPE"})
+                    allowableValues = {"AUCTION_STATUS", "BID_STATUS", "EMAIL_LOG_STATUS", "PROMISSORY_NOTE_STATUS", "COIN_LOG_TYPE", "CONTRACT_STATUS", "REPAYMENT_TYPE", "NOTIFICATION_TYPE", "NOTIFICATION_RELATED_TYPE"})
     )
     @interface CodeTypeParam {
     }

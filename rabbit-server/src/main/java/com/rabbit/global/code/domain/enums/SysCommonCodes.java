@@ -34,8 +34,10 @@ public class SysCommonCodes {
                 PromissoryNote.values()[0].getCodeType(),
                 CoinLog.values()[0].getCodeType(),
                 Bid.values()[0].getCodeType(),
-                Contract.values()[0].getCodeType(),
-                Repayment.values()[0].getCodeType()
+                Contract.values()[0].getCodeType(), // 계약 상태 코드 추가
+                Repayment.values()[0].getCodeType(),
+                NotificationType.values()[0].getCodeType(),
+                NotificationRelatedType.values()[0].getCodeType()
                 // 새 코드 타입 추가 시 여기에 추가
         );
     }

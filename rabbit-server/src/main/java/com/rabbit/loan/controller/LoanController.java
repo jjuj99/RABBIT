@@ -4,6 +4,7 @@ import com.rabbit.global.response.CustomApiResponse;
 import com.rabbit.loan.domain.dto.response.BorrowDetailResponseDTO;
 import com.rabbit.loan.domain.dto.response.BorrowListResponseDTO;
 import com.rabbit.loan.domain.dto.response.BorrowSummaryResponseDTO;
+import com.rabbit.loan.domain.dto.response.LentSummaryResponseDTO;
 import com.rabbit.loan.service.LoanService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +53,14 @@ public class LoanController {
     public ResponseEntity<CustomApiResponse<BorrowDetailResponseDTO>> borrowDetail(@PathVariable int contracId, Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
         BorrowDetailResponseDTO response = loanService.borrowDetail(contracId, Integer.parseInt(userId));
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
+
+    @GetMapping("/lent/me/summary")
+    public ResponseEntity<CustomApiResponse<LentSummaryResponseDTO>> lentSummary(Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+        LentSummaryResponseDTO response = loanService.lentSummary(Integer.parseInt(userId));
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }

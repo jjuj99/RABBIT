@@ -24,6 +24,48 @@ public interface BankAuthControllerSwagger {
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
     @Operation(
+            summary = "은행 리스트 정보",
+            description = "은행 리스트를 가져옵니다.",
+            security = {@SecurityRequirement(name = "bearerAuth")},
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "전송 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "리스트 조회 성공",
+                                                    summary = "리스트 조회 성공",
+                                                    value = """
+                                                            {
+                                                              "status": "SUCCESS",
+                                                              "data": [
+                                                                {
+                                                                  "bankId": 1,
+                                                                  "bankName": "국민은행"
+                                                                },
+                                                                {
+                                                                  "bankId": 2,
+                                                                  "bankName": "신한은행"
+                                                                }
+                                                              ],
+                                                              "error": null
+                                                            }
+                                                            """
+                                            )
+                                    }
+                            )
+                    )
+            }
+    )
+    @interface getAllBanksApi {
+    }
+
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Operation(
             summary = "계좌 인증번호 전송",
             description = "사용자의 이메일을 기반으로 싸피 은행 계좌를 생성하고 해당 계좌로 인증번호를 전송합니다.",
             security = {@SecurityRequirement(name = "bearerAuth")},

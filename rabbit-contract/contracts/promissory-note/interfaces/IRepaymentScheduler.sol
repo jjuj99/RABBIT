@@ -6,7 +6,6 @@ pragma solidity ^0.8.0;
  * @dev 차용증 NFT의 자동 이자 상환을 관리하는 컨트랙트의 인터페이스
  */
 interface IRepaymentScheduler {
-    enum RepaymentType { EPIP, EPP, BP } // 원리금균등상환, 원금균등상환, 만기일시상환
 
     struct RepaymentInfo {
         uint256 tokenId;            // 차용증 NFT 토큰 ID
@@ -19,7 +18,7 @@ interface IRepaymentScheduler {
         uint256 totalPayments;      // 총 납부 횟수
         uint256 remainingPayments;  // 남은 납부 횟수
         uint256 fixedPaymentAmount; // EPIP 시 고정 납부액
-        RepaymentType repayType;    // 상환 방식
+        string repayType;           // 상환 방식 EPIP(원리금균등상환), EPP(원금균등상환), BP(만기일시상환)
         address drWalletAddress;    // 채무자 주소
         bool activeFlag;            // 활성 상태 여부
 

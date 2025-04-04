@@ -10,11 +10,13 @@ import com.rabbit.blockchain.util.BlockChainUtil;
 import com.rabbit.loan.domain.dto.response.BorrowDetailResponseDTO;
 import com.rabbit.loan.domain.dto.response.BorrowListResponseDTO;
 import com.rabbit.loan.domain.dto.response.BorrowSummaryResponseDTO;
+import com.rabbit.loan.domain.dto.response.LentSummaryResponseDTO;
 import com.rabbit.loan.util.DateUtils;
 import com.rabbit.loan.domain.dto.response.BorrowListResponseDTO;
 import com.rabbit.loan.domain.dto.response.BorrowSummaryResponseDTO;
 import com.rabbit.loan.util.DateUtils;
 import com.rabbit.loan.domain.dto.response.BorrowSummaryResponseDTO;
+>>>>>>> rabbit-server/src/main/java/com/rabbit/loan/service/LoanService.java
 import com.rabbit.loan.util.LoanCalculationUtil;
 import com.rabbit.user.repository.MetamaskWalletRepository;
 import lombok.RequiredArgsConstructor;
@@ -184,5 +186,63 @@ public class LoanService {
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "NFT 목록 조회 중 오류가 발생했습니다.");
         }
 
+    }
+
+    public LentSummaryResponseDTO lentSummary(int userId) {
+        // 1. 내가 채권자인 차용증들에서 tokenId를 리스트로 불러온다.
+        List<BigInteger> tokenIdList = new ArrayList<>();
+
+        // 1-2. 만약 리스트가 비어있다면, 전체 0 데이터를 반환
+        if (tokenIdList.isEmpty()) {
+            return LentSummaryResponseDTO.builder()
+                    .totalIncomingLa(0)
+                    .monthlyIncomingLa(0)
+                    .nextIncomingDt("-")
+                    .build();
+        }
+
+        try {
+            DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            LocalDate today = LocalDate.now();
+            List<String> nextDtList = new ArrayList<>(); // 가장 가까운 날짜를 구하기 위해서
+
+            // 2. 각 tokenId에 대한 메타데이터 조회 및 합계 계산
+            BigInteger totalIncomingLa = BigInteger.ZERO;
+            BigInteger monthlyIncomingLa = BigInteger.ZERO;
+
+            // 3. tokenId로 각 NFT의 정보를 조회
+            for (BigInteger tokenId : tokenIdList) {
+                // NFT의 상환 정보를 호출
+                RepaymentInfoDTO repaymentInfo = repaymentSchedulerService.getRepaymentInfo(tokenId);
+
+                // 전체 대출한 금액에 더하기
+                totalIncomingLa = totalIncomingLa.add(repaymentInfo.getInitialPrincipal());
+
+                // 이번달 상환액 더하기
+                monthlyIncomingLa = monthlyIncomingLa.add(LoanCalculationUtil.calculateMonthlyPayment(repaymentInfo));
+
+                // 리스트에 날짜 담기
+                nextDtList.add(repaymentInfo.getNextPaymentDate());
+            }
+
+            // 가장 가까운 날 찾기
+            String nextIncomingDt = nextDtList.stream()
+                    .map(dateStr -> LocalDate.parse(dateStr, FORMATTER))
+                    .filter(date -> !date.isBefore(today)) // 오늘 이후
+                    .min(Comparator.naturalOrder())        // 가장 빠른 날짜
+                    .map(FORMATTER::format)               // 다시 문자열로 변환
+                    .orElse(null);
+
+            // 4. 결과 반환
+            return LentSummaryResponseDTO.builder()
+                    .totalIncomingLa(totalIncomingLa.intValue())
+                    .monthlyIncomingLa(monthlyIncomingLa.intValue())
+                    .nextIncomingDt("-")
+                    .build();
+
+        } catch (Exception e) {
+//            log.error("❌ NFT 목록 조회 실패 - userId={}, wallet={}", 1, walletAddress, e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "NFT 목록 조회 중 오류가 발생했습니다.");
+        }
     }
 }

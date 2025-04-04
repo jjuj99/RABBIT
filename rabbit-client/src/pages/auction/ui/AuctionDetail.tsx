@@ -1,4 +1,5 @@
 import {
+  getAuctionSimilarListAPI,
   getBidListAPI,
   getNFTEventListAPI,
   getPNInfoListAPI,
@@ -12,6 +13,7 @@ import CountdownTimer from "@/shared/ui/CountdownTimer";
 import useMediaQuery from "@/shared/hooks/useMediaQuery";
 import NFTEventListMobile from "@/entities/common/ui/NFTEventListMobile";
 import NFTEventList from "@/entities/common/ui/NFTEventList";
+import AuctionSimilarList from "@/entities/auction/ui/AuctionSimilarList";
 
 const AuctionDetail = () => {
   const { auctionId } = useParams<{ auctionId: string }>();
@@ -30,6 +32,11 @@ const AuctionDetail = () => {
   const { data: EventList, isLoading: EventListLoading } = useQuery({
     queryKey: ["NFTEventList", auctionId],
     queryFn: () => getNFTEventListAPI(Number(auctionId)),
+  });
+
+  const { data: AuctionSimilarListdata } = useQuery({
+    queryKey: ["AuctionSimilarList", auctionId],
+    queryFn: () => getAuctionSimilarListAPI(Number(auctionId)),
   });
 
   if (EventListLoading) {
@@ -65,7 +72,7 @@ const AuctionDetail = () => {
           </div>
           {/* 오른쪽 영역 */}
           <div className="flex h-full w-full flex-1 flex-col gap-4">
-            <AuctionBidPanel CBP={PNInfo?.data?.price} amount={123132} />
+            <AuctionBidPanel CBP={PNInfo?.data?.price} />
 
             <AuctionBidList data={bidList?.data || []} />
           </div>
@@ -77,6 +84,7 @@ const AuctionDetail = () => {
             <CountdownTimer endDate={PNInfo.data.endDate} />
           </span>
         </div>
+
         <div className="flex flex-col gap-4 rounded-lg sm:bg-gray-900 sm:p-4 sm:pt-4 sm:pb-6">
           <h3 className="rounded-sm px-3 py-2 text-lg font-semibold text-white sm:text-xl">
             차용증 정보
@@ -88,6 +96,11 @@ const AuctionDetail = () => {
               PNInfo?.data && <PNInfoList data={PNInfo.data} />
             )}
           </div>
+          <div className="w-full">
+            {AuctionSimilarListdata?.data && (
+              <AuctionSimilarList data={AuctionSimilarListdata?.data} />
+            )}
+          </div>
         </div>
         <div className="flex flex-col gap-1 sm:rounded-lg sm:bg-gray-900 sm:p-4">
           <h3 className="bg-succecss px-3 py-2 text-lg font-semibold text-white sm:py-2 sm:text-xl">
@@ -95,9 +108,9 @@ const AuctionDetail = () => {
           </h3>
           <div className="w-full rounded-sm bg-gray-900">
             {isDesktop ? (
-              <NFTEventList data={EventList.data} />
+              <NFTEventList data={EventList.data.eventList} />
             ) : (
-              <NFTEventListMobile data={EventList.data} />
+              <NFTEventListMobile data={EventList.data.eventList} />
             )}
           </div>
         </div>

@@ -3,11 +3,17 @@ import { ApiResponse } from "@/shared/type/ApiResponse";
 import { AuctionListRequest } from "../types/request";
 import {
   AuctionListResponse,
+  AuctionSimilarListResponse,
   BidListResponse,
   PNInfoListResponse,
   SubmitAuctionBidResponse,
 } from "../types/response";
-import { mockAuctionList, mockBidHistoryData, mockBidList } from "./data";
+import {
+  mockAuctionList,
+  mockAuctionSimilarList,
+  mockBidHistoryData,
+  mockBidList,
+} from "./data";
 import { nftEvents } from "@/entities/common/mocks/data";
 import { NFTEventListResponse } from "@/shared/type/NFTEventList";
 
@@ -257,51 +263,6 @@ export const handlers = [
         );
       }
 
-      // NFT 존재 여부 검증 (임시로 tokenId 형식으로 검증)
-      if (!tokenId.match(/^0x[a-fA-F0-9]{40}$/)) {
-        return HttpResponse.json(
-          {
-            status: "ERROR",
-            data: null,
-            error: {
-              statusCode: 404,
-              message: "NFT를 찾을 수 없습니다. 올바른 NFT ID를 입력하세요.",
-            },
-          },
-          { status: 404 },
-        );
-      }
-
-      // 권한 검증 (임시로 sellerSign 길이로 검증)
-      if (sellerSign.length < 10) {
-        return HttpResponse.json(
-          {
-            status: "ERROR",
-            data: null,
-            error: {
-              statusCode: 403,
-              message: "해당 NFT에 대한 경매를 생성할 권한이 없습니다.",
-            },
-          },
-          { status: 403 },
-        );
-      }
-
-      // 이미 진행 중인 경매 검증 (임시로 tokenId의 마지막 숫자로 검증)
-      if (parseInt(tokenId.slice(-1)) % 2 === 0) {
-        return HttpResponse.json(
-          {
-            status: "ERROR",
-            data: null,
-            error: {
-              statusCode: 409,
-              message: "해당 NFT는 이미 경매가 진행 중입니다.",
-            },
-          },
-          { status: 409 },
-        );
-      }
-
       // 성공 응답
       return HttpResponse.json(
         {
@@ -346,6 +307,18 @@ export const handlers = [
       const response: ApiResponse<NFTEventListResponse> = {
         status: "SUCCESS",
         data: auction,
+      };
+
+      return HttpResponse.json(response);
+    },
+  ),
+
+  http.get(
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/:auctionId/similar`,
+    () => {
+      const response: ApiResponse<AuctionSimilarListResponse> = {
+        status: "SUCCESS",
+        data: mockAuctionSimilarList,
       };
 
       return HttpResponse.json(response);

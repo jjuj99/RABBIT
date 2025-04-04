@@ -52,6 +52,8 @@ const LentDetail = () => {
             defCnt={data.data.defCnt}
             contractDt={data.data.contractDt}
             pnStatus={data.data.pnStatus}
+            earlypayFlag={data.data.earlypayFlag}
+            earlypayFee={data.data.earlypayFee}
           />
           <div>
             <div className="flex h-full flex-col gap-2 lg:flex-row">
@@ -64,7 +66,7 @@ const LentDetail = () => {
               </div>
               <div className="flex h-full w-full flex-col justify-center gap-2 rounded-sm bg-gray-800 px-4 py-3">
                 <InfoRow
-                  label="중도 상환 수수료"
+                  label="기한 이익 상실"
                   value={`${data.data.earlypayFee}%`}
                 />
                 {data.data.earlypayFlag ? (

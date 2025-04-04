@@ -2,6 +2,8 @@ import fetchOption from "@/shared/utils/fetchOption";
 import { AuctionListRequest } from "../types/request";
 import {
   AuctionListResponse,
+  AuctionSimilarListResponse,
+  AvailableAuctionsResponse,
   BidHistoryResponse,
   BidListResponse,
   CreateAuctionResponse,
@@ -110,6 +112,28 @@ export const getNFTEventListAPI = async (
 ): Promise<ApiResponse<NFTEventListResponse>> => {
   const res = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/auctions/${auctionId}/event`,
+    fetchOption("GET"),
+  );
+  const data = await res.json();
+  return data;
+};
+
+export const getAuctionSimilarListAPI = async (
+  auctionId: number,
+): Promise<ApiResponse<AuctionSimilarListResponse>> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/${auctionId}/similar`,
+    fetchOption("GET"),
+  );
+  const data = await res.json();
+  return data;
+};
+
+export const getAvailableAuctionsAPI = async (): Promise<
+  ApiResponse<AvailableAuctionsResponse[]>
+> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/loans/lent/available-auctions`,
     fetchOption("GET"),
   );
   const data = await res.json();

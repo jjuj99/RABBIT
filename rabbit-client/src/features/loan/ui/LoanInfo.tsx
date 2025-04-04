@@ -17,6 +17,8 @@ interface LoanInfoProps {
   defCnt: number;
   contractDt: string;
   pnStatus: pnStatus;
+  earlypayFlag?: boolean;
+  earlypayFee?: number;
 }
 
 const LoanInfo = ({
@@ -31,10 +33,13 @@ const LoanInfo = ({
   defCnt,
   contractDt,
   pnStatus,
+  earlypayFlag,
+  earlypayFee,
 }: LoanInfoProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const walletAddress = crWallet;
+  console.log(earlypayFlag, earlypayFee);
 
   const handleCopy = async () => {
     try {
@@ -86,6 +91,9 @@ const LoanInfo = ({
           <InfoRow label="이자율" value={`${ir}%`} />
           <InfoRow label="연체 이자율" value={`${dir}%`} />
           <InfoRow label="연체" value={`${defCnt}회`} />
+          {earlypayFee && earlypayFlag !== undefined && (
+            <InfoRow label="기한 이익 상실" value={`${earlypayFee}%`} />
+          )}
         </div>
       </div>
 

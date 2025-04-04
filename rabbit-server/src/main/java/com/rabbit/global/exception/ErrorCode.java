@@ -42,7 +42,9 @@ public enum ErrorCode {
     BUSINESS_LOGIC_ERROR(HttpStatus.UNPROCESSABLE_ENTITY, "error.business", "처리할 수 없는 요청입니다"),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "error.method.not.allowed", "지원하지 않는 HTTP 메소드입니다"),
 
-    BLOCKCHAIN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "error.blockchain", "블록체인 처리 중 오류가 발생했습니다");
+    BLOCKCHAIN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "error.blockchain", "블록체인 처리 중 오류가 발생했습니다"),
+
+    FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "error.file.upload.failed", "파일 업로드 중 오류가 발생했습니다");
 
     private final HttpStatus status;
     private final String messageKey;

@@ -194,6 +194,10 @@ blockchain:
   repaymentScheduler:
     address: ${REPAYMENT_SCHEDULER}
 
+# Pinata (IPFS) 설정
+pinata:
+  apiKey: ${PINATA_API_KEY}
+  secretKey: ${PINATA_API_SECRET}
 # 파일 설정
 app:
   file:

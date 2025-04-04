@@ -1,5 +1,7 @@
 // scripts/2_deploy_rabbit_coin.js
 const hre = require("hardhat");
+const fs = require("fs");
+const path = require("path");
 
 async function main() {
   console.log("Deploying RABBIT...");
@@ -18,27 +20,34 @@ async function main() {
   console.log("Deploying contract with initial supply:", initialSupply);
   const rabbitCoin = await RabbitCoin.deploy(initialSupply);
 
+  // 트랜잭션 마이닝 대기
+  await rabbitCoin.waitForDeployment();
+
   // 배포된 컨트랙트 주소 출력
   console.log("Contract deployed successfully!");
   const rabbitCoinAddress = await rabbitCoin.getAddress();
   console.log("RabbitCoin contract address:", rabbitCoinAddress);
-  
-  // 환경 변수에서 시스템 컨트랙트 주소 가져오기
-  const systemContractAddress = process.env.SYSTEM_CONTRACT_ADDRESS;
-  
-  if (systemContractAddress) {
-    console.log("Setting system contract address:", systemContractAddress);
-    try {
-      const setTx = await rabbitCoin.setSystemContract(systemContractAddress, {
-        gasLimit: 100000
-      });
-      await setTx.wait();
-      console.log("System contract address set successfully!");
-    } catch (error) {
-      console.error("Failed to set system contract address:", error.message);
-    }
-  }
 
+  // 배포 주소 파일 저장
+  try {
+    let deploymentData = {};
+    try {
+      deploymentData = JSON.parse(fs.readFileSync(path.join(__dirname, "../deployment-addresses.json"), "utf8"));
+    } catch (error) {
+      // 파일이 없는 경우 새로 생성
+    }
+    
+    deploymentData.rabbitCoinAddress = rabbitCoinAddress;
+    
+    fs.writeFileSync(
+      path.join(__dirname, "../deployment-addresses.json"),
+      JSON.stringify(deploymentData, null, 2)
+    );
+    console.log("Updated deployment addresses in deployment-addresses.json");
+  } catch (error) {
+    console.error("Failed to update deployment addresses:", error.message);
+  }
+  
   console.log("To verify the contract on Etherscan, run the following command:");
   console.log(`npx hardhat verify --network sepolia ${rabbitCoinAddress} ${initialSupply}`);
 }

@@ -14,7 +14,7 @@ const HeaderMobile = () => {
     <>
       <h1 className="sr-only">Rabbit</h1>
       <div>
-        <header className="flex w-full items-center justify-between px-8 py-4">
+        <header className="flex w-full items-center justify-between py-4">
           <Link to="/">
             <img src="/logo.svg" alt="Rabbit" className="h-5 w-[130px]" />
           </Link>
@@ -29,7 +29,7 @@ const HeaderMobile = () => {
             )}
           </div>
         </header>
-        <Separator className="mb-6" />
+        <Separator />
       </div>
     </>
   );

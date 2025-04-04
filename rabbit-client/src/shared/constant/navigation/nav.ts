@@ -40,3 +40,36 @@ export const SUB_NAV_ITEMS = {
   //   { label: "출금", to: "account/withdraw" },
   // ],
 };
+
+export const MobileNAV_ITEMS = [
+  {
+    to: "/",
+    label: "홈",
+    activeLabel: "home",
+    icon: "/icons/home.svg",
+  },
+  {
+    to: "/contract/new",
+    label: "차용증 작성",
+    activeLabel: "contract",
+    icon: "/icons/pen.svg",
+  },
+  {
+    to: "/auction/list",
+    label: "차용증 경매",
+    activeLabel: "auction",
+    icon: "/icons/auction.svg",
+  },
+  {
+    to: "/loan/borrow",
+    label: "채권\u2022채무",
+    activeLabel: "loan",
+    icon: "/icons/paper.svg",
+  },
+  {
+    to: "/account/charge",
+    label: "입\u2022출금",
+    activeLabel: "account",
+    icon: "/icons/bank.svg",
+  },
+];

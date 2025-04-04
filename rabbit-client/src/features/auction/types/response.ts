@@ -84,30 +84,6 @@ export interface ComparisonAuction {
 }
 
 export interface AuctionSimilarListResponse {
-  content: {
-    auctionId: number;
-    price: number;
-    endDate: string;
-    ir: number;
-    createdAt: string;
-    repayType: string;
-    totalAmount: number;
-    matDt: string;
-    dir: number;
-    la: number;
-    earlypayFlag: boolean;
-    earlypayFee: number;
-    creditScore: number;
-    defCnt: number;
-    rp: number; // 잔여원금
-    rd: number; // 잔여상환일
-    rr: number; // 수익률
-    percentile: number; // 퍼센타일
-  }[];
-  pageNumber: number;
-  pageSize: number;
-  totalElements: number;
-  totalPages: number;
-  last: boolean;
-  hasNext: boolean;
+  targetAuction: TargetAuction;
+  comparisonAuctions: ComparisonAuction[];
 }

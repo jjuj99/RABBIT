@@ -83,4 +83,10 @@ public class SignatureUtil {
         return Hash.sha3(prefixedMessage);
     }
 
+    public static byte[] convertSignToByte(String signature){
+        String cleanSig = Numeric.cleanHexPrefix(signature);
+        byte[] signatureBytes = Numeric.hexStringToByteArray(cleanSig);
+
+        return signatureBytes;
+    }
 }

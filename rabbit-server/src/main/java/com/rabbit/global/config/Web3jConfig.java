@@ -1,5 +1,7 @@
 package com.rabbit.global.config;
 
+import com.rabbit.blockchain.wrapper.PromissoryNoteAuction;
+import com.rabbit.blockchain.wrapper.RabbitCoin;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -7,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.tx.gas.DefaultGasProvider;
 
 @Slf4j
 @Configuration
@@ -17,6 +20,12 @@ public class Web3jConfig {
 
     @Value("${blockchain.privateKey}")
     private String privateKey;
+
+    @Value("${blockchain.promissoryNoteAuction.address}")
+    private String promissoryNoteAuctionAddress;
+
+    @Value("${blockchain.rabbitCoin.address}")
+    private String rabbitCoinAddress;
 
     @Bean
     public Web3j web3j() { // Spring 프로젝트 어디서든 블록체인과 연결
@@ -38,4 +47,13 @@ public class Web3jConfig {
         return Credentials.create(privateKey);
     }
 
+    @Bean
+    public PromissoryNoteAuction promissoryNoteAuction(Web3j web3j, Credentials credentials) {
+        return PromissoryNoteAuction.load(promissoryNoteAuctionAddress, web3j, credentials, new DefaultGasProvider());
+    }
+
+    @Bean
+    public RabbitCoin rabbitCoin(Web3j web3j, Credentials credentials) {
+        return RabbitCoin.load(rabbitCoinAddress, web3j, credentials, new DefaultGasProvider());
+    }
 }

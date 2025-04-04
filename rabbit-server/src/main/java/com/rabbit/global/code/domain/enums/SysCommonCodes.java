@@ -33,7 +33,8 @@ public class SysCommonCodes {
                 EmailLog.values()[0].getCodeType(),
                 PromissoryNote.values()[0].getCodeType(),
                 CoinLog.values()[0].getCodeType(),
-                Bid.values()[0].getCodeType()
+                Bid.values()[0].getCodeType(),
+                Contract.values()[0].getCodeType() // 계약 상태 코드 추가
                 // 새 코드 타입 추가 시 여기에 추가
         );
     }
@@ -115,6 +116,43 @@ public class SysCommonCodes {
 
         public static Bid fromCode(String code) {
             return fromCodeCommon(values(), code, CODE_TYPE);
+        }
+    }
+
+    /**
+     * 계약 상태 코드 열거형
+     */
+    @Getter
+    @RequiredArgsConstructor
+    public enum Contract implements SysCommonCodeEnum {
+        REQUESTED("요청", "계약이 요청됨", 1),
+        MODIFICATION_REQUESTED("수정 요청됨", "계약 수정이 요청됨", 2),
+        CONTRACTED("체결", "계약이 체결됨", 3),
+        CANCELED("취소", "계약이 취소됨", 4),
+        REJECTED("거절", "계약이 거절됨", 5);
+
+        private final String codeName;
+        private final String description;
+        private final int displayOrder;
+
+        private static final String CODE_TYPE = "CONTRACT_STATUS";
+
+        @Override
+        public String getCode() {
+            return this.name();
+        }
+
+        @Override
+        public String getCodeType() {
+            return CODE_TYPE;
+        }
+
+        public static Contract fromCode(String code) {
+            return Arrays.stream(values())
+                    .filter(status -> status.getCode().equals(code))
+                    .findFirst()
+                    .orElseThrow(() -> new BusinessException(
+                            ErrorCode.CODE_NOT_FOUND, CODE_TYPE, code));
         }
     }
 

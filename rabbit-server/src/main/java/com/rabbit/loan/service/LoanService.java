@@ -16,7 +16,6 @@ import com.rabbit.loan.domain.dto.response.BorrowListResponseDTO;
 import com.rabbit.loan.domain.dto.response.BorrowSummaryResponseDTO;
 import com.rabbit.loan.util.DateUtils;
 import com.rabbit.loan.domain.dto.response.BorrowSummaryResponseDTO;
->>>>>>> rabbit-server/src/main/java/com/rabbit/loan/service/LoanService.java
 import com.rabbit.loan.util.LoanCalculationUtil;
 import com.rabbit.user.repository.MetamaskWalletRepository;
 import lombok.RequiredArgsConstructor;

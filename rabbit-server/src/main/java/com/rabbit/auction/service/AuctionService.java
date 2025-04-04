@@ -12,10 +12,13 @@ import com.rabbit.global.code.service.SysCommonCodeService;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.response.PageResponseDTO;
+import com.rabbit.mail.service.MailService;
 import com.rabbit.notification.domain.dto.request.NotificationRequestDTO;
 import com.rabbit.notification.service.NotificationService;
 import com.rabbit.sse.domain.dto.response.NotiResponseDTO;
 import com.rabbit.sse.service.SseEventPublisher;
+import com.rabbit.user.domain.entity.User;
+import com.rabbit.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +40,8 @@ public class AuctionService {
     private final AuctionScheduler auctionScheduler;
     private final SseEventPublisher sseEventPublisher;
     private final NotificationService notificationService;
+    private final MailService mailService;
+    private final UserService userService;
 
     private final SysCommonCodeService sysCommonCodeService;
 
@@ -170,6 +175,15 @@ public class AuctionService {
                             .build()
             );
 
+            User winner = userService.findById(winningBid.getUserId());
+            mailService.sendMail(
+                    winner.getEmail(),
+                    SysCommonCodes.MailTemplateType.AUCTION_SUCCESS_WINNER,
+                    winner.getUserName(),
+                    auction.getTokenId()
+            );
+
+
             // 양도자에게 전송 예정 알림
             notificationService.createNotification(
                     NotificationRequestDTO.builder()
@@ -178,6 +192,14 @@ public class AuctionService {
                             .relatedId(auctionId)
                             .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
                             .build()
+            );
+
+            User seller = userService.findById(auction.getUserId());
+            mailService.sendMail(
+                    seller.getEmail(),
+                    SysCommonCodes.MailTemplateType.AUCTION_SUCCESS_SELLER,
+                    seller.getUserName(),
+                    auction.getTokenId()
             );
         }
 

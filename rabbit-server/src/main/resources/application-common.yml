@@ -194,8 +194,6 @@ blockchain:
   repaymentScheduler:
     address: ${REPAYMENT_SCHEDULER}
 
-
-
 # 파일 설정
 app:
   file:

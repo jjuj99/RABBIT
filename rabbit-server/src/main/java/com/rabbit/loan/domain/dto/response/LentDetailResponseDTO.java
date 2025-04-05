@@ -9,18 +9,18 @@ import lombok.NoArgsConstructor;
 import java.math.BigInteger;
 import java.util.List;
 
-@Schema(description = "부채 상세 정보 응답 DTO")
+@Schema(description = "채권 상세 정보 응답 DTO")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BorrowDetailResponseDTO {
+public class LentDetailResponseDTO {
 
     private int contractId;
     private BigInteger tokenId; // 토큰 아이디
     private String nftImage; // 토큰 이미지
-    private String crName; // 채권자 이름
-    private String crWallet; // 채권자 지갑
+    private String drName; // 채권자 이름
+    private String drWallet; // 채권자 지갑
     private Long la; // 총 대출 금액
     private Long totalAmount; // 만기수취액
     private String repayType; // 상환 방식

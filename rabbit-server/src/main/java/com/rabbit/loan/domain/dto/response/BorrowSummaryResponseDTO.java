@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BorrowSummaryResponseDTO {
 
-    private int totalOutgoingLa;
-    private int monthlyOutgoingLa;
+    private Long totalOutgoingLa;
+    private Long monthlyOutgoingLa;
     private String nextOutgoingDt;
 }

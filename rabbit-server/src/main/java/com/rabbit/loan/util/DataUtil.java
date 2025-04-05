@@ -1,16 +1,22 @@
 package com.rabbit.loan.util;
 
+import com.rabbit.blockchain.wrapper.PromissoryNote;
 import com.rabbit.blockchain.wrapper.RepaymentScheduler;
 
 import java.math.BigInteger;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 public class DataUtil {
 
     // 이자율 값 변환
-    public static double getIrAsDouble(BigInteger ir) {
-        return ir.divide(BigInteger.valueOf(100)).doubleValue();
+    public static double getRateAsDouble(BigInteger rate) {
+        return rate.doubleValue() / 100.0;
     }
 
     // 차용증 상태, 정상 / 연체 중 반환
@@ -67,5 +73,79 @@ public class DataUtil {
         }
 
         return basePayment.longValue();
+    }
+
+    // 만기수취액 계산
+    public static Long calculateTotalAmount(PromissoryNote.PromissoryMetadata promissoryMetadata, RepaymentScheduler.RepaymentInfo repayInfo) {
+        int remainTerms = calculateRemainTerms(promissoryMetadata.matDt);
+        Long mp = calculateMonthlyPayment(repayInfo);
+
+        return remainTerms * mp;
+    }
+
+    // 진행률 계산
+    public static double calculateProgressRate(String contractDt, String matDt) {
+        LocalDate today = LocalDate.now();
+        LocalDate contractDate = LocalDate.parse(contractDt);
+        LocalDate maturityDate = LocalDate.parse(matDt);
+
+        long totalDays = ChronoUnit.DAYS.between(contractDate, maturityDate);
+        long passedDays = ChronoUnit.DAYS.between(contractDate, today);
+
+        if (totalDays <= 0) return 100.0; // 만기일이 시작일보다 빠르거나 같을 경우
+        if (passedDays <= 0) return 0.0;  // 아직 시작 안했으면 진행률 0%
+
+        double progress = ((double) passedDays / totalDays) * 100.0;
+        return Math.min(progress, 100.0); // 최대 100%로 제한
+    }
+
+    // 다음 상환일 초에서 날짜로 반환
+    public static String getNextMpDt(BigInteger nextMpDt) {
+        // BigInteger를 long으로 변환
+        long nextMpDtSeconds = nextMpDt.longValue();
+
+        // Unix timestamp(초)를 LocalDateTime으로 변환
+        LocalDateTime nextPaymentDate = LocalDateTime.ofInstant(
+                Instant.ofEpochSecond(nextMpDtSeconds),
+                ZoneId.systemDefault()
+        );
+
+        // 날짜 형식 지정
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        // 포맷팅된 날짜 문자열 반환
+        return nextPaymentDate.format(formatter);
+    }
+
+    // 가장 빠른 상환일
+    public static String getFastestNextPaymentDate(List<BigInteger> paymentDates) {
+        if (paymentDates == null || paymentDates.isEmpty()) {
+            return "납부일 정보가 없습니다";
+        }
+
+        // 현재 시간의 Unix timestamp (초)
+        long currentTimeSec = Instant.now().getEpochSecond();
+
+        // 미래 납부일만 필터링
+        List<BigInteger> futureDates = paymentDates.stream()
+                .filter(date -> date.longValue() > currentTimeSec)
+                .sorted()  // 오름차순 정렬
+                .toList();
+
+        if (futureDates.isEmpty()) {
+            return "남은 납부일이 없습니다";
+        }
+
+        // 가장 빠른 미래 납부일 (정렬했으므로 첫 번째 요소)
+        BigInteger nextDate = futureDates.get(0);
+
+        // 날짜 포맷팅
+        LocalDateTime nextDateTime = LocalDateTime.ofInstant(
+                Instant.ofEpochSecond(nextDate.longValue()),
+                ZoneId.systemDefault()
+        );
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        return nextDateTime.format(formatter);
     }
 }

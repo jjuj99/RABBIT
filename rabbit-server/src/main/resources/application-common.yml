@@ -194,10 +194,18 @@ blockchain:
   repaymentScheduler:
     address: ${REPAYMENT_SCHEDULER}
 
+  network:
+    chainId: 11155111  # Sepolia 테스트넷 체인 ID
+
+  gas:
+    price: 20000000000
+    limit: 4500000
+
 # Pinata (IPFS) 설정
 pinata:
   apiKey: ${PINATA_API_KEY}
   secretKey: ${PINATA_API_SECRET}
+
 # 파일 설정
 app:
   file:

@@ -41,5 +41,5 @@ public class LentDetailResponseDTO {
     private int accel; // 기한이익상실
     private double accelDir; // 기한이익상실 연체이자율
     private String addTerms; // 추가 약정 사항
-    private List<BorrowEventDTO> eventList; // 이벤트 내역
+    private List<ContractEventDTO> eventList; // 이벤트 내역
 }

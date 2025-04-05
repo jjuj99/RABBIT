@@ -194,25 +194,6 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "originalTokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "appendixTokenId",
-        "type": "uint256"
-      }
-    ],
-    "name": "AppendixNFTBundled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
         "name": "appendixTokenId",
         "type": "uint256"
       },
@@ -221,6 +202,12 @@
         "internalType": "uint256",
         "name": "originalTokenId",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
       },
       {
         "indexed": true,
@@ -1430,6 +1417,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "schedulerAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -1443,6 +1443,19 @@
       }
     ],
     "name": "setApprovalForAll",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_schedulerAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setSchedulerAddress",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

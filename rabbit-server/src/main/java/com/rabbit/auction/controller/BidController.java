@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,11 +26,11 @@ public class BidController {
     @BidControllerSwagger.AddBidApi
     @PostMapping
     public ResponseEntity<CustomApiResponse<?>> addBid(@Valid @RequestBody BidRequestDTO bidRequest,
-                                                       @PathVariable("auctionId") Integer auctionId) {
-        // JWT로 변경해야함
-        Integer userId=3;
+                                                       @PathVariable("auctionId") Integer auctionId,
+                                                       Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
 
-        bidService.addBid(bidRequest, auctionId, userId);
+        bidService.addBid(bidRequest, auctionId, Integer.parseInt(userId));
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(CustomApiResponse.success(MessageResponse.of("입찰 성공했습니다.")));
@@ -37,7 +38,9 @@ public class BidController {
 
     @BidControllerSwagger.GetBidListApi
     @GetMapping
-    public ResponseEntity<CustomApiResponse<?>> getBids(@PathVariable("auctionId") Integer auctionId) {
+    public ResponseEntity<CustomApiResponse<?>> getBids(@PathVariable("auctionId") Integer auctionId, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+
         List<BidResponseDTO> result = bidService.getBids(auctionId);
 
         return ResponseEntity.ok(CustomApiResponse.success(result));

@@ -91,12 +91,12 @@ public class LoanController {
     }
 
     @GetMapping("/lent/available-auctions")
-    public ResponseEntity<CustomApiResponse<?>> getAuctionAvailable(@Valid PageRequestDTO pageRequest) {
-        Integer userId=3;
+    public ResponseEntity<CustomApiResponse<?>> getAuctionAvailable(@Valid PageRequestDTO pageRequest, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
 
-        Pageable pageable = pageRequest.toPageable("bidDate", Sort.Direction.DESC);
+        Pageable pageable = pageRequest.toPageable();
 
-        PageResponseDTO<LentAuctionResponseDTO> response = loanService.getAuctionAvailable(userId, pageable);
+        PageResponseDTO<LentAuctionResponseDTO> response = loanService.getAuctionAvailable(Integer.parseInt(userId), pageable);
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }

@@ -39,8 +39,8 @@ interface IRepaymentScheduler {
     // 차용증 NFT 새로운 상환 일정 생성 (토큰 ID, 남은 원금, 다음 납부일)
     event RepaymentScheduleCreated(uint256 tokenId, uint256 remainingPrincipal, uint256 nextMpDt); 
 
-    // 정기 상환 처리 완료 (토큰 ID, 납부 금액, 남은 원금, 다음 납부일)
-    event RepaymentProcessed(uint256 tokenId, uint256 amount, uint256 remainingPrincipal, uint256 nextMpDt); 
+    // 정기 상환 처리 완료 (토큰 ID, 납부 금액, 남은 원금, 다음 납부일, 채무자, 채권자자)
+    event RepaymentProcessed(uint256 tokenId, uint256 amount, uint256 remainingPrincipal, uint256 nextMpDt, address from, address to); 
 
     // 상환 완료 처리 (토큰 ID)
     event RepaymentCompleted(uint256 tokenId); 
@@ -58,13 +58,13 @@ interface IRepaymentScheduler {
 
     // ========== 연체 관련 이벤트 ==========
     // 상환 연체 발생 (토큰 ID, 연체 시작일, 총 연체 횟수)
-    event RepaymentOverdue(uint256 indexed tokenId, uint256 overdueStartDate, uint256 totalDefaultCount);
+    event RepaymentOverdue(uint256 indexed tokenId, uint256 overdueStartDate, uint256 totalDefaultCount, uint256 aoi);
 
     // 연체 이자 누적 (토큰 ID, 신규 발생 이자, 총 누적 연체 이자)
     event OverdueInterestAccumulated(uint256 indexed tokenId, uint256 newInterest, uint256 totalAccumulatedInterest);
 
-    // 연체 해결 완료 (토큰 ID, 지불된 연체 금액)
-    event OverdueResolved(uint256 indexed tokenId, uint256 paidOverdueAmount);
+    // 연체 해결 완료 (토큰 ID, 지불된 연체 금액, 채무자, 채권자자)
+    event OverdueResolved(uint256 indexed tokenId, uint256 paidOverdueAmount, address indexed from, address indexed to);
 
     // 기한이익상실 조건 도달 (토큰 ID, 적용 최대 이자율)
     event AccelReached(uint256 indexed tokenId, uint256 maxInterestRate);

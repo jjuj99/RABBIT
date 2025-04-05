@@ -1,10 +1,10 @@
-// scripts/5_deploy_repayment_scheduler.js
+// scripts/5_deploy_promissory_note_auction.js
 const hre = require("hardhat");
 const fs = require("fs");
 const path = require("path");
 
 async function main() {
-  console.log("Deploying RepaymentScheduler...");
+  console.log("Deploying PromissoryNoteAuction...");
 
   const [deployer] = await ethers.getSigners();
   console.log("Deploying with account:", deployer.address);
@@ -33,21 +33,21 @@ async function main() {
   console.log("Using RabbitCoin address:", rabbitCoinAddress);
   console.log("Using PromissoryNote address:", promissoryNoteAddress);
 
-  // RepaymentScheduler 컨트랙트 팩토리 가져오기
-  const RepaymentScheduler = await ethers.getContractFactory("RepaymentScheduler");
+  // PromissoryNoteAuction 컨트랙트 팩토리 가져오기
+  const PromissoryNoteAuction = await ethers.getContractFactory("PromissoryNoteAuction");
   
-  // 컨트랙트 배포 (PromissoryNote와 RabbitCoin 주소 전달)
-  const repaymentScheduler = await RepaymentScheduler.deploy(
-    promissoryNoteAddress,
-    rabbitCoinAddress
+  // 컨트랙트 배포 (RabbitCoin과 PromissoryNote 주소 전달)
+  const promissoryNoteAuction = await PromissoryNoteAuction.deploy(
+    rabbitCoinAddress,
+    promissoryNoteAddress
   );
   
   // 트랜잭션 마이닝 대기
-  await repaymentScheduler.waitForDeployment();
+  await promissoryNoteAuction.waitForDeployment();
 
   // 배포된 컨트랙트 주소 출력
-  const repaymentSchedulerAddress = await repaymentScheduler.getAddress();
-  console.log("RepaymentScheduler contract deployed to:", repaymentSchedulerAddress);
+  const promissoryNoteAuctionAddress = await promissoryNoteAuction.getAddress();
+  console.log("PromissoryNoteAuction contract deployed to:", promissoryNoteAuctionAddress);
   
   // 배포 주소 파일 업데이트
   try {
@@ -58,7 +58,7 @@ async function main() {
       // 파일이 없는 경우 새로 생성
     }
     
-    deploymentData.repaymentSchedulerAddress = repaymentSchedulerAddress;
+    deploymentData.promissoryNoteAuctionAddress = promissoryNoteAuctionAddress;
     
     fs.writeFileSync(
       path.join(__dirname, "../deployment-addresses.json"),
@@ -70,13 +70,13 @@ async function main() {
   }
   
   console.log("To verify the contract on Etherscan, run the following command:");
-  console.log(`npx hardhat verify --network sepolia ${repaymentSchedulerAddress} ${promissoryNoteAddress} ${rabbitCoinAddress}`);
+  console.log(`npx hardhat verify --network sepolia ${promissoryNoteAuctionAddress} ${rabbitCoinAddress} ${promissoryNoteAddress}`);
 
-  // 승인 설정: PromissoryNote가 RepaymentScheduler에게 소각 권한 부여
-  console.log("Setting burn authorization for scheduler contract...");
+  // 승인 설정: PromissoryNote가 PromissoryNoteAuction에게 소각 권한 부여
+  console.log("Setting burn authorization for auction contract...");
   try {
     const promissoryNoteContract = await ethers.getContractAt("PromissoryNote", promissoryNoteAddress);
-    const authTx = await promissoryNoteContract.addBurnAuthorization(repaymentSchedulerAddress);
+    const authTx = await promissoryNoteContract.addBurnAuthorization(promissoryNoteAuctionAddress);
     await authTx.wait();
     console.log("Burn authorization set successfully!");
   } catch (error) {

@@ -24,12 +24,12 @@ async function main() {
 
   // ============ 여기에 데이터를 입력하세요 ============
 
-  const originalTokenId = 5;
+  const originalTokenId = 3;
 
   // 양도인 정보
   const grantorInfo = {
     grantorSign: "양도인 서명: 암호화된 서명",
-    grantorName: "양도인 이름",
+    grantorName: "이름",
     grantorWalletAddress: "계좌",
     grantorInfoHash: ethers.keccak256(ethers.toUtf8Bytes("양도인 개인정보 해시")),
   };
@@ -37,12 +37,12 @@ async function main() {
   // 양수인 정보
   const granteeInfo = {
     granteeSign: "양수인 서명: 암호화된 서명",
-    granteeName: "양수인 이름",
+    granteeName: "이름",
     granteeWalletAddress: "계좌",
     granteeInfoHash: ethers.keccak256(ethers.toUtf8Bytes("양수인 개인정보 해시")),
   };
 
-  const remainingLoanAmount = 1000000; // 남은 원금
+  const remainingLoanAmount = 10000000; // 남은 원금
   const contractDate = new Date().toISOString().split('T')[0];
   const originalTextHash = ethers.keccak256(ethers.toUtf8Bytes("계약서 원문 내용"));
 

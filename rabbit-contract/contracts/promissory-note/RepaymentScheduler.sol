@@ -143,7 +143,7 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
             info.overdueInfo.defCnt++;
             info.overdueInfo.totalDefCnt++;
 
-            emit RepaymentOverdue(tokenId, info.nextMpDt, info.overdueInfo.totalDefCnt);
+            emit RepaymentOverdue(tokenId, info.nextMpDt, info.overdueInfo.totalDefCnt, info.overdueInfo.aoi);
             
             // 기한이익상실 횟수 초과 시 최대 이자율 적용
             if (info.overdueInfo.defCnt >= info.overdueInfo.accel) {
@@ -231,7 +231,7 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
             info.overdueInfo.currentIr = info.ir;
             info.overdueInfo.defCnt = 0;
             
-            emit OverdueResolved(tokenId, overdueAmount);
+            emit OverdueResolved(tokenId, overdueAmount, info.drWalletAddress, currentOwner);
         }
 
         // 남은 원금 업데이트
@@ -267,7 +267,7 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
             info.nextMpDt = calculateNextPaymentDateFromCurrent(info.nextMpDt, info.mpDt);
         }
         
-        emit RepaymentProcessed(tokenId, paymentAmount, info.remainingPrincipal, info.nextMpDt);
+        emit RepaymentProcessed(tokenId, paymentAmount, info.remainingPrincipal, info.nextMpDt, info.drWalletAddress, currentOwner);
         
         // 상환 완료 NFT 처리
         if (info.remainingPrincipal == 0 || info.remainingPayments == 0) {

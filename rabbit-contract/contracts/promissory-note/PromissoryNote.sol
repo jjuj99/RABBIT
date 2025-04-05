@@ -8,9 +8,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "./interfaces/IPromissoryNote.sol";
+import "./interfaces/IRepaymentScheduler.sol";
 
 contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
     uint256 public tokenIdCounter;
+    address public schedulerAddress;
 
     // tokenId, metadata
     mapping(uint256 => PromissoryMetadata) private tokenMetadata;
@@ -25,6 +27,10 @@ contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
 
     constructor() ERC721("PromissoryNote", "PNFT") EIP712("PromissoryNote", "1") Ownable(msg.sender) {
         tokenIdCounter = 1;
+    }
+
+    function setSchedulerAddress(address _schedulerAddress) external onlyOwner {
+        schedulerAddress = _schedulerAddress;
     }
 
     function addBurnAuthorization(address authorized) external onlyOwner {
@@ -56,6 +62,10 @@ contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
         uint256 newTokenId = tokenIdCounter;
         _safeMint(to, newTokenId);
         tokenMetadata[newTokenId] = metadata;
+
+        // 상환정보 등록
+        IRepaymentScheduler scheduler = IRepaymentScheduler(schedulerAddress);
+        scheduler.registerRepaymentSchedule(newTokenId);
 
         emit PromissoryNoteMinted(newTokenId, to, metadata);
         tokenIdCounter++;

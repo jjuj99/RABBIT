@@ -3,6 +3,8 @@ const { ethers } = require("hardhat");
 
 describe("PromissoryNote Contract", function () {
     let promissoryNote;
+    let repaymentScheduler;
+    let rabbitCoin;
     let owner;
     let creditor;
     let debtor;
@@ -23,10 +25,10 @@ describe("PromissoryNote Contract", function () {
             drWalletAddress: "",  // 배포 시 설정
             drInfoHash: "0x1234debtorInfoHash",
         },
-        la: ethers.parseEther("10"),  // 10 ETH 차용 금액
+        la: ethers.parseEther("100"),
         ir: 500,  // 5.00% 이자율 
         lt: 12,   // 12개월
-        repayType: "만기일시상환",
+        repayType: "EPIP",  // 원리금 균등 상환
         matDt: "2025-04-03",
         mpDt: 25,  // 매월 25일
         dir: 1800, // 18.00% 연체 이자율
@@ -48,10 +50,29 @@ describe("PromissoryNote Contract", function () {
         mockMetadata.crInfo.crWalletAddress = creditor.address;
         mockMetadata.drInfo.drWalletAddress = debtor.address;
 
-        // 컨트랙트 배포
+        // RabbitCoin 컨트랙트 배포 (간단한 ERC20 구현)
+        const RabbitCoin = await ethers.getContractFactory("RabbitCoin");
+        rabbitCoin = await RabbitCoin.deploy(1000);
+        await rabbitCoin.waitForDeployment();
+
+        // PromissoryNote 컨트랙트 배포
         const PromissoryNote = await ethers.getContractFactory("PromissoryNote");
         promissoryNote = await PromissoryNote.deploy();
         await promissoryNote.waitForDeployment();
+
+        // RepaymentScheduler 컨트랙트 배포
+        const RepaymentScheduler = await ethers.getContractFactory("RepaymentScheduler");
+        repaymentScheduler = await RepaymentScheduler.deploy(
+            await promissoryNote.getAddress(),
+            await rabbitCoin.getAddress()
+        );
+        await repaymentScheduler.waitForDeployment();
+
+        // PromissoryNote에 스케줄러 주소 설정
+        await promissoryNote.setSchedulerAddress(await repaymentScheduler.getAddress());
+
+        // 스케줄러에 소각 권한 부여
+        await promissoryNote.addBurnAuthorization(await repaymentScheduler.getAddress());
     });
 
     describe("기본 기능 테스트", function () {
@@ -106,6 +127,182 @@ describe("PromissoryNote Contract", function () {
             await expect(
                 promissoryNote.connect(creditor).mint(mockMetadata, creditor.address)
             ).to.be.revertedWithCustomError(promissoryNote, "OwnableUnauthorizedAccount");
+        });
+    });
+
+    describe("NFT 발행 및 상환정보 등록 테스트", function () {
+        it("NFT 발행 시 상환정보가 올바르게 등록되어야 함", async function () {
+            // NFT 발행
+            const tx = await promissoryNote.mint(mockMetadata, creditor.address);
+            const receipt = await tx.wait();
+
+            // 이벤트에서 tokenId 추출
+            const mintEvent = receipt.logs.find(log => {
+                try {
+                    const parsedLog = promissoryNote.interface.parseLog(log);
+                    return parsedLog && parsedLog.name === "PromissoryNoteMinted";
+                } catch (e) {
+                    return false;
+                }
+            });
+
+            expect(mintEvent).to.not.be.undefined;
+            const tokenId = promissoryNote.interface.parseLog(mintEvent).args[0];
+
+            // 상환정보 등록 이벤트 확인
+            const schedulerEvents = receipt.logs.filter(log => {
+                try {
+                    const parsedLog = repaymentScheduler.interface.parseLog(log);
+                    return parsedLog && parsedLog.name === "RepaymentScheduleCreated";
+                } catch (e) {
+                    return false;
+                }
+            });
+
+            expect(schedulerEvents.length).to.be.greaterThan(0);
+
+            // 등록된 상환정보 조회 및 검증
+            const repaymentInfo = await repaymentScheduler.getRepaymentInfo(tokenId);
+
+            expect(repaymentInfo.tokenId).to.equal(tokenId);
+            expect(repaymentInfo.initialPrincipal).to.equal(mockMetadata.la);
+            expect(repaymentInfo.remainingPrincipal).to.equal(mockMetadata.la);
+            expect(repaymentInfo.ir).to.equal(mockMetadata.ir);
+            expect(repaymentInfo.dir).to.equal(mockMetadata.dir);
+            expect(repaymentInfo.mpDt).to.equal(mockMetadata.mpDt);
+            expect(repaymentInfo.totalPayments).to.equal(mockMetadata.lt);
+            expect(repaymentInfo.remainingPayments).to.equal(mockMetadata.lt);
+            expect(repaymentInfo.repayType).to.equal(mockMetadata.repayType);
+            expect(repaymentInfo.drWalletAddress).to.equal(mockMetadata.drInfo.drWalletAddress);
+            expect(repaymentInfo.activeFlag).to.be.true;
+        });
+
+        it("활성 상환 목록에 토큰 ID가 추가되어야 함", async function () {
+            // 초기 활성 상환 목록 확인
+            const initialActiveRepayments = await repaymentScheduler.getActiveRepayments();
+            expect(initialActiveRepayments.length).to.equal(0);
+
+            // NFT 발행
+            const tx = await promissoryNote.mint(mockMetadata, creditor.address);
+            const receipt = await tx.wait();
+
+            // 이벤트에서 tokenId 추출
+            const events = receipt.logs.filter(log => {
+                try {
+                    return promissoryNote.interface.parseLog(log).name === "PromissoryNoteMinted";
+                } catch (e) {
+                    return false;
+                }
+            });
+
+            const tokenId = promissoryNote.interface.parseLog(events[0]).args[0];
+
+            // 활성 상환 목록 업데이트 확인
+            const updatedActiveRepayments = await repaymentScheduler.getActiveRepayments();
+            expect(updatedActiveRepayments.length).to.equal(1);
+            expect(updatedActiveRepayments[0]).to.equal(tokenId);
+        });
+
+        it("원리금 균등 상환(EPIP) 방식에서 고정 납부액이 올바르게 계산되어야 함", async function () {
+            // NFT 발행 (원리금 균등 상환 타입으로 설정된 mockMetadata 사용)
+            const tx = await promissoryNote.mint(mockMetadata, creditor.address);
+            const receipt = await tx.wait();
+
+            const events = receipt.logs.filter(log => {
+                try {
+                    return promissoryNote.interface.parseLog(log).name === "PromissoryNoteMinted";
+                } catch (e) {
+                    return false;
+                }
+            });
+
+            const tokenId = promissoryNote.interface.parseLog(events[0]).args[0];
+
+            // 상환정보 조회
+            const repaymentInfo = await repaymentScheduler.getRepaymentInfo(tokenId);
+
+            // EPIP 방식에서는 fixedPaymentAmount가 계산되어 설정되어야 함
+            expect(repaymentInfo.fixedPaymentAmount).to.be.greaterThan(0);
+
+            // JavaScript에서 동일한 계산 로직 구현
+            // RepaymentScheduler의 calculateFixedPaymentForEPIP 함수와 동일한 로직
+            function calculateFixedPaymentForEPIPJS(principal, annualRate, months) {
+                // annualRate가 0이면 원금/개월 수로 계산
+                if (annualRate === 0n) return principal / BigInt(months);
+
+                const precision = 1000000000000n; // 1e12
+                const monthlyRate = (BigInt(annualRate) * precision) / 12n / 10000n;
+
+                // (1 + monthlyRate)^months 계산
+                function calculatePower(base, exponent, precision) {
+                    if (exponent === 0) {
+                        return precision;
+                    }
+
+                    let result = precision;
+                    let exp = exponent;
+                    let baseVal = base;
+
+                    while (exp > 0) {
+                        if (exp % 2n === 1n) {
+                            result = (result * baseVal) / precision;
+                        }
+                        baseVal = (baseVal * baseVal) / precision;
+                        exp = exp / 2n;
+                    }
+
+                    return result;
+                }
+
+                const onePlusRateToN = calculatePower(precision + monthlyRate, BigInt(months), precision);
+                const numerator = (principal * monthlyRate * onePlusRateToN) / (precision * precision);
+                const denominator = onePlusRateToN - precision;
+
+                return numerator / denominator;
+            }
+
+            // 컨트랙트와 동일한 입력값으로 계산
+            const expectedPayment = calculateFixedPaymentForEPIPJS(
+                mockMetadata.la,
+                BigInt(mockMetadata.ir),
+                BigInt(mockMetadata.lt)
+            );
+
+            console.log("Expected Payment:", expectedPayment.toString());
+            console.log("Actual Payment:", repaymentInfo.fixedPaymentAmount.toString());
+
+            // 계산된 값과 컨트랙트에서 계산한 값이 동일한지 확인
+            // 소수점 처리 등으로 인한 약간의 차이는 허용 (1% 이내)
+            const tolerance = expectedPayment * 1n / 100n;
+            const lowerBound = expectedPayment - tolerance;
+            const upperBound = expectedPayment + tolerance;
+
+            expect(repaymentInfo.fixedPaymentAmount).to.be.gte(lowerBound);
+            expect(repaymentInfo.fixedPaymentAmount).to.be.lte(upperBound);
+        });
+    });
+
+    describe("스케줄러 주소 설정 오류 시나리오", function () {
+        it("스케줄러 주소가 설정되지 않은 경우 NFT 발행이 실패해야 함", async function () {
+            // 새로운 PromissoryNote 배포 (스케줄러 주소 설정 X)
+            const PromissoryNote = await ethers.getContractFactory("PromissoryNote");
+            const newPromissoryNote = await PromissoryNote.deploy();
+            await newPromissoryNote.waitForDeployment();
+
+            // 스케줄러 주소를 설정하지 않고 NFT 발행 시도
+            await expect(
+                newPromissoryNote.mint(mockMetadata, creditor.address)
+            ).to.be.reverted;
+        });
+
+        it("잘못된 스케줄러 주소로 설정된 경우 NFT 발행이 실패해야 함", async function () {
+            // 스케줄러 주소를 잘못된 주소로 설정
+            await promissoryNote.setSchedulerAddress(ethers.ZeroAddress);
+
+            // NFT 발행 시도
+            await expect(
+                promissoryNote.mint(mockMetadata, creditor.address)
+            ).to.be.reverted;
         });
     });
 
@@ -273,7 +470,7 @@ describe("PromissoryNote Contract", function () {
 
             // 부속 NFT 메타데이터 조회
             const metadata = await promissoryNote.getAppendixMetadata(appendixTokenId);
-            
+
             // 메타데이터 검증
             expect(metadata.tokenId).to.equal(tokenId);
             expect(metadata.grantorName).to.equal(appendixMetadata.grantorName);

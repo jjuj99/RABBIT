@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -18,6 +19,7 @@ import java.util.List;
  * 대출 상환 계산을 위한 유틸리티 클래스
  */
 @Slf4j
+@Component
 public class LoanUtil {
 
     private static final int SCALE = 10; // 계산 정밀도

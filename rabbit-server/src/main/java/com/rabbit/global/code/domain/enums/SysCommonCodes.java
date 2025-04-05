@@ -352,6 +352,14 @@ public class SysCommonCodes {
                             new IllegalArgumentException("유효하지 않은 상환 방식입니다: " + codeName));
         }
 
+        public static String toCalculationType(String repaymentCode) {
+            return switch (repaymentCode) {
+                case "EPIP" -> "EQUAL_PAYMENT";
+                case "EPP"  -> "EQUAL_PRINCIPAL";
+                case "BP"   -> "BULLET";
+                default     -> throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "지원되지 않는 상환 방식입니다: " + repaymentCode);
+            };
+        }
     }
 
     @Getter

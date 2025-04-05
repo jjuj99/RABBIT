@@ -1,10 +1,15 @@
 package com.rabbit.loan.controller;
 
+import com.rabbit.global.request.PageRequestDTO;
 import com.rabbit.global.response.CustomApiResponse;
+import com.rabbit.global.response.PageResponseDTO;
 import com.rabbit.loan.domain.dto.response.*;
 import com.rabbit.loan.service.LoanService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
@@ -81,6 +86,17 @@ public class LoanController {
     public ResponseEntity<CustomApiResponse<LentDetailResponseDTO>> lentDetail(@PathVariable int contractId, Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
         LentDetailResponseDTO response = loanService.lentDetail(contractId, Integer.parseInt(userId));
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
+
+    @GetMapping("/lent/available-auctions")
+    public ResponseEntity<CustomApiResponse<?>> getAuctionAvailable(@Valid PageRequestDTO pageRequest) {
+        Integer userId=3;
+
+        Pageable pageable = pageRequest.toPageable("bidDate", Sort.Direction.DESC);
+
+        PageResponseDTO<LentAuctionResponseDTO> response = loanService.getAuctionAvailable(userId, pageable);
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }

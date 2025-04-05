@@ -8,6 +8,7 @@ import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
 import com.rabbit.auction.domain.entity.Auction;
 import com.rabbit.auction.repository.BidRepository;
 import com.rabbit.bankApi.service.BankService;
+import com.rabbit.blockchain.domain.dto.RepaymentInfo;
 import com.rabbit.blockchain.domain.dto.response.AppendixMetadataDTO;
 import com.rabbit.blockchain.mapper.AppendixMetadataMapper;
 import com.rabbit.blockchain.service.PromissoryNoteAuctionService;
@@ -28,6 +29,7 @@ import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.response.PageResponseDTO;
 import com.rabbit.global.util.DateTimeUtils;
+import com.rabbit.global.util.LoanUtil;
 import com.rabbit.mail.service.MailService;
 import com.rabbit.global.util.SignatureUtil;
 import com.rabbit.notification.domain.dto.request.NotificationRequestDTO;
@@ -71,6 +73,7 @@ public class AuctionService {
     private final ContractService contractService;
     private final PromissoryNoteService promissoryNoteService;
     private final BankService bankService;
+    private final LoanUtil loanUtil;
 
     private final SysCommonCodeService sysCommonCodeService;
     private final RepaymentSchedulerService repaymentSchedulerService;
@@ -129,7 +132,7 @@ public class AuctionService {
                         PromissoryNote.PromissoryMetadata metadata = promissoryNoteService.getPromissoryMetadata(BigInteger.valueOf(dto.getAuctionId()));
 
                         // 상환 정보 조회 (연체 횟수, 남은 원금)
-                        RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(dto.getTokenId());
+                        RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(dto.getTokenId());
 
                         // 채무자 조회 및 신용 점수 조회
                         User debtor = contractService.getDebtorByTokenId(BigInteger.valueOf(dto.getAuctionId()));
@@ -137,15 +140,31 @@ public class AuctionService {
 
                         ZonedDateTime matDt = DateTimeUtils.toZonedDateTimeAtEndOfDay(metadata.matDt);
 
+
+                        // 만기 수취액 계산
+                        BigDecimal ir = new BigDecimal(metadata.ir).divide(BigDecimal.valueOf(10000));
+
+                        // 만기수취액 계산
+                        BigDecimal totalAmount = loanUtil.calculateTotalRepaymentAmount(
+                                new BigDecimal(repaymentInfo.remainingPrincipal),
+                                ir,
+                                repaymentInfo.remainingPayments.intValue(),
+                                SysCommonCodes.Repayment.toCalculationType(metadata.repayType),
+                                LoanUtil.RoundingStrategy.HALF_UP,
+                                LoanUtil.TruncationStrategy.WON,
+                                LoanUtil.LegalLimits.getDefaultLimits()
+                        );
+
+
                         return AuctionResponseDTO.builder()
                                 .auctionId(dto.getAuctionId())
                                 .price(dto.getPrice())
                                 .endDate(dto.getEndDate())
                                 .createdAt(dto.getCreatedAt())
-                                .ir(new BigDecimal(metadata.ir))
+                                .ir(ir)
                                 .tokenId(dto.getTokenId())
                                 .repayType(SysCommonCodes.Repayment.fromCode(metadata.repayType).getCodeName())  // 한글 상환 방식
-                                .totalAmount(50000L) // 총 수취액 로직 필요 시 계산 함수 넣기
+                                .totalAmount(totalAmount.longValue()) // 총 수취액 로직 필요 시 계산 함수 넣기
                                 .matDt(matDt)
                                 .dir(new BigDecimal(metadata.dir))
                                 .la(repaymentInfo.remainingPrincipal.longValue())
@@ -263,20 +282,35 @@ public class AuctionService {
 
         //블록체인에서 직접 읽어온 값 추가 필요
         try {
-            PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(BigInteger.valueOf(3));
+            PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(auction.getTokenId());
             RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(auction.getTokenId());
+
+            BigDecimal ir = new BigDecimal(promissoryMetadata.ir).divide(BigDecimal.valueOf(10000));
+            BigDecimal dir = new BigDecimal(promissoryMetadata.dir).divide(BigDecimal.valueOf(10000));
+            BigDecimal earlyPayFee = new BigDecimal(promissoryMetadata.earlyPayFee).divide(BigDecimal.valueOf(10000));
+
+            // 만기수취액 계산
+            BigDecimal totalAmount = loanUtil.calculateTotalRepaymentAmount(
+                    new BigDecimal(repaymentInfo.remainingPrincipal),
+                    ir,
+                    repaymentInfo.remainingPayments.intValue(),
+                    SysCommonCodes.Repayment.toCalculationType(promissoryMetadata.repayType),
+                    LoanUtil.RoundingStrategy.HALF_UP,
+                    LoanUtil.TruncationStrategy.WON,
+                    LoanUtil.LegalLimits.getDefaultLimits()
+            );
 
             return AuctionDetailResponseDTO.builder()
                     .auctionId(auction.getAuctionId())
                     .price(auction.getPrice())  //현재 가격
-                    .ir(new BigDecimal(promissoryMetadata.ir))
+                    .ir(ir)
                     .repayType(SysCommonCodes.Repayment.fromCode(promissoryMetadata.repayType).getCodeName())
-                    .totalAmount(50000L)  //만기 수취액?
+                    .totalAmount(totalAmount.longValue())
                     .matDt(DateTimeUtils.toZonedDateTimeAtEndOfDay(promissoryMetadata.matDt))
-                    .dir(new BigDecimal(promissoryMetadata.dir))
+                    .dir(dir)
                     .la(repaymentInfo.remainingPrincipal.longValue())  //원금
                     .earlypayFlag(promissoryMetadata.earlyPayFlag)
-                    .earlypayFee(new BigDecimal(promissoryMetadata.earlyPayFee))
+                    .earlypayFee(earlyPayFee)
                     .creditScore(creditScore)  //신용 점수
                     .defCnt(repaymentInfo.defCnt.intValue())   //연체 횟수
                     .endDate(auction.getEndDate())

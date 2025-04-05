@@ -21,4 +21,6 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer>, Auct
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM Auction a WHERE a.auctionId = :auctionId")
     Optional<Auction> findByIdForUpdate(@Param("auctionId") Integer auctionId);
+
+    boolean existsByTokenIdAndAuctionStatus(BigInteger tokenId, SysCommonCodes.Auction auction);
 }

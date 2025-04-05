@@ -1,21 +1,35 @@
 package com.rabbit.loan.service;
 
+import com.rabbit.auction.repository.AuctionRepository;
+import com.rabbit.bankApi.service.BankService;
+import com.rabbit.blockchain.domain.dto.RepaymentInfo;
 import com.rabbit.blockchain.service.PromissoryNoteService;
 import com.rabbit.blockchain.service.RepaymentSchedulerService;
 import com.rabbit.blockchain.wrapper.PromissoryNote;
 import com.rabbit.blockchain.wrapper.RepaymentScheduler;
+import com.rabbit.contract.domain.entity.Contract;
+import com.rabbit.contract.repository.ContractRepository;
+import com.rabbit.contract.service.ContractService;
+import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
+import com.rabbit.global.response.PageResponseDTO;
+import com.rabbit.global.util.DateTimeUtils;
+import com.rabbit.global.util.LoanUtil;
+import com.rabbit.loan.controller.LentAuctionResponseDTO;
 import com.rabbit.loan.domain.dto.response.*;
 import com.rabbit.loan.util.DataUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -24,6 +38,10 @@ public class LoanService {
 
     private final PromissoryNoteService promissoryNoteService;
     private final RepaymentSchedulerService repaymentSchedulerService;
+    private final ContractRepository contractRepository;
+    private final AuctionRepository auctionRepository;
+    private final BankService bankService;
+    private final LoanUtil loanUtil;
 
     public BorrowSummaryResponseDTO borrowSummary(int userId) {
         // 1. 유저 Id로 해당 유저가 채무자인 차용증 리스트를 호출한다.
@@ -287,5 +305,74 @@ public class LoanService {
             log.error(e.getMessage());
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "NFT 조회 중 오류가 발생했습니다.");
         }
+    }
+
+    public PageResponseDTO<LentAuctionResponseDTO> getAuctionAvailable(Integer userId, Pageable pageable) {
+        List<Contract> contracts = contractRepository.findByCreditorId(userId);
+
+        // 이미 경매중인 차용증 제외
+        List<LentAuctionResponseDTO> content = contracts.stream()
+                .filter(contract -> !auctionRepository.existsByTokenIdAndAuctionStatus(
+                        contract.getTokenId(), SysCommonCodes.Auction.ING))
+                .map(contract -> {
+                    try {
+                        PromissoryNote.PromissoryMetadata metadata = promissoryNoteService.getPromissoryMetadata(contract.getTokenId());
+                        RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(contract.getTokenId());
+
+                        // 채무자 신용점수 조회
+                        String creditScore = bankService.getCreditScore(contract.getDebtor().getUserId());
+
+                        BigDecimal ir = new BigDecimal(metadata.ir).divide(BigDecimal.valueOf(10000));
+                        BigDecimal dir = new BigDecimal(metadata.dir).divide(BigDecimal.valueOf(10000));
+                        BigDecimal earlyPayFee = new BigDecimal(metadata.earlyPayFee).divide(BigDecimal.valueOf(10000));
+
+                        // 만기수취액 계산
+                        BigDecimal totalAmount = loanUtil.calculateTotalRepaymentAmount(
+                                new BigDecimal(repaymentInfo.remainingPrincipal),
+                                ir,
+                                repaymentInfo.remainingPayments.intValue(),
+                                SysCommonCodes.Repayment.toCalculationType(metadata.repayType),
+                                LoanUtil.RoundingStrategy.HALF_UP,
+                                LoanUtil.TruncationStrategy.WON,
+                                LoanUtil.LegalLimits.getDefaultLimits()
+                        );
+
+                        return LentAuctionResponseDTO.builder()
+                                .crId(contract.getCreditor().getUserId())
+                                .crName(contract.getCreditor().getUserName())
+                                .matDt(DateTimeUtils.toZonedDateTimeAtEndOfDay(metadata.matDt))
+                                .tokenId(contract.getTokenId())
+                                .la(repaymentInfo.remainingPrincipal.longValue())
+                                .ir(ir)
+                                .totalAmount(totalAmount.longValue()) // 수취액 로직 필요 시 수정
+                                .repayType(SysCommonCodes.Repayment.fromCode(metadata.repayType).getCodeName())
+                                .dir(dir)
+                                .earlypayFlag(metadata.earlyPayFlag)
+                                .earlypayFee(earlyPayFee)
+                                .defCnt(repaymentInfo.defCnt.intValue())
+                                .creditScore(creditScore)
+                                .build();
+                    } catch (Exception e) {
+                        log.warn("[채권자 NFT 조회 실패] tokenId={}", contract.getTokenId(), e);
+                        throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "경매 가능한 차용증 조회에 실패했습니다.");
+                    }
+                })
+                .filter(Objects::nonNull)
+                .toList();
+
+        int offset = (int) pageable.getOffset();
+        int pageSize = pageable.getPageSize();
+
+        List<LentAuctionResponseDTO> paged = content.stream()
+                .skip(offset)
+                .limit(pageSize)
+                .toList();
+
+        return PageResponseDTO.<LentAuctionResponseDTO>builder()
+                .content(paged)
+                .pageNumber(pageable.getPageNumber())
+                .pageSize(pageable.getPageSize())
+                .totalElements(content.size())
+                .build();
     }
 }

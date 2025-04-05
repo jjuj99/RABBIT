@@ -60,25 +60,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "reason",
-        "type": "string"
-      }
-    ],
-    "name": "BurnFailed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "uint256",
         "name": "tokenId",
@@ -220,6 +201,18 @@
         "internalType": "uint256",
         "name": "paidOverdueAmount",
         "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
       }
     ],
     "name": "OverdueResolved",
@@ -277,6 +270,12 @@
         "internalType": "uint256",
         "name": "totalDefaultCount",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "aoi",
+        "type": "uint256"
       }
     ],
     "name": "RepaymentOverdue",
@@ -308,6 +307,18 @@
         "internalType": "uint256",
         "name": "nextMpDt",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
       }
     ],
     "name": "RepaymentProcessed",
@@ -522,44 +533,51 @@
             "type": "bool"
           },
           {
-            "internalType": "bool",
-            "name": "overdueFlag",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint256",
-            "name": "overdueStartDate",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "overdueDays",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "aoi",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "defCnt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "accel",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "currentIr",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "totalDefCnt",
-            "type": "uint256"
+            "components": [
+              {
+                "internalType": "bool",
+                "name": "overdueFlag",
+                "type": "bool"
+              },
+              {
+                "internalType": "uint256",
+                "name": "overdueStartDate",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "overdueDays",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "aoi",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "defCnt",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "accel",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "currentIr",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "totalDefCnt",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IRepaymentScheduler.OverdueInfo",
+            "name": "overdueInfo",
+            "type": "tuple"
           }
         ],
         "internalType": "struct IRepaymentScheduler.RepaymentInfo",
@@ -754,44 +772,51 @@
         "type": "bool"
       },
       {
-        "internalType": "bool",
-        "name": "overdueFlag",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "overdueStartDate",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "overdueDays",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "aoi",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "defCnt",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "accel",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "currentIr",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "totalDefCnt",
-        "type": "uint256"
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "overdueFlag",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "overdueStartDate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "overdueDays",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "aoi",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "defCnt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accel",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "currentIr",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalDefCnt",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IRepaymentScheduler.OverdueInfo",
+        "name": "overdueInfo",
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",

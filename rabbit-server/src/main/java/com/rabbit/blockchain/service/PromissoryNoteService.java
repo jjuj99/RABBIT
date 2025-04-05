@@ -63,14 +63,15 @@ public class PromissoryNoteService {
 
             // 6. 디코딩 값이 비어있다면, 에러 반환
             if (decoded.isEmpty()) {
-                throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "1");
+                log.error("[PromissoryNote] ERROR : response decoed is Emtpy");
+                throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "NFT 조회 중 오류가 발생했습니다.");
             }
 
             // 7. 응답 반환
             return (PromissoryNote.PromissoryMetadata) decoded.get(0);
         } catch (Exception e) {
-            log.error("[PromissoryNote] ERROR : ", e);
-            throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "2");
+            log.error("[PromissoryNote] ERROR : {}", e.getMessage());
+            throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "NFT 조회 중 오류가 발생했습니다.");
         }
     }
 }

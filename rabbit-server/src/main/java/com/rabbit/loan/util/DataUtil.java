@@ -1,9 +1,11 @@
 package com.rabbit.loan.util;
 
-import com.rabbit.blockchain.wrapper.PromissoryNote;
 import com.rabbit.blockchain.wrapper.RepaymentScheduler;
+import com.rabbit.global.util.LoanUtil;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,6 +26,13 @@ public class DataUtil {
         return overdueFlag ? "연체 중" : "정상";
     }
 
+    // 연체 반환 타입
+    public static String getRepayTypeString(String type) {
+        if (type.equals("EPIP")) return "원리금 균등 상환";
+        else if (type.equals("EPP")) return "원금 균등 상환";
+        else return "만기 일시 상환";
+    }
+
     // 만기일까지 남은 일수를 계산
     public static int calculateRemainTerms(String matDt) {
         if (matDt == null || matDt.isBlank()) return 0;
@@ -31,57 +40,96 @@ public class DataUtil {
         LocalDate today = LocalDate.now();
         LocalDate maturityDate = LocalDate.parse(matDt); // ISO 8601 형식 (yyyy-MM-dd)
 
-        return (int) ChronoUnit.DAYS.between(today, maturityDate);
+        long days = ChronoUnit.DAYS.between(today, maturityDate);
+        return (int) Math.max(0, days); // 음수 방지
+    }
+
+    public static BigDecimal parseInterestRate(BigInteger ir) {
+        return new BigDecimal(ir).divide(BigDecimal.valueOf(10000), 10, RoundingMode.HALF_UP);
     }
 
     // 차용증의 이번달 상환액을 계산
     public static Long calculateMonthlyPayment(RepaymentScheduler.RepaymentInfo repayInfo) {
-        // 기본 상환액 계산 (상환 방식에 따라 다름)
-        BigInteger basePayment;
+        // 남은 원금 & 남은 납부 횟수
+        BigDecimal remainingPrincipal = new BigDecimal(repayInfo.remainingPrincipal);
+        int remainingMonths = repayInfo.remainingPayments.intValue();
+        BigDecimal annualRate = parseInterestRate(repayInfo.ir); // ir은 10000 = 1%
 
-        // 상환 방식에 따른 계산
-        if ("EPIP".equals(repayInfo.repayType)) {
-            // 원리금균등상환 - 고정 납부액
-            basePayment = repayInfo.fixedPaymentAmount;
-        } else if ("EPP".equals(repayInfo.repayType)) {
-            // 원금균등상환 - 원금 분할 + 이자
+        LoanUtil.RoundingStrategy roundingStrategy = LoanUtil.RoundingStrategy.HALF_UP;
+        LoanUtil.TruncationStrategy truncationStrategy = LoanUtil.TruncationStrategy.WON;
+        LoanUtil.LegalLimits legalLimits = LoanUtil.LegalLimits.getDefaultLimits();
 
-            // 원금 분할액 = 초기원금 / 총납부횟수
-            BigInteger principalPayment = repayInfo.initialPrincipal
-                    .divide(repayInfo.totalPayments);
+        if ("EPIP".equalsIgnoreCase(repayInfo.repayType)) {
+            // 원리금 균등 상환
+            BigDecimal monthlyPayment = LoanUtil.calculateEqualPayment(
+                    remainingPrincipal, annualRate, remainingMonths,
+                    roundingStrategy, truncationStrategy, legalLimits
+            );
+            return monthlyPayment.setScale(0, RoundingMode.DOWN).longValue();
 
-            // 이자 = 남은원금 * 연이자율 / 12 / 10000
-            BigInteger interestPayment = repayInfo.remainingPrincipal
-                    .multiply(repayInfo.ir)
-                    .divide(BigInteger.valueOf(12 * 10000));
+        } else if ("EPP".equalsIgnoreCase(repayInfo.repayType)) {
+            // 원금 균등 상환
+            List<LoanUtil.PaymentSchedule> schedules = LoanUtil.calculateEqualPrincipal(
+                    remainingPrincipal, annualRate, remainingMonths,
+                    roundingStrategy, truncationStrategy, legalLimits
+            );
 
-            basePayment = principalPayment.add(interestPayment);
-        } else {
-            // 만기일시상환(BP)
-            if (repayInfo.remainingPayments.equals(BigInteger.ONE)) {
-                // 마지막 납부 차례 - 원금 + 이자
-                BigInteger interest = repayInfo.initialPrincipal
-                        .multiply(repayInfo.ir)
-                        .divide(BigInteger.valueOf(12 * 10000));
-                basePayment = repayInfo.initialPrincipal.add(interest);
+            // 다음 회차가 첫 번째인 경우
+            if (!schedules.isEmpty()) {
+                return schedules.get(0).getTotalPayment().setScale(0, RoundingMode.DOWN).longValue();
             } else {
-                // 그 외 - 이자만 납부
-                basePayment = repayInfo.remainingPrincipal
-                        .multiply(repayInfo.ir)
-                        .divide(BigInteger.valueOf(12 * 10000));
+                return 0L;
+            }
+
+        } else if ("BP".equalsIgnoreCase(repayInfo.repayType)) {
+            // 만기일시상환
+            List<LoanUtil.PaymentSchedule> schedules = LoanUtil.calculateBulletPayment(
+                    remainingPrincipal, annualRate, remainingMonths,
+                    roundingStrategy, truncationStrategy, legalLimits
+            );
+
+            if (!schedules.isEmpty()) {
+                return schedules.get(0).getTotalPayment().setScale(0, RoundingMode.DOWN).longValue();
+            } else {
+                return 0L;
             }
         }
 
-        return basePayment.longValue();
+        throw new IllegalArgumentException("지원되지 않는 상환 방식: " + repayInfo.repayType);
     }
 
-    // 만기수취액 계산
-    public static Long calculateTotalAmount(PromissoryNote.PromissoryMetadata promissoryMetadata, RepaymentScheduler.RepaymentInfo repayInfo) {
-        int remainTerms = calculateRemainTerms(promissoryMetadata.matDt);
-        Long mp = calculateMonthlyPayment(repayInfo);
+    public static Long calculateTotalAmount(RepaymentScheduler.RepaymentInfo repayInfo) {
+        // 남은 원금 & 남은 납부 횟수
+        BigDecimal remainingPrincipal = new BigDecimal(repayInfo.remainingPrincipal);
+        int remainingMonths = repayInfo.remainingPayments.intValue();
+        BigDecimal annualRate = new BigDecimal(repayInfo.ir).divide(BigDecimal.valueOf(10000), 10, RoundingMode.HALF_UP); // ir = 10000 → 1%
 
-        return remainTerms * mp;
+        String repaymentType;
+        switch (repayInfo.repayType) {
+            case "EPIP": repaymentType = "EQUAL_PAYMENT"; break;
+            case "EPP":  repaymentType = "EQUAL_PRINCIPAL"; break;
+            case "BP":   repaymentType = "BULLET"; break;
+            default: throw new IllegalArgumentException("지원되지 않는 상환 방식: " + repayInfo.repayType);
+        }
+
+        // 옵션 설정
+        LoanUtil.RoundingStrategy roundingStrategy = LoanUtil.RoundingStrategy.HALF_UP;
+        LoanUtil.TruncationStrategy truncationStrategy = LoanUtil.TruncationStrategy.WON;
+        LoanUtil.LegalLimits legalLimits = LoanUtil.LegalLimits.getDefaultLimits();
+
+        BigDecimal totalRepayment = LoanUtil.calculateTotalRepaymentAmount(
+                remainingPrincipal,
+                annualRate,
+                remainingMonths,
+                repaymentType,
+                roundingStrategy,
+                truncationStrategy,
+                legalLimits
+        );
+
+        return totalRepayment.setScale(0, RoundingMode.DOWN).longValue(); // 원단위 정리
     }
+
 
     // 진행률 계산
     public static double calculateProgressRate(String contractDt, String matDt) {
@@ -96,7 +144,11 @@ public class DataUtil {
         if (passedDays <= 0) return 0.0;  // 아직 시작 안했으면 진행률 0%
 
         double progress = ((double) passedDays / totalDays) * 100.0;
-        return Math.min(progress, 100.0); // 최대 100%로 제한
+        double roundedProgress = new BigDecimal(progress)
+                .setScale(1, RoundingMode.HALF_UP)
+                .doubleValue();
+
+        return Math.min(roundedProgress, 100.0); // 최대 100%로 제한
     }
 
     // 다음 상환일 초에서 날짜로 반환

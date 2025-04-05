@@ -16,9 +16,9 @@ import org.web3j.abi.datatypes.DynamicBytes;
 import org.web3j.abi.datatypes.DynamicStruct;
 import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.StaticStruct;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.Utf8String;
-import org.web3j.abi.datatypes.generated.Uint8;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
@@ -28,6 +28,7 @@ import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.BaseEventResponse;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.tuples.generated.Tuple14;
 import org.web3j.tuples.generated.Tuple2;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
@@ -90,10 +91,6 @@ public class RepaymentScheduler extends Contract {
             Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>(true) {}, new TypeReference<Uint256>() {}));
     ;
 
-    public static final Event BURNFAILED_EVENT = new Event("BurnFailed", 
-            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Utf8String>() {}));
-    ;
-
     public static final Event EARLYREPAYMENTFEE_EVENT = new Event("EarlyRepaymentFee", 
             Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>(true) {}, new TypeReference<Uint256>() {}));
     ;
@@ -115,7 +112,7 @@ public class RepaymentScheduler extends Contract {
     ;
 
     public static final Event OVERDUERESOLVED_EVENT = new Event("OverdueResolved", 
-            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>(true) {}, new TypeReference<Uint256>() {}));
+            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>(true) {}, new TypeReference<Uint256>() {}, new TypeReference<Address>(true) {}, new TypeReference<Address>(true) {}));
     ;
 
     public static final Event OWNERSHIPTRANSFERRED_EVENT = new Event("OwnershipTransferred", 
@@ -127,11 +124,11 @@ public class RepaymentScheduler extends Contract {
     ;
 
     public static final Event REPAYMENTOVERDUE_EVENT = new Event("RepaymentOverdue", 
-            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>(true) {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
+            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>(true) {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
     ;
 
     public static final Event REPAYMENTPROCESSED_EVENT = new Event("RepaymentProcessed", 
-            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
+            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>() {}, new TypeReference<Address>() {}));
     ;
 
     public static final Event REPAYMENTSCHEDULECREATED_EVENT = new Event("RepaymentScheduleCreated", 
@@ -192,40 +189,6 @@ public class RepaymentScheduler extends Contract {
         EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
         filter.addSingleTopic(EventEncoder.encode(ACCELREACHED_EVENT));
         return accelReachedEventFlowable(filter);
-    }
-
-    public static List<BurnFailedEventResponse> getBurnFailedEvents(
-            TransactionReceipt transactionReceipt) {
-        List<Contract.EventValuesWithLog> valueList = staticExtractEventParametersWithLog(BURNFAILED_EVENT, transactionReceipt);
-        ArrayList<BurnFailedEventResponse> responses = new ArrayList<BurnFailedEventResponse>(valueList.size());
-        for (Contract.EventValuesWithLog eventValues : valueList) {
-            BurnFailedEventResponse typedResponse = new BurnFailedEventResponse();
-            typedResponse.log = eventValues.getLog();
-            typedResponse.tokenId = (BigInteger) eventValues.getNonIndexedValues().get(0).getValue();
-            typedResponse.reason = (String) eventValues.getNonIndexedValues().get(1).getValue();
-            responses.add(typedResponse);
-        }
-        return responses;
-    }
-
-    public static BurnFailedEventResponse getBurnFailedEventFromLog(Log log) {
-        Contract.EventValuesWithLog eventValues = staticExtractEventParametersWithLog(BURNFAILED_EVENT, log);
-        BurnFailedEventResponse typedResponse = new BurnFailedEventResponse();
-        typedResponse.log = log;
-        typedResponse.tokenId = (BigInteger) eventValues.getNonIndexedValues().get(0).getValue();
-        typedResponse.reason = (String) eventValues.getNonIndexedValues().get(1).getValue();
-        return typedResponse;
-    }
-
-    public Flowable<BurnFailedEventResponse> burnFailedEventFlowable(EthFilter filter) {
-        return web3j.ethLogFlowable(filter).map(log -> getBurnFailedEventFromLog(log));
-    }
-
-    public Flowable<BurnFailedEventResponse> burnFailedEventFlowable(
-            DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
-        EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
-        filter.addSingleTopic(EventEncoder.encode(BURNFAILED_EVENT));
-        return burnFailedEventFlowable(filter);
     }
 
     public static List<EarlyRepaymentFeeEventResponse> getEarlyRepaymentFeeEvents(
@@ -425,6 +388,8 @@ public class RepaymentScheduler extends Contract {
             OverdueResolvedEventResponse typedResponse = new OverdueResolvedEventResponse();
             typedResponse.log = eventValues.getLog();
             typedResponse.tokenId = (BigInteger) eventValues.getIndexedValues().get(0).getValue();
+            typedResponse.from = (String) eventValues.getIndexedValues().get(1).getValue();
+            typedResponse.to = (String) eventValues.getIndexedValues().get(2).getValue();
             typedResponse.paidOverdueAmount = (BigInteger) eventValues.getNonIndexedValues().get(0).getValue();
             responses.add(typedResponse);
         }
@@ -436,6 +401,8 @@ public class RepaymentScheduler extends Contract {
         OverdueResolvedEventResponse typedResponse = new OverdueResolvedEventResponse();
         typedResponse.log = log;
         typedResponse.tokenId = (BigInteger) eventValues.getIndexedValues().get(0).getValue();
+        typedResponse.from = (String) eventValues.getIndexedValues().get(1).getValue();
+        typedResponse.to = (String) eventValues.getIndexedValues().get(2).getValue();
         typedResponse.paidOverdueAmount = (BigInteger) eventValues.getNonIndexedValues().get(0).getValue();
         return typedResponse;
     }
@@ -529,6 +496,7 @@ public class RepaymentScheduler extends Contract {
             typedResponse.tokenId = (BigInteger) eventValues.getIndexedValues().get(0).getValue();
             typedResponse.overdueStartDate = (BigInteger) eventValues.getNonIndexedValues().get(0).getValue();
             typedResponse.totalDefaultCount = (BigInteger) eventValues.getNonIndexedValues().get(1).getValue();
+            typedResponse.aoi = (BigInteger) eventValues.getNonIndexedValues().get(2).getValue();
             responses.add(typedResponse);
         }
         return responses;
@@ -541,6 +509,7 @@ public class RepaymentScheduler extends Contract {
         typedResponse.tokenId = (BigInteger) eventValues.getIndexedValues().get(0).getValue();
         typedResponse.overdueStartDate = (BigInteger) eventValues.getNonIndexedValues().get(0).getValue();
         typedResponse.totalDefaultCount = (BigInteger) eventValues.getNonIndexedValues().get(1).getValue();
+        typedResponse.aoi = (BigInteger) eventValues.getNonIndexedValues().get(2).getValue();
         return typedResponse;
     }
 
@@ -566,6 +535,8 @@ public class RepaymentScheduler extends Contract {
             typedResponse.amount = (BigInteger) eventValues.getNonIndexedValues().get(1).getValue();
             typedResponse.remainingPrincipal = (BigInteger) eventValues.getNonIndexedValues().get(2).getValue();
             typedResponse.nextMpDt = (BigInteger) eventValues.getNonIndexedValues().get(3).getValue();
+            typedResponse.from = (String) eventValues.getNonIndexedValues().get(4).getValue();
+            typedResponse.to = (String) eventValues.getNonIndexedValues().get(5).getValue();
             responses.add(typedResponse);
         }
         return responses;
@@ -579,6 +550,8 @@ public class RepaymentScheduler extends Contract {
         typedResponse.amount = (BigInteger) eventValues.getNonIndexedValues().get(1).getValue();
         typedResponse.remainingPrincipal = (BigInteger) eventValues.getNonIndexedValues().get(2).getValue();
         typedResponse.nextMpDt = (BigInteger) eventValues.getNonIndexedValues().get(3).getValue();
+        typedResponse.from = (String) eventValues.getNonIndexedValues().get(4).getValue();
+        typedResponse.to = (String) eventValues.getNonIndexedValues().get(5).getValue();
         return typedResponse;
     }
 
@@ -765,102 +738,34 @@ public class RepaymentScheduler extends Contract {
         return executeRemoteCallTransaction(function);
     }
 
-//    public RemoteFunctionCall<Tuple21<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, String, String, Boolean, Boolean, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger>> repaymentSchedules(
-//            BigInteger param0) {
-//        final Function function = new Function(FUNC_REPAYMENTSCHEDULES,
-//                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(param0)),
-//                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Utf8String>() {}, new TypeReference<Address>() {}, new TypeReference<Bool>() {}, new TypeReference<Bool>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
-//        return new RemoteFunctionCall<Tuple21<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, String, String, Boolean, Boolean, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger>>(function,
-//                new Callable<Tuple21<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, String, String, Boolean, Boolean, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger>>() {
-//                    @Override
-//                    public Tuple21<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, String, String, Boolean, Boolean, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger> call(
-//                            ) throws Exception {
-//                        List<Type> results = executeCallMultipleValueReturn(function);
-//                        return new Tuple21<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, String, String, Boolean, Boolean, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger>(
-//                                (BigInteger) results.get(0).getValue(),
-//                                (BigInteger) results.get(1).getValue(),
-//                                (BigInteger) results.get(2).getValue(),
-//                                (BigInteger) results.get(3).getValue(),
-//                                (BigInteger) results.get(4).getValue(),
-//                                (BigInteger) results.get(5).getValue(),
-//                                (BigInteger) results.get(6).getValue(),
-//                                (BigInteger) results.get(7).getValue(),
-//                                (BigInteger) results.get(8).getValue(),
-//                                (BigInteger) results.get(9).getValue(),
-//                                (String) results.get(10).getValue(),
-//                                (String) results.get(11).getValue(),
-//                                (Boolean) results.get(12).getValue(),
-//                                (Boolean) results.get(13).getValue(),
-//                                (BigInteger) results.get(14).getValue(),
-//                                (BigInteger) results.get(15).getValue(),
-//                                (BigInteger) results.get(16).getValue(),
-//                                (BigInteger) results.get(17).getValue(),
-//                                (BigInteger) results.get(18).getValue(),
-//                                (BigInteger) results.get(19).getValue(),
-//                                (BigInteger) results.get(20).getValue());
-//                    }
-//                });
-//    }
-
-    public RemoteFunctionCall<RepaymentInfo> repaymentSchedules(
-            BigInteger tokenId) {
-        final Function function = new Function(
-                FUNC_REPAYMENTSCHEDULES,
-                Arrays.<Type>asList(new Uint256(tokenId)),
-                Arrays.<TypeReference<?>>asList(
-                        new TypeReference<Uint256>() {
-                        }, new TypeReference<Uint256>() {
-                        },
-                        new TypeReference<Uint256>() {
-                        }, new TypeReference<Uint256>() {
-                        },
-                        new TypeReference<Uint256>() {
-                        }, new TypeReference<Uint256>() {
-                        },
-                        new TypeReference<Uint256>() {
-                        }, new TypeReference<Uint256>() {
-                        },
-                        new TypeReference<Uint256>() {
-                        }, new TypeReference<Uint256>() {
-                        },
-                        new TypeReference<Utf8String>() {
-                        }, new TypeReference<Address>() {
-                        },
-                        new TypeReference<Bool>() {
-                        }, new TypeReference<Bool>() {
-                        },
-                        new TypeReference<Uint256>() {
-                        }, new TypeReference<Uint256>() {
-                        },
-                        new TypeReference<Uint256>() {
-                        }, new TypeReference<Uint256>() {
-                        },
-                        new TypeReference<Uint256>() {
-                        }, new TypeReference<Uint256>() {
-                        },
-                        new TypeReference<Uint256>() {
-                        }
-                )
-        );
-
-        return new RemoteFunctionCall<>(function, () -> {
-            List<Type> results = executeCallMultipleValueReturn(function);
-
-            // RepaymentInfo 생성자에 Raw Type들을 전달 (Uint256, Address 등)
-            return new RepaymentInfo(
-                    (Uint256) results.get(0), (Uint256) results.get(1),
-                    (Uint256) results.get(2), (Uint256) results.get(3),
-                    (Uint256) results.get(4), (Uint256) results.get(5),
-                    (Uint256) results.get(6), (Uint256) results.get(7),
-                    (Uint256) results.get(8), (Uint256) results.get(9),
-                    (Utf8String) results.get(10), (Address) results.get(11),
-                    (Bool) results.get(12), (Bool) results.get(13),
-                    (Uint256) results.get(14), (Uint256) results.get(15),
-                    (Uint256) results.get(16), (Uint256) results.get(17),
-                    (Uint256) results.get(18), (Uint256) results.get(19),
-                    (Uint256) results.get(20)
-            );
-        });
+    public RemoteFunctionCall<Tuple14<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, String, String, Boolean, OverdueInfo>> repaymentSchedules(
+            BigInteger param0) {
+        final Function function = new Function(FUNC_REPAYMENTSCHEDULES, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(param0)), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Utf8String>() {}, new TypeReference<Address>() {}, new TypeReference<Bool>() {}, new TypeReference<OverdueInfo>() {}));
+        return new RemoteFunctionCall<Tuple14<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, String, String, Boolean, OverdueInfo>>(function,
+                new Callable<Tuple14<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, String, String, Boolean, OverdueInfo>>() {
+                    @Override
+                    public Tuple14<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, String, String, Boolean, OverdueInfo> call(
+                            ) throws Exception {
+                        List<Type> results = executeCallMultipleValueReturn(function);
+                        return new Tuple14<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, String, String, Boolean, OverdueInfo>(
+                                (BigInteger) results.get(0).getValue(), 
+                                (BigInteger) results.get(1).getValue(), 
+                                (BigInteger) results.get(2).getValue(), 
+                                (BigInteger) results.get(3).getValue(), 
+                                (BigInteger) results.get(4).getValue(), 
+                                (BigInteger) results.get(5).getValue(), 
+                                (BigInteger) results.get(6).getValue(), 
+                                (BigInteger) results.get(7).getValue(), 
+                                (BigInteger) results.get(8).getValue(), 
+                                (BigInteger) results.get(9).getValue(), 
+                                (String) results.get(10).getValue(), 
+                                (String) results.get(11).getValue(), 
+                                (Boolean) results.get(12).getValue(), 
+                                (OverdueInfo) results.get(13));
+                    }
+                });
     }
 
     public RemoteFunctionCall<TransactionReceipt> transferOwnership(String newOwner) {
@@ -933,6 +838,59 @@ public class RepaymentScheduler extends Contract {
         return new RepaymentScheduler(contractAddress, web3j, transactionManager, contractGasProvider);
     }
 
+    public static class OverdueInfo extends StaticStruct {
+        public Boolean overdueFlag;
+
+        public BigInteger overdueStartDate;
+
+        public BigInteger overdueDays;
+
+        public BigInteger aoi;
+
+        public BigInteger defCnt;
+
+        public BigInteger accel;
+
+        public BigInteger currentIr;
+
+        public BigInteger totalDefCnt;
+
+        public OverdueInfo(Boolean overdueFlag, BigInteger overdueStartDate, BigInteger overdueDays,
+                BigInteger aoi, BigInteger defCnt, BigInteger accel, BigInteger currentIr,
+                BigInteger totalDefCnt) {
+            super(new org.web3j.abi.datatypes.Bool(overdueFlag), 
+                    new org.web3j.abi.datatypes.generated.Uint256(overdueStartDate), 
+                    new org.web3j.abi.datatypes.generated.Uint256(overdueDays), 
+                    new org.web3j.abi.datatypes.generated.Uint256(aoi), 
+                    new org.web3j.abi.datatypes.generated.Uint256(defCnt), 
+                    new org.web3j.abi.datatypes.generated.Uint256(accel), 
+                    new org.web3j.abi.datatypes.generated.Uint256(currentIr), 
+                    new org.web3j.abi.datatypes.generated.Uint256(totalDefCnt));
+            this.overdueFlag = overdueFlag;
+            this.overdueStartDate = overdueStartDate;
+            this.overdueDays = overdueDays;
+            this.aoi = aoi;
+            this.defCnt = defCnt;
+            this.accel = accel;
+            this.currentIr = currentIr;
+            this.totalDefCnt = totalDefCnt;
+        }
+
+        public OverdueInfo(Bool overdueFlag, Uint256 overdueStartDate, Uint256 overdueDays,
+                Uint256 aoi, Uint256 defCnt, Uint256 accel, Uint256 currentIr,
+                Uint256 totalDefCnt) {
+            super(overdueFlag, overdueStartDate, overdueDays, aoi, defCnt, accel, currentIr, totalDefCnt);
+            this.overdueFlag = overdueFlag.getValue();
+            this.overdueStartDate = overdueStartDate.getValue();
+            this.overdueDays = overdueDays.getValue();
+            this.aoi = aoi.getValue();
+            this.defCnt = defCnt.getValue();
+            this.accel = accel.getValue();
+            this.currentIr = currentIr.getValue();
+            this.totalDefCnt = totalDefCnt.getValue();
+        }
+    }
+
     public static class RepaymentInfo extends DynamicStruct {
         public BigInteger tokenId;
 
@@ -960,29 +918,13 @@ public class RepaymentScheduler extends Contract {
 
         public Boolean activeFlag;
 
-        public Boolean overdueFlag;
-
-        public BigInteger overdueStartDate;
-
-        public BigInteger overdueDays;
-
-        public BigInteger aoi;
-
-        public BigInteger defCnt;
-
-        public BigInteger accel;
-
-        public BigInteger currentIr;
-
-        public BigInteger totalDefCnt;
+        public OverdueInfo overdueInfo;
 
         public RepaymentInfo(BigInteger tokenId, BigInteger initialPrincipal,
                 BigInteger remainingPrincipal, BigInteger ir, BigInteger dir, BigInteger mpDt,
                 BigInteger nextMpDt, BigInteger totalPayments, BigInteger remainingPayments,
                 BigInteger fixedPaymentAmount, String repayType, String drWalletAddress,
-                Boolean activeFlag, Boolean overdueFlag, BigInteger overdueStartDate,
-                BigInteger overdueDays, BigInteger aoi, BigInteger defCnt, BigInteger accel,
-                BigInteger currentIr, BigInteger totalDefCnt) {
+                Boolean activeFlag, OverdueInfo overdueInfo) {
             super(new org.web3j.abi.datatypes.generated.Uint256(tokenId), 
                     new org.web3j.abi.datatypes.generated.Uint256(initialPrincipal), 
                     new org.web3j.abi.datatypes.generated.Uint256(remainingPrincipal), 
@@ -996,14 +938,7 @@ public class RepaymentScheduler extends Contract {
                     new org.web3j.abi.datatypes.Utf8String(repayType), 
                     new org.web3j.abi.datatypes.Address(160, drWalletAddress), 
                     new org.web3j.abi.datatypes.Bool(activeFlag), 
-                    new org.web3j.abi.datatypes.Bool(overdueFlag), 
-                    new org.web3j.abi.datatypes.generated.Uint256(overdueStartDate), 
-                    new org.web3j.abi.datatypes.generated.Uint256(overdueDays), 
-                    new org.web3j.abi.datatypes.generated.Uint256(aoi), 
-                    new org.web3j.abi.datatypes.generated.Uint256(defCnt), 
-                    new org.web3j.abi.datatypes.generated.Uint256(accel), 
-                    new org.web3j.abi.datatypes.generated.Uint256(currentIr), 
-                    new org.web3j.abi.datatypes.generated.Uint256(totalDefCnt));
+                    overdueInfo);
             this.tokenId = tokenId;
             this.initialPrincipal = initialPrincipal;
             this.remainingPrincipal = remainingPrincipal;
@@ -1017,23 +952,14 @@ public class RepaymentScheduler extends Contract {
             this.repayType = repayType;
             this.drWalletAddress = drWalletAddress;
             this.activeFlag = activeFlag;
-            this.overdueFlag = overdueFlag;
-            this.overdueStartDate = overdueStartDate;
-            this.overdueDays = overdueDays;
-            this.aoi = aoi;
-            this.defCnt = defCnt;
-            this.accel = accel;
-            this.currentIr = currentIr;
-            this.totalDefCnt = totalDefCnt;
+            this.overdueInfo = overdueInfo;
         }
 
         public RepaymentInfo(Uint256 tokenId, Uint256 initialPrincipal, Uint256 remainingPrincipal,
                 Uint256 ir, Uint256 dir, Uint256 mpDt, Uint256 nextMpDt, Uint256 totalPayments,
                 Uint256 remainingPayments, Uint256 fixedPaymentAmount, Utf8String repayType,
-                Address drWalletAddress, Bool activeFlag, Bool overdueFlag,
-                Uint256 overdueStartDate, Uint256 overdueDays, Uint256 aoi, Uint256 defCnt,
-                Uint256 accel, Uint256 currentIr, Uint256 totalDefCnt) {
-            super(tokenId, initialPrincipal, remainingPrincipal, ir, dir, mpDt, nextMpDt, totalPayments, remainingPayments, fixedPaymentAmount, repayType, drWalletAddress, activeFlag, overdueFlag, overdueStartDate, overdueDays, aoi, defCnt, accel, currentIr, totalDefCnt);
+                Address drWalletAddress, Bool activeFlag, OverdueInfo overdueInfo) {
+            super(tokenId, initialPrincipal, remainingPrincipal, ir, dir, mpDt, nextMpDt, totalPayments, remainingPayments, fixedPaymentAmount, repayType, drWalletAddress, activeFlag, overdueInfo);
             this.tokenId = tokenId.getValue();
             this.initialPrincipal = initialPrincipal.getValue();
             this.remainingPrincipal = remainingPrincipal.getValue();
@@ -1047,14 +973,7 @@ public class RepaymentScheduler extends Contract {
             this.repayType = repayType.getValue();
             this.drWalletAddress = drWalletAddress.getValue();
             this.activeFlag = activeFlag.getValue();
-            this.overdueFlag = overdueFlag.getValue();
-            this.overdueStartDate = overdueStartDate.getValue();
-            this.overdueDays = overdueDays.getValue();
-            this.aoi = aoi.getValue();
-            this.defCnt = defCnt.getValue();
-            this.accel = accel.getValue();
-            this.currentIr = currentIr.getValue();
-            this.totalDefCnt = totalDefCnt.getValue();
+            this.overdueInfo = overdueInfo;
         }
     }
 
@@ -1062,12 +981,6 @@ public class RepaymentScheduler extends Contract {
         public BigInteger tokenId;
 
         public BigInteger maxInterestRate;
-    }
-
-    public static class BurnFailedEventResponse extends BaseEventResponse {
-        public BigInteger tokenId;
-
-        public String reason;
     }
 
     public static class EarlyRepaymentFeeEventResponse extends BaseEventResponse {
@@ -1115,6 +1028,10 @@ public class RepaymentScheduler extends Contract {
     public static class OverdueResolvedEventResponse extends BaseEventResponse {
         public BigInteger tokenId;
 
+        public String from;
+
+        public String to;
+
         public BigInteger paidOverdueAmount;
     }
 
@@ -1134,6 +1051,8 @@ public class RepaymentScheduler extends Contract {
         public BigInteger overdueStartDate;
 
         public BigInteger totalDefaultCount;
+
+        public BigInteger aoi;
     }
 
     public static class RepaymentProcessedEventResponse extends BaseEventResponse {
@@ -1144,6 +1063,10 @@ public class RepaymentScheduler extends Contract {
         public BigInteger remainingPrincipal;
 
         public BigInteger nextMpDt;
+
+        public String from;
+
+        public String to;
     }
 
     public static class RepaymentScheduleCreatedEventResponse extends BaseEventResponse {

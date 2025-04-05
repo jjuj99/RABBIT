@@ -96,7 +96,11 @@ public class PromissoryNote extends Contract {
 
     public static final String FUNC_safeTransferFrom = "safeTransferFrom";
 
+    public static final String FUNC_SCHEDULERADDRESS = "schedulerAddress";
+
     public static final String FUNC_SETAPPROVALFORALL = "setApprovalForAll";
+
+    public static final String FUNC_SETSCHEDULERADDRESS = "setSchedulerAddress";
 
     public static final String FUNC_SUPPORTSINTERFACE = "supportsInterface";
 
@@ -110,12 +114,8 @@ public class PromissoryNote extends Contract {
 
     public static final String FUNC_TRANSFEROWNERSHIP = "transferOwnership";
 
-    public static final Event APPENDIXNFTBUNDLED_EVENT = new Event("AppendixNFTBundled", 
-            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>(true) {}, new TypeReference<Uint256>(true) {}));
-    ;
-
     public static final Event APPENDIXNFTMINTED_EVENT = new Event("AppendixNFTMinted", 
-            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>(true) {}, new TypeReference<Uint256>(true) {}, new TypeReference<Address>(true) {}));
+            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>(true) {}, new TypeReference<Uint256>(true) {}, new TypeReference<Address>() {}, new TypeReference<Address>(true) {}));
     ;
 
     public static final Event APPROVAL_EVENT = new Event("Approval", 
@@ -168,41 +168,6 @@ public class PromissoryNote extends Contract {
         super(BINARY, contractAddress, web3j, transactionManager, contractGasProvider);
     }
 
-    public static List<AppendixNFTBundledEventResponse> getAppendixNFTBundledEvents(
-            TransactionReceipt transactionReceipt) {
-        List<Contract.EventValuesWithLog> valueList = staticExtractEventParametersWithLog(APPENDIXNFTBUNDLED_EVENT, transactionReceipt);
-        ArrayList<AppendixNFTBundledEventResponse> responses = new ArrayList<AppendixNFTBundledEventResponse>(valueList.size());
-        for (Contract.EventValuesWithLog eventValues : valueList) {
-            AppendixNFTBundledEventResponse typedResponse = new AppendixNFTBundledEventResponse();
-            typedResponse.log = eventValues.getLog();
-            typedResponse.originalTokenId = (BigInteger) eventValues.getIndexedValues().get(0).getValue();
-            typedResponse.appendixTokenId = (BigInteger) eventValues.getIndexedValues().get(1).getValue();
-            responses.add(typedResponse);
-        }
-        return responses;
-    }
-
-    public static AppendixNFTBundledEventResponse getAppendixNFTBundledEventFromLog(Log log) {
-        Contract.EventValuesWithLog eventValues = staticExtractEventParametersWithLog(APPENDIXNFTBUNDLED_EVENT, log);
-        AppendixNFTBundledEventResponse typedResponse = new AppendixNFTBundledEventResponse();
-        typedResponse.log = log;
-        typedResponse.originalTokenId = (BigInteger) eventValues.getIndexedValues().get(0).getValue();
-        typedResponse.appendixTokenId = (BigInteger) eventValues.getIndexedValues().get(1).getValue();
-        return typedResponse;
-    }
-
-    public Flowable<AppendixNFTBundledEventResponse> appendixNFTBundledEventFlowable(
-            EthFilter filter) {
-        return web3j.ethLogFlowable(filter).map(log -> getAppendixNFTBundledEventFromLog(log));
-    }
-
-    public Flowable<AppendixNFTBundledEventResponse> appendixNFTBundledEventFlowable(
-            DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
-        EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
-        filter.addSingleTopic(EventEncoder.encode(APPENDIXNFTBUNDLED_EVENT));
-        return appendixNFTBundledEventFlowable(filter);
-    }
-
     public static List<AppendixNFTMintedEventResponse> getAppendixNFTMintedEvents(
             TransactionReceipt transactionReceipt) {
         List<Contract.EventValuesWithLog> valueList = staticExtractEventParametersWithLog(APPENDIXNFTMINTED_EVENT, transactionReceipt);
@@ -213,6 +178,7 @@ public class PromissoryNote extends Contract {
             typedResponse.appendixTokenId = (BigInteger) eventValues.getIndexedValues().get(0).getValue();
             typedResponse.originalTokenId = (BigInteger) eventValues.getIndexedValues().get(1).getValue();
             typedResponse.newOwner = (String) eventValues.getIndexedValues().get(2).getValue();
+            typedResponse.from = (String) eventValues.getNonIndexedValues().get(0).getValue();
             responses.add(typedResponse);
         }
         return responses;
@@ -225,6 +191,7 @@ public class PromissoryNote extends Contract {
         typedResponse.appendixTokenId = (BigInteger) eventValues.getIndexedValues().get(0).getValue();
         typedResponse.originalTokenId = (BigInteger) eventValues.getIndexedValues().get(1).getValue();
         typedResponse.newOwner = (String) eventValues.getIndexedValues().get(2).getValue();
+        typedResponse.from = (String) eventValues.getNonIndexedValues().get(0).getValue();
         return typedResponse;
     }
 
@@ -723,12 +690,27 @@ public class PromissoryNote extends Contract {
         return executeRemoteCallTransaction(function);
     }
 
+    public RemoteFunctionCall<String> schedulerAddress() {
+        final Function function = new Function(FUNC_SCHEDULERADDRESS, 
+                Arrays.<Type>asList(), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}));
+        return executeRemoteCallSingleValueReturn(function, String.class);
+    }
+
     public RemoteFunctionCall<TransactionReceipt> setApprovalForAll(String operator,
             Boolean approved) {
         final Function function = new Function(
                 FUNC_SETAPPROVALFORALL, 
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, operator), 
                 new org.web3j.abi.datatypes.Bool(approved)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> setSchedulerAddress(String _schedulerAddress) {
+        final Function function = new Function(
+                FUNC_SETSCHEDULERADDRESS, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, _schedulerAddress)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
@@ -1046,18 +1028,14 @@ public class PromissoryNote extends Contract {
         }
     }
 
-    public static class AppendixNFTBundledEventResponse extends BaseEventResponse {
-        public BigInteger originalTokenId;
-
-        public BigInteger appendixTokenId;
-    }
-
     public static class AppendixNFTMintedEventResponse extends BaseEventResponse {
         public BigInteger appendixTokenId;
 
         public BigInteger originalTokenId;
 
         public String newOwner;
+
+        public String from;
     }
 
     public static class ApprovalEventResponse extends BaseEventResponse {

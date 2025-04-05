@@ -86,6 +86,7 @@ interface IPromissoryNote is IERC721 {
         uint256 indexed appendixTokenId
     );
 
+    function setSchedulerAddress(address schedulerAddress) external;
     function addBurnAuthorization(address authorized) external;
     function removeBurnAuthorization(address authorized) external;
 

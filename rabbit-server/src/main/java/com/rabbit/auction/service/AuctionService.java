@@ -7,6 +7,18 @@ import com.rabbit.auction.repository.AuctionRepository;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
 import com.rabbit.auction.domain.entity.Auction;
 import com.rabbit.auction.repository.BidRepository;
+import com.rabbit.bankApi.service.BankService;
+import com.rabbit.blockchain.domain.dto.response.AppendixMetadataDTO;
+import com.rabbit.blockchain.mapper.AppendixMetadataMapper;
+import com.rabbit.blockchain.service.PromissoryNoteAuctionService;
+import com.rabbit.blockchain.service.PromissoryNoteService;
+import com.rabbit.blockchain.service.RepaymentSchedulerService;
+import com.rabbit.blockchain.wrapper.PromissoryNote;
+import com.rabbit.blockchain.wrapper.PromissoryNoteAuction;
+import com.rabbit.blockchain.wrapper.RepaymentScheduler;
+import com.rabbit.contract.domain.entity.Contract;
+import com.rabbit.contract.repository.ContractRepository;
+import com.rabbit.contract.service.ContractService;
 import com.rabbit.blockchain.service.PromissoryNoteAuctionService;
 import com.rabbit.contract.domain.entity.Contract;
 import com.rabbit.contract.repository.ContractRepository;
@@ -15,12 +27,14 @@ import com.rabbit.global.code.service.SysCommonCodeService;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.response.PageResponseDTO;
+import com.rabbit.global.util.DateTimeUtils;
 import com.rabbit.mail.service.MailService;
 import com.rabbit.global.util.SignatureUtil;
 import com.rabbit.notification.domain.dto.request.NotificationRequestDTO;
 import com.rabbit.notification.service.NotificationService;
 import com.rabbit.sse.domain.dto.response.NotiResponseDTO;
 import com.rabbit.sse.service.SseEventPublisher;
+import com.rabbit.user.domain.dto.response.ProfileInfoResponseDTO;
 import com.rabbit.user.domain.entity.User;
 import com.rabbit.user.service.UserService;
 import com.rabbit.user.domain.entity.MetamaskWallet;
@@ -37,7 +51,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -52,8 +68,12 @@ public class AuctionService {
     private final UserService userService;
     private final ContractRepository contractRepository;
     private final MailService mailService;
+    private final ContractService contractService;
+    private final PromissoryNoteService promissoryNoteService;
+    private final BankService bankService;
 
     private final SysCommonCodeService sysCommonCodeService;
+    private final RepaymentSchedulerService repaymentSchedulerService;
 
     // 코드 타입 상수 정의
     private static final String AUCTION_STATUS = SysCommonCodes.Auction.values()[0].getCodeType();
@@ -102,12 +122,89 @@ public class AuctionService {
         Page<AuctionResponseDTO> result = auctionRepository.searchAuctions(request, pageable);
 
         //블록체인 읽어와 다른 조건 필터링 구현 필요
+        List<AuctionResponseDTO> fullList = result.getContent().stream()
+                .map(dto -> {
+                    try {
+                        // 블록체인 메타데이터 조회
+                        PromissoryNote.PromissoryMetadata metadata = promissoryNoteService.getPromissoryMetadata(BigInteger.valueOf(dto.getAuctionId()));
+
+                        // 상환 정보 조회 (연체 횟수, 남은 원금)
+                        RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(dto.getTokenId());
+
+                        // 채무자 조회 및 신용 점수 조회
+                        User debtor = contractService.getDebtorByTokenId(BigInteger.valueOf(dto.getAuctionId()));
+                        String creditScore = bankService.getCreditScore(debtor.getUserId());
+
+                        ZonedDateTime matDt = DateTimeUtils.toZonedDateTimeAtEndOfDay(metadata.matDt);
+
+                        return AuctionResponseDTO.builder()
+                                .auctionId(dto.getAuctionId())
+                                .price(dto.getPrice())
+                                .endDate(dto.getEndDate())
+                                .createdAt(dto.getCreatedAt())
+                                .ir(new BigDecimal(metadata.ir))
+                                .tokenId(dto.getTokenId())
+                                .repayType(SysCommonCodes.Repayment.fromCode(metadata.repayType).getCodeName())  // 한글 상환 방식
+                                .totalAmount(50000L) // 총 수취액 로직 필요 시 계산 함수 넣기
+                                .matDt(matDt)
+                                .dir(new BigDecimal(metadata.dir))
+                                .la(repaymentInfo.remainingPrincipal.longValue())
+                                .earlypayFlag(metadata.earlyPayFlag)
+                                .earlypayFee(new BigDecimal(metadata.earlyPayFee))
+                                .creditScore(Integer.parseInt(creditScore))  // String → Integer 변환
+                                .defCnt(repaymentInfo.defCnt.intValue())
+                                .build();
+
+                    } catch (Exception e) {
+                        log.warn("[리스트 변환 오류] auctionId={}", dto.getAuctionId(), e);
+                        return null; // 예외 시 필터링 제외
+                    }
+                })
+                .filter(Objects::nonNull)
+                .filter(dto -> {
+                    // 블록체인 기반 필터 조건 적용
+                    boolean irCheck = (request.getMinIr() == null || dto.getIr().compareTo(request.getMinIr()) >= 0)
+                            && (request.getMaxIr() == null || dto.getIr().compareTo(request.getMaxIr()) <= 0);
+
+                    // 상환 방식 여러 개 선택 가능 (IN 조건)
+                    boolean repayCheck = true;
+                    if (request.getRepayTypeList() != null && !request.getRepayTypeList().isEmpty()) {
+                        SysCommonCodes.Repayment repaymentEnum = SysCommonCodes.Repayment.fromCodeEnumName(dto.getRepayType()); // 한글 → Enum
+                        repayCheck = request.getRepayTypeList().contains(repaymentEnum.getDisplayOrder());
+                    }
+
+                    // 만기일 필터링
+                    boolean matCheck = true;
+                    if (request.getMatTerm() != null) {
+                        ZonedDateTime now = ZonedDateTime.now();
+                        switch (request.getMatTerm()) {
+                            case 1 -> matCheck = dto.getMatDt().isBefore(now.plusMonths(1));
+                            case 3 -> matCheck = dto.getMatDt().isBefore(now.plusMonths(3));
+                            case 6 -> matCheck = dto.getMatDt().isBefore(now.plusMonths(6));
+                            case 12 -> matCheck = dto.getMatDt().isBefore(now.plusMonths(12));
+                        }
+                    } else if (request.getMatStart() != null && request.getMatEnd() != null) {
+                        matCheck = !dto.getMatDt().isBefore(request.getMatStart()) && !dto.getMatDt().isAfter(request.getMatEnd());
+                    }
+
+                    return irCheck && repayCheck && matCheck;
+                })
+                .toList();
+
+        // 블록체인 필터링 후 다시한번 페이징
+        int offset = (int) pageable.getOffset();
+        int limit = pageable.getPageSize();
+
+        List<AuctionResponseDTO> pagedList = fullList.stream()
+                .skip(offset)
+                .limit(limit)
+                .toList();
 
         return PageResponseDTO.<AuctionResponseDTO>builder()
-                .content(result.getContent())
-                .pageNumber(result.getNumber())
-                .pageSize(result.getSize())
-                .totalElements(result.getTotalElements())
+                .content(pagedList)
+                .pageNumber(pageable.getPageNumber())
+                .pageSize(pageable.getPageSize())
+                .totalElements(fullList.size()) // 전체 개수는 필터링된 데이터 기준
                 .build();
     }
 
@@ -161,14 +258,34 @@ public class AuctionService {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
 
-        //블록체인에서 직접 읽어온 값 추가 필요
+        User debtor = contractService.getDebtorByTokenId(auction.getTokenId());
+        String creditScore = bankService.getCreditScore(debtor.getUserId());
 
-        return AuctionDetailResponseDTO.builder()
-                .auctionId(auction.getAuctionId())
-                .price(auction.getPrice())
-                .endDate(auction.getEndDate())
-                .createdAt(auction.getCreatedAt())
-                .build();
+        //블록체인에서 직접 읽어온 값 추가 필요
+        try {
+            PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(BigInteger.valueOf(3));
+            RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(auction.getTokenId());
+
+            return AuctionDetailResponseDTO.builder()
+                    .auctionId(auction.getAuctionId())
+                    .price(auction.getPrice())  //현재 가격
+                    .ir(new BigDecimal(promissoryMetadata.ir))
+                    .repayType(SysCommonCodes.Repayment.fromCode(promissoryMetadata.repayType).getCodeName())
+                    .totalAmount(50000L)  //만기 수취액?
+                    .matDt(DateTimeUtils.toZonedDateTimeAtEndOfDay(promissoryMetadata.matDt))
+                    .dir(new BigDecimal(promissoryMetadata.dir))
+                    .la(repaymentInfo.remainingPrincipal.longValue())  //원금
+                    .earlypayFlag(promissoryMetadata.earlyPayFlag)
+                    .earlypayFee(new BigDecimal(promissoryMetadata.earlyPayFee))
+                    .creditScore(creditScore)  //신용 점수
+                    .defCnt(repaymentInfo.defCnt.intValue())   //연체 횟수
+                    .endDate(auction.getEndDate())
+                    .createdAt(auction.getCreatedAt())
+                    .build();
+        } catch (Exception e) {
+            log.error("[블록체인 오류] getPromissoryMetadata 실패", e);
+            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR);
+        }
     }
 
     public void processAuctionEnd(Integer auctionId) {
@@ -197,6 +314,35 @@ public class AuctionService {
             Bid winningBid = bids.get(0);   //최고가
             auction.updatePriceAndBidder(winningBid.getBidAmount(), winningBid.getUserId());
             auction.setAuctionStatus(SysCommonCodes.Auction.COMPLETED);
+
+            // 낙찰 종료 트랜잭션 실행
+            ProfileInfoResponseDTO grantor = userService.getProfileInfo(auction.getUserId());
+            ProfileInfoResponseDTO grantee = userService.getProfileInfo(winningBid.getUserId());
+
+            AppendixMetadataDTO dto = AppendixMetadataDTO.builder()
+                    .tokenId(auction.getTokenId())
+                    .grantorSign(auction.getSellerSign())
+                    .grantorName(grantor.getUserName())
+                    .grantorWalletAddress(grantor.getWalletAddress())
+                    .grantorInfoHash("")  //?
+                    .granteeSign(winningBid.getBidderSign())
+                    .granteeName(grantee.getUserName())
+                    .granteeWalletAddress(grantee.getWalletAddress())
+                    .granteeInfoHash("")  //?
+                    .la(BigInteger.valueOf(100))   //?
+                    .contractDate(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                    .originalText("")   //?
+                    .build();
+
+            PromissoryNoteAuction.AppendixMetadata metadata = AppendixMetadataMapper.toWeb3(dto);
+
+            MetamaskWallet currentBidderWallet = userService.getWalletByUserIdAndPrimaryFlagTrue(winningBid.getUserId());
+            promissoryNoteAuctionService.finalizeAuction(
+                    auction.getTokenId(),
+                    currentBidderWallet.getWalletAddress(),
+                    BigInteger.valueOf(winningBid.getBidAmount()),
+                    metadata
+            );
 
             // 낙찰자에게 성공 알림
             notificationService.createNotification(
@@ -238,8 +384,8 @@ public class AuctionService {
 
         auctionRepository.save(auction);
 
-        //차용증 채권자 정보 변경
-        //부속 NFT 추가
+        //차용증 현재 채권자 정보 변경
+        contractService.changeCreditorByTokenId(auction.getTokenId(), auction.getUserId());
     }
 
     public SimilarAuctionResponseDTO getSimilarAuctions(@Valid Integer auctionId) {

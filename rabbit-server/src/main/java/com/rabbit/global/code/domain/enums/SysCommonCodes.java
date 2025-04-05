@@ -343,6 +343,15 @@ public class SysCommonCodes {
         public static Repayment fromCode(String code) {
             return fromCodeCommon(values(), code, CODE_TYPE);
         }
+
+        public static Repayment fromCodeEnumName(String codeName) {
+            return Arrays.stream(values())
+                    .filter(e -> e.getCodeName().equals(codeName))
+                    .findFirst()
+                    .orElseThrow(() ->
+                            new IllegalArgumentException("유효하지 않은 상환 방식입니다: " + codeName));
+        }
+
     }
 
     @Getter

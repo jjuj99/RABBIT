@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 
 @Getter
@@ -19,6 +20,7 @@ public class AuctionResponseDTO {
     private BigDecimal ir;           // 이자율
     private ZonedDateTime createdAt; // 최초 등록일
     private String repayType;        // 상환 방식
+    private BigInteger tokenId;
     private Long totalAmount;             // 만기수취액
     private ZonedDateTime matDt;     // 만기일
     private BigDecimal dir;          // 연체 이자율

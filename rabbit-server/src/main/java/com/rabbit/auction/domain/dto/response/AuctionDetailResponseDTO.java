@@ -25,6 +25,6 @@ public class AuctionDetailResponseDTO {
     private Long la;    //원금
     private Boolean earlypayFlag;   // 중도상환 가능 여부
     private BigDecimal earlypayFee;  // 중도 상환 수수료
-    private Integer creditScore;     // 신용점수
+    private String creditScore;     // 신용점수
     private Integer defCnt;          // 연체 횟수
 }

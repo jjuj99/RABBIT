@@ -48,7 +48,8 @@ public class AuctionRepositoryCustomImpl implements AuctionRepositoryCustom {
                         auction.auctionId.as("auctionId"),
                         auction.price,
                         auction.endDate,
-                        auction.createdAt
+                        auction.createdAt,
+                        auction.tokenId
                 ))
                 .from(auction)
                 .where(builder)

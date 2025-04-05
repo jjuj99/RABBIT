@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.rabbit.contract.domain.dto.request.ContractRejectRequestDTO;
 import com.rabbit.contract.domain.dto.response.ContractListResponseDTO;
+import com.rabbit.user.service.UserService;
 import com.rabbit.user.service.WalletService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,6 +45,8 @@ public class ContractService {
     private final UserRepository userRepository;
     private final WalletService walletService;
     private final SysCommonCodeService sysCommonCodeService;
+    private final UserService userService;
+
     // NFT 관련 서비스 주입 필요
     // private final NftService nftService;
 
@@ -611,5 +614,22 @@ public class ContractService {
                     contract.getContractId(), contract.getContractStatus());
             throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "체결된 계약은 삭제할 수 없습니다");
         }
+    }
+
+    @Transactional
+    public void changeCreditorByTokenId(BigInteger tokenId, Integer newCreditorId) {
+        Contract contract = contractRepository.findByTokenId(tokenId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 tokenId의 계약이 없습니다."));
+
+        User newCreditor = userService.findById(newCreditorId);
+
+        contract.changeCreditor(newCreditor); // Contract 내부 메서드
+    }
+
+    public User getDebtorByTokenId(BigInteger tokenId) {
+        Contract contract = contractRepository.findByTokenId(tokenId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 tokenId의 계약이 없습니다."));
+
+        return contract.getDebtor();
     }
 }

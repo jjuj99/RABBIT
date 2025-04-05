@@ -7,6 +7,7 @@ import com.rabbit.auction.domain.entity.Bid;
 import com.rabbit.auction.repository.AuctionRepository;
 import com.rabbit.auction.repository.BidRepository;
 import com.rabbit.blockchain.service.PromissoryNoteAuctionService;
+import com.rabbit.blockchain.service.RabbitCoinService;
 import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
@@ -36,6 +37,7 @@ public class BidService {
     private final NotificationService notificationService;
     private final UserService userService;
     private final PromissoryNoteAuctionService promissoryNoteAuctionService;
+    private final RabbitCoinService rabbitCoinService;
 
     @Transactional
     public void addBid(@Valid BidRequestDTO bidRequest, Integer auctionId, Integer userId) {
@@ -58,22 +60,35 @@ public class BidService {
             throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "양도자는 경매에 참여할 수 없습니다.");
         }
 
-        //기존 입찰자
+        //해당 입찰자에게 금액만큼 잔고가 있는지 확인
+        MetamaskWallet currentBidderWallet = userService.getWalletByUserIdAndPrimaryFlagTrue(userId);
+
         Integer previousBidderId = auction.getWinningBidder();
 
-        //해당 입찰자에게 금액만큼 잔고가 있는지 확인 -> 서명 후 스마트컨트랙트로 예치
-        MetamaskWallet wallet = userService.getWalletByUserIdAndPrimaryFlagTrue(userId);
-        try {
-            promissoryNoteAuctionService.depositRAB(
-                    auction.getTokenId(),                          // tokenId
-                    BigInteger.valueOf(bidRequest.getBidAmount()),                // amount
-                    wallet.getWalletAddress()                                           // bidder address
-            );
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "블록체인 입찰 처리 중 오류가 발생했습니다.");
+        if(previousBidderId!=null){
+
+            BigInteger currentBalance = rabbitCoinService.balanceOf(currentBidderWallet.getWalletAddress());
+            BigInteger previousAmount = promissoryNoteAuctionService.getBiddingAmount(auction.getTokenId());
+            BigInteger bidAmount = BigInteger.valueOf(bidRequest.getBidAmount());
+
+            // 현재 입찰자가 가격을 올려서 입찰
+            if(previousBidderId.equals(userId)){
+                if(currentBalance.add(previousAmount).compareTo(bidAmount) < 0){
+                    throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "입찰 금액이 부족합니다.");
+                }
+            }else{  //다른 사람이 입찰
+                if(currentBalance.compareTo(bidAmount) < 0){
+                    throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "입찰 금액이 부족합니다.");
+                }
+            }
         }
 
-        //이전 입찰자에게는 예치한 금액 돌려주기
+        // 스마트 컨트랙트로 코인 예치 및 이전 사람에게는 돌려주기
+        promissoryNoteAuctionService.depositRAB(
+                auction.getTokenId(),                          // tokenId
+                BigInteger.valueOf(bidRequest.getBidAmount()),                // amount
+                currentBidderWallet.getWalletAddress()                                           // bidder address
+        );
 
         Bid bid = Bid.builder()
                 .userId(userId)

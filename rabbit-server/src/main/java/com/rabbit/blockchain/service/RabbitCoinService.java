@@ -1,6 +1,8 @@
 package com.rabbit.blockchain.service;
 
 import com.rabbit.blockchain.wrapper.RabbitCoin;
+import com.rabbit.global.exception.BusinessException;
+import com.rabbit.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -28,8 +30,12 @@ public class RabbitCoinService {
         return rabbitCoin.approveInfiniteForSystem(account).send();
     }
 
-    public BigInteger balanceOf(String address) throws Exception {
-        return rabbitCoin.balanceOf(address).send();
+    public BigInteger balanceOf(String address) {
+        try {
+            return rabbitCoin.balanceOf(address).send();
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "블록체인 잔액 조회 중 오류가 발생했습니다.", e);
+        }
     }
 
     public TransactionReceipt mint(String account, BigInteger amount) throws Exception {

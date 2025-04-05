@@ -314,4 +314,10 @@ public class Contract {
                 .deletedFlag(false)
                 .build();
     }
+
+    public void changeCreditor(User newCreditor) {
+        this.creditor = newCreditor;
+        this.updatedAt = ZonedDateTime.now();
+    }
+
 }

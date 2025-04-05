@@ -1,10 +1,9 @@
 import UnitInput from "@/entities/common/ui/UnitInput";
 import { Button } from "@/shared/ui/button";
-
 import { Textarea } from "@/shared/ui/textarea";
-
 import { InputForm, SelectRepayType } from "@/entities/contract";
 import { useContractForm } from "@/features/contract";
+import { Calendar } from "@/shared/ui/calendar";
 import { Checkbox } from "@/shared/ui/checkbox";
 import {
   Form,
@@ -13,29 +12,24 @@ import {
   FormItem,
   FormLabel,
 } from "@/shared/ui/form";
-import PASSDialog from "@/widget/common/ui/PASSDialog";
-import BasicDialog from "@/widget/common/ui/BasicDialog";
-import { useState } from "react";
-import EmailSearchDialog from "@/widget/common/ui/EmailSearchDialog";
-import { Calendar } from "@/shared/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import dateFormat from "@/shared/utils/dateFormat";
+import BasicDialog from "@/widget/common/ui/BasicDialog";
+import EmailSearchDialog from "@/widget/common/ui/EmailSearchDialog";
+import PASSDialog from "@/widget/common/ui/PASSDialog";
+import { useState } from "react";
 
 const ContractCreate = () => {
   const {
     form,
     onSubmit,
-    passUserName,
-    passPhoneNumber,
-    isPassDialogOpen,
-    setPassUserName,
-    setPassPhoneNumber,
-    setIsPassDialogOpen,
-    handlePassComplete,
     dialogOpen,
     setDialogOpen,
     dialogMessage,
     setDialogMessage,
+    isPassDialogOpen,
+    setIsPassDialogOpen,
+    setPassState,
   } = useContractForm();
 
   const [isSearchUserDialogOpen, setIsSearchUserDialogOpen] = useState(false);
@@ -69,11 +63,7 @@ const ContractCreate = () => {
                     <PASSDialog
                       isOpen={isPassDialogOpen}
                       onOpenChange={setIsPassDialogOpen}
-                      userName={passUserName}
-                      phoneNumber={passPhoneNumber}
-                      onUserNameChange={setPassUserName}
-                      onPhoneNumberChange={setPassPhoneNumber}
-                      onComplete={handlePassComplete}
+                      setPassState={setPassState}
                     >
                       <InputForm
                         type="tel"

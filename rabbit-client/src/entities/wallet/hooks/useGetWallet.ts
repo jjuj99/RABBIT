@@ -1,24 +1,21 @@
-import { useEffect, useState } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import getMetaMaskProvider from "../utils/getMetaMaskProvider";
 import getWalletAddress from "../utils/getWalletAddress";
 
 const useGetWallet = () => {
-  const [address, setAddress] = useState<string | null>(null);
-  useEffect(() => {
-    const getWallet = async () => {
+  const { data: address } = useSuspenseQuery({
+    queryKey: ["user", "wallet"],
+    queryFn: async () => {
       const provider = await getMetaMaskProvider();
       if (!provider) {
-        return;
+        return null;
       }
       const walletAddress = await getWalletAddress({ provider });
-      if (!walletAddress || !walletAddress.address) {
-        return;
-      }
-      setAddress(walletAddress.address);
-      return;
-    };
-    getWallet();
-  }, []);
+      return walletAddress?.address || null;
+    },
+  });
+
   return { address };
 };
+
 export default useGetWallet;

@@ -1,0 +1,13 @@
+<svg width="150" height="150" viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 배경 원 -->
+  <circle cx="75" cy="75" r="70" fill="#FEE2E2" />
+  
+  <!-- 빨간색 X 마크가 있는 원 -->
+  <circle cx="75" cy="75" r="60" fill="#EF4444" />
+  
+  <!-- 흰색 X 마크 -->
+  <path d="M50 50 L100 100 M100 50 L50 100" 
+        stroke="white" 
+        stroke-width="8" 
+        stroke-linecap="round" />
+</svg> 

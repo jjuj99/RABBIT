@@ -1,9 +1,9 @@
 import { truncateAddress } from "@/shared/utils/truncateAddress";
 import { ContractListResponse } from "../types/response";
-import ContactStatusBadge from "../ui/ContactStatusBadge";
 import { wonFormat } from "@/shared/utils/wonFormat";
 import { ColumnDef } from "@/shared/ui/DataTable";
 import { repaymentTypeConfig } from "../types/repaymentTypeConfig";
+import ContractStatusBadge from "../ui/ContractStatusBadge";
 
 export const contractSentColumns: ColumnDef<ContractListResponse>[] = [
   {
@@ -11,7 +11,7 @@ export const contractSentColumns: ColumnDef<ContractListResponse>[] = [
     key: "debtorInfo",
     render: (contract: ContractListResponse) => (
       <>
-        {contract.debtorName}({truncateAddress(contract.debtorWallet)})
+        {contract.name}({truncateAddress(contract.walletAddress)})
       </>
     ),
   },
@@ -19,39 +19,38 @@ export const contractSentColumns: ColumnDef<ContractListResponse>[] = [
     header: "대출 금액",
     key: "amount",
     align: "right",
-    render: (contract: ContractListResponse) => wonFormat(contract.amount),
+    render: (contract: ContractListResponse) => wonFormat(contract.la),
   },
   {
     header: "이자율",
     key: "interestRate",
     align: "right",
-    render: (contract: ContractListResponse) => `${contract.interestRate}%`,
+    render: (contract: ContractListResponse) => `${contract.ir}%`,
   },
   {
     header: "상환 방식",
     key: "repaymentType",
     align: "center",
     render: (contract: ContractListResponse) =>
-      repaymentTypeConfig[contract.repaymentType],
+      repaymentTypeConfig[contract.repayType],
   },
   {
     header: "대출 기간",
     key: "loanTerm",
     align: "center",
-    render: (contract: ContractListResponse) => `${contract.loanTerm}개월`,
+    render: (contract: ContractListResponse) => `${contract.lt}개월`,
   },
   {
     header: "월 상환일",
     key: "monthlyPaymentDate",
     align: "center",
-    render: (contract: ContractListResponse) =>
-      `매월 ${contract.monthlyPaymentDate}일`,
+    render: (contract: ContractListResponse) => `매월 ${contract.mpDt}일`,
   },
   {
     header: "계약 시행일",
     key: "contractDate",
     align: "center",
-    render: (contract: ContractListResponse) => contract.contractDate,
+    render: (contract: ContractListResponse) => contract.contractDt,
   },
   {
     header: "요청일",
@@ -65,7 +64,7 @@ export const contractSentColumns: ColumnDef<ContractListResponse>[] = [
     align: "center",
     render: (contract: ContractListResponse) => (
       <div className="flex justify-center">
-        <ContactStatusBadge status={contract.status} />
+        <ContractStatusBadge status={contract.contractStatus} />
       </div>
     ),
   },

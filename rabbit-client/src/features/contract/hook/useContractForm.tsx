@@ -7,14 +7,20 @@ import useGetWallet from "@/entities/wallet/hooks/useGetWallet";
 import { useWeb3 } from "@/shared/lib/web3/context/useWeb3";
 import useCreateContract from "@/entities/contract/hooks/useCreateContract";
 import dateFormat from "@/shared/utils/dateFormat";
+import { passType } from "@/shared/type/Types";
 
 const useContractForm = () => {
   const { user } = useAuthUser();
-  const [passUserName, setPassUserName] = useState("");
-  const [passPhoneNumber, setPassPhoneNumber] = useState("");
-  const [isPassDialogOpen, setIsPassDialogOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
+  const [isPassDialogOpen, setIsPassDialogOpen] = useState(false);
+  const [passState, setPassState] = useState<passType>({
+    authResultCode: "FAIL",
+    passAuthToken: "",
+    txId: "",
+    phoneNumber: "",
+    name: "",
+  });
   const { address } = useGetWallet();
   const { web3 } = useWeb3();
   const { createContractMutation } = useCreateContract();
@@ -81,6 +87,12 @@ const useContractForm = () => {
     }
   }, [address]);
 
+  useEffect(() => {
+    if (passState.authResultCode === "SUCCESS") {
+      handlePassComplete();
+    }
+  }, [passState]);
+
   const form = useForm<z.infer<typeof contractSchema>>({
     resolver: zodResolver(contractSchema),
     defaultValues: {
@@ -124,37 +136,30 @@ const useContractForm = () => {
     });
   };
 
-  const handlePassComplete = (phoneNumber: string, name: string) => {
-    const loggedInUserName = form.getValues("drName");
-
-    if (loggedInUserName && name !== loggedInUserName) {
-      alert("인증하신 이름이 회원정보와 일치하지 않습니다.");
-      return false;
+  const handlePassComplete = () => {
+    console.log("passState", passState);
+    if (passState.authResultCode === "SUCCESS") {
+      form.setValue("drPhone", passState.phoneNumber);
+      form.setValue("drName", passState.name);
+      form.setValue("passAuthToken", passState.passAuthToken);
+      form.setValue("txId", passState.txId);
+      form.setValue("authResultCode", passState.authResultCode);
+      setIsPassDialogOpen(false);
     }
-    const pass = btoa(encodeURIComponent(name + phoneNumber));
-
-    form.setValue("drPhone", phoneNumber);
-    form.setValue("passAuthToken", pass);
-    form.setValue("txId", "rabbit");
-    form.setValue("authResultCode", "SUCCESS");
-    setIsPassDialogOpen(false);
-    return true;
   };
 
   return {
     form,
     onSubmit,
-    passUserName,
-    passPhoneNumber,
-    isPassDialogOpen,
-    setPassUserName,
-    setPassPhoneNumber,
-    setIsPassDialogOpen,
+    passState,
+    setPassState,
     handlePassComplete,
     dialogOpen,
     setDialogOpen,
     dialogMessage,
     setDialogMessage,
+    isPassDialogOpen,
+    setIsPassDialogOpen,
   };
 };
 

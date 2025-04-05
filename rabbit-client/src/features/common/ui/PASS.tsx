@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
+import { toast } from "sonner";
 
 // 이미지 경로를 실제 환경에 맞게 조정해야 할 수 있습니다.
 interface PassProps {
@@ -14,6 +15,7 @@ interface PassProps {
   onUserNameChange: (value: string) => void;
   onPhoneNumberChange: (value: string) => void;
   onComplete: (phoneNumber: string, name: string) => boolean;
+  onClose: () => void;
 }
 
 const PASS: React.FC<PassProps> = ({
@@ -22,6 +24,7 @@ const PASS: React.FC<PassProps> = ({
   onUserNameChange,
   onPhoneNumberChange,
   onComplete,
+  onClose,
 }) => {
   const [selectedMobileCo, setSelectedMobileCo] = useState<string>("");
   const [allAgreed, setAllAgreed] = useState<boolean>(false);
@@ -43,10 +46,12 @@ const PASS: React.FC<PassProps> = ({
     const isSuccess = onComplete(phoneNumber, userName);
 
     if (isSuccess) {
-      // 인증 성공 시 팝업 닫기
+      toast.success("인증에 성공했습니다.");
       setAuthPopupOpen(false);
+      onClose();
+    } else {
+      toast.error("인증에 실패했습니다. 이름과 휴대폰 번호를 확인해주세요.");
     }
-    // 실패 시는 팝업 유지 (사용자가 다시 시도할 수 있도록)
   };
   // 통신사 선택 핸들러
   const handleMobileCoSelect = (value: string) => {

@@ -12,3 +12,11 @@ export type auctionStatusName = "진행중" | "완료" | "유찰" | "취소";
 export type bidStatus = "WON" | "LOST" | "PENDING";
 
 export type bidStatusName = "입찰중" | "낙찰" | "낙찰 실패";
+
+export interface passType {
+  passAuthToken: string;
+  txId: string;
+  authResultCode: "SUCCESS" | "FAIL";
+  phoneNumber: string;
+  name: string;
+}

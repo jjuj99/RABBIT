@@ -10,6 +10,7 @@ import { ContractStatus, statusConfig } from "../constant/statusConfig";
 import { Button } from "@/shared/ui/button";
 import { Filter } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
+import useGetCommonCode from "@/widget/common/hook/useGetCommonCode";
 
 export type SelectedFilters = Set<ContractStatus>;
 // 필터 옵션 컴포넌트
@@ -22,6 +23,8 @@ const FilterOptions = ({
   selectedFilters,
   onFilterChange,
 }: FilterOptionsProps) => {
+  const { data: contractStatus } = useGetCommonCode("CONTRACT_STATUS");
+  console.log(contractStatus);
   const handleFilterToggle = (status: ContractStatus) => {
     const newFilters = new Set(selectedFilters);
     if (newFilters.has(status)) {
@@ -62,7 +65,10 @@ const FilterOptions = ({
                   statusConfig[status].dotColor,
                 )}
               />
-              {statusConfig[status].label}
+              {
+                contractStatus?.data?.find((item) => item.code === status)
+                  ?.codeName
+              }
             </div>
           </DropdownMenuItem>
         ))}

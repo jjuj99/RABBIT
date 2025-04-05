@@ -115,6 +115,7 @@
 @layer base {
   html,
   body {
+    min-height: 100vh;
     font-family: "Pretendard", sans-serif;
     background-image: var(--gradient-radial-lg);
     /* height: 100%; */

@@ -1,88 +1,30 @@
 import { contractSentColumns } from "@/entities/contract/constant/contractSentColumns";
-import {
-  ContractStatus,
-  statusConfig,
-} from "@/entities/contract/constant/statusConfig";
+import { ContractStatus } from "@/entities/contract/constant/statusConfig";
+import useGetContractList from "@/entities/contract/hooks/useGetContractList";
 import { repaymentTypeConfig } from "@/entities/contract/types/repaymentTypeConfig";
-import { ContractSentListResponse } from "@/entities/contract/types/response";
+import { ContractListResponse } from "@/entities/contract/types/response";
+import ContractStatusBadge from "@/entities/contract/ui/ContractStatusBadge";
 
-import ContactStatusBadge from "@/entities/contract/ui/ContactStatusBadge";
 import FilterOptions, {
   SelectedFilters,
 } from "@/entities/contract/ui/FilterOptions";
 import SortOptions, { SortConfig } from "@/entities/contract/ui/SortOption";
 import { sortData } from "@/entities/contract/utils/sortData";
-import { cn } from "@/shared/lib/utils";
-import { Badge } from "@/shared/ui/badge";
 import { DataCard } from "@/shared/ui/DataCard";
 import { DataTable } from "@/shared/ui/DataTable";
 import { truncateAddress } from "@/shared/utils/truncateAddress";
 import { wonFormat } from "@/shared/utils/wonFormat";
-import { X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 
 // 목데이터 수정
-const mockData: ContractSentListResponse[] = [
-  {
-    id: "1",
-    debtorName: "홍길동",
-    debtorWallet: "0x1234567890abcdef",
-    amount: 1000000,
-    interestRate: 3.5,
-    maturityDate: "2024.06.20",
-    monthlyPaymentDate: 25,
-    loanTerm: 3,
-    repaymentType: "EPIP",
-    contractDate: "2024.03.20",
-    createdAt: "2024.03.15",
-    status: "REQUESTED",
-  },
-  {
-    id: "2",
-    debtorName: "김철수",
-    debtorWallet: "0x9876543210fedcba",
-    amount: 5000000,
-    interestRate: 5.0,
-    maturityDate: "2024.04.15",
-    monthlyPaymentDate: 15,
-    loanTerm: 6,
-    repaymentType: "EPP",
-    contractDate: "2024.03.15",
-    createdAt: "2024.03.10",
-    status: "COMPLETED",
-  },
-  {
-    id: "3",
-    debtorName: "이영희",
-    debtorWallet: "0x456789abcdef0123",
-    amount: 2500000,
-    interestRate: 4.2,
-    maturityDate: "2024.05.01",
-    monthlyPaymentDate: 10,
-    loanTerm: 12,
-    repaymentType: "BP",
-    contractDate: "2024.04.15",
-    createdAt: "2024.04.05",
-    status: "MODIFIED",
-  },
-  {
-    id: "4",
-    debtorName: "박민수",
-    debtorWallet: "0xabcdef0123456789",
-    amount: 3000000,
-    interestRate: 3.8,
-    maturityDate: "2024.03.25",
-    monthlyPaymentDate: 20,
-    loanTerm: 24,
-    repaymentType: "EPIP",
-    contractDate: "2024.03.20",
-    createdAt: "2024.03.15",
-    status: "CANCELED",
-  },
-];
 
 // 메인 컴포넌트
 const ContractSentList = () => {
+  const navigate = useNavigate();
+  const { data: contractList } = useGetContractList({
+    type: "sent",
+  });
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     field: "createdAt",
     order: "desc",
@@ -90,6 +32,7 @@ const ContractSentList = () => {
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>(
     new Set(),
   );
+  console.log(contractList);
 
   const handleFilterToggle = (status: ContractStatus) => {
     const newFilters = new Set(selectedFilters);
@@ -101,18 +44,19 @@ const ContractSentList = () => {
     setSelectedFilters(newFilters);
   };
 
-  const handleRowClick = (contract: ContractSentListResponse) => {
-    console.log("Contract clicked:", contract);
-    // 필요한 경우 상위 컴포넌트로 이벤트를 전달하거나
-    // 페이지 이동 등의 로직을 구현
+  const handleRowClick = (contract: ContractListResponse) => {
+    navigate(`/contract/sent/${contract.id}`);
   };
 
   const filteredAndSortedData = useMemo(() => {
-    let result = [...mockData];
+    if (!contractList) return [];
+    let result = [...contractList.data!];
 
     // 필터 적용
     if (selectedFilters.size > 0) {
-      result = result.filter((item) => selectedFilters.has(item.status));
+      result = result.filter((item) =>
+        selectedFilters.has(item.contractStatus),
+      );
     }
 
     // 정렬 적용
@@ -135,27 +79,11 @@ const ContractSentList = () => {
               <div className="hidden lg:flex lg:flex-wrap lg:items-center lg:gap-2">
                 {selectedFilters.size > 0 &&
                   Array.from(selectedFilters).map((status) => (
-                    <Badge
+                    <ContractStatusBadge
                       key={status}
-                      className="flex items-center gap-2 bg-gray-800 px-3 py-1 text-white"
-                    >
-                      <span
-                        className={cn(
-                          "h-2 w-2 rounded-full",
-                          statusConfig[status].dotColor,
-                        )}
-                      />
-                      {statusConfig[status].label}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleFilterToggle(status);
-                        }}
-                        className="ml-1 hover:text-gray-400"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </Badge>
+                      status={status}
+                      onDelete={() => handleFilterToggle(status)}
+                    />
                   ))}
               </div>
               <FilterOptions
@@ -171,27 +99,11 @@ const ContractSentList = () => {
             {selectedFilters.size > 0 && (
               <div className="flex flex-wrap items-center gap-2 lg:hidden">
                 {Array.from(selectedFilters).map((status) => (
-                  <Badge
+                  <ContractStatusBadge
                     key={status}
-                    className="flex items-center gap-2 bg-gray-800 px-3 py-1 text-white"
-                  >
-                    <span
-                      className={cn(
-                        "h-2 w-2 rounded-full",
-                        statusConfig[status].dotColor,
-                      )}
-                    />
-                    {statusConfig[status].label}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFilterToggle(status);
-                      }}
-                      className="ml-1 hover:text-gray-400"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </Badge>
+                    status={status}
+                    onDelete={() => handleFilterToggle(status)}
+                  />
                 ))}
               </div>
             )}
@@ -216,19 +128,19 @@ const ContractSentList = () => {
                 item={contract}
                 onClick={handleRowClick}
                 renderHeader={(contract) => (
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 space-y-1">
                       <div className="font-medium text-white">
-                        {contract.debtorName}
+                        {contract.name}
                         <span className="ml-1 text-sm text-gray-400">
-                          ({truncateAddress(contract.debtorWallet)})
+                          ({truncateAddress(contract.walletAddress)})
                         </span>
                       </div>
                       <div className="text-lg font-semibold text-white">
-                        {wonFormat(contract.amount)}
+                        {wonFormat(contract.la)}
                       </div>
                     </div>
-                    <ContactStatusBadge status={contract.status} />
+                    <ContractStatusBadge status={contract.contractStatus} />
                   </div>
                 )}
                 sections={[
@@ -237,25 +149,24 @@ const ContractSentList = () => {
                     items: [
                       {
                         label: "이자율",
-                        render: (contract) => `${contract.interestRate}%`,
+                        render: (contract) => `${contract.ir}%`,
                       },
                       {
                         label: "상환 방식",
                         render: (contract) =>
-                          repaymentTypeConfig[contract.repaymentType],
+                          repaymentTypeConfig[contract.repayType],
                       },
                       {
                         label: "대출 기간",
-                        render: (contract) => `${contract.loanTerm}개월`,
+                        render: (contract) => `${contract.lt}개월`,
                       },
                       {
                         label: "월 상환일",
-                        render: (contract) =>
-                          `매월 ${contract.monthlyPaymentDate}일`,
+                        render: (contract) => `매월 ${contract.mpDt}일`,
                       },
                       {
                         label: "계약 시행일",
-                        render: (contract) => contract.contractDate,
+                        render: (contract) => contract.contractDt,
                       },
                       {
                         label: "요청일",

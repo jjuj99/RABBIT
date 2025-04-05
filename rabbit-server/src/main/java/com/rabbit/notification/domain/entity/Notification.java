@@ -52,7 +52,6 @@ public class Notification {
     @Column(name = "updated_at")
     private ZonedDateTime updatedAt;
 
-    // 도메인 메서드 예시
     public void markAsRead() {
         this.readFlag = true;
     }

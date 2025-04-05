@@ -1,5 +1,7 @@
 package com.rabbit.notification.service;
 
+import com.rabbit.global.exception.BusinessException;
+import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.notification.domain.dto.request.NotificationRequestDTO;
 import com.rabbit.notification.domain.dto.response.NotificationResponseDTO;
 import com.rabbit.notification.domain.entity.Notification;
@@ -10,6 +12,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.web3j.abi.datatypes.Int;
 
 import java.util.List;
 
@@ -57,5 +60,19 @@ public class NotificationService {
         return notifications.stream()
                 .map(NotificationResponseDTO::from)
                 .toList();
+    }
+
+    public void readNotification(Integer notificationId, Integer userId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 알림을 찾을 수 없습니다."));
+
+        if (!notification.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+
+        if (!notification.getReadFlag()) {
+            notification.markAsRead();
+            notificationRepository.save(notification);
+        }
     }
 }

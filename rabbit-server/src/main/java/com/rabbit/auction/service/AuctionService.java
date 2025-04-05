@@ -227,9 +227,14 @@ public class AuctionService {
                 .build();
     }
 
-    public void cancelAuction(@Valid Integer auctionId) {
+    public void cancelAuction(@Valid Integer auctionId, Integer userId) {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
+
+        // 내 auction이 아니면 취소 불가
+        if(!auction.getUserId().equals(userId)){
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "경매 취소 권한이 없습니다.");
+        }
 
         //입찰자 존재시 취소 불가
         boolean hasBids=bidRepository.existsByAuction(auction);
@@ -328,7 +333,9 @@ public class AuctionService {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
 
-        if (auction.getAuctionStatus() != SysCommonCodes.Auction.ING) return;
+        if (auction.getAuctionStatus() != SysCommonCodes.Auction.ING) {
+            throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "진행중인 경매가 아닙니다.");
+        }
 
         List<Bid> bids = bidRepository.findAllByAuction_AuctionIdOrderByBidAmountDescCreatedAtAsc(auctionId);
 
@@ -353,67 +360,74 @@ public class AuctionService {
             ProfileInfoResponseDTO grantor = userService.getProfileInfo(auction.getUserId());
             ProfileInfoResponseDTO grantee = userService.getProfileInfo(winningBid.getUserId());
 
-            AppendixMetadataDTO dto = AppendixMetadataDTO.builder()
-                    .tokenId(auction.getTokenId())
-                    .grantorSign(auction.getSellerSign())
-                    .grantorName(grantor.getUserName())
-                    .grantorWalletAddress(grantor.getWalletAddress())
-                    .grantorInfoHash("")  //?
-                    .granteeSign(winningBid.getBidderSign())
-                    .granteeName(grantee.getUserName())
-                    .granteeWalletAddress(grantee.getWalletAddress())
-                    .granteeInfoHash("")  //?
-                    .la(BigInteger.valueOf(100))   //?
-                    .contractDate(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                    .originalText("")   //?
-                    .build();
+            // 상환 정보 조회 (연체 횟수, 남은 원금)
+            try {
+                RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(auction.getTokenId());
 
-            PromissoryNoteAuction.AppendixMetadata metadata = AppendixMetadataMapper.toWeb3(dto);
+                AppendixMetadataDTO dto = AppendixMetadataDTO.builder()
+                        .tokenId(auction.getTokenId())
+                        .grantorSign(auction.getSellerSign())
+                        .grantorName(grantor.getUserName())
+                        .grantorWalletAddress(grantor.getWalletAddress())
+                        .grantorInfoHash("")  //?
+                        .granteeSign(winningBid.getBidderSign())
+                        .granteeName(grantee.getUserName())
+                        .granteeWalletAddress(grantee.getWalletAddress())
+                        .granteeInfoHash("")  //?
+                        .la(repaymentInfo.remainingPrincipal)   //?
+                        .contractDate(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                        .originalText("")   //?
+                        .build();
 
-            MetamaskWallet currentBidderWallet = userService.getWalletByUserIdAndPrimaryFlagTrue(winningBid.getUserId());
-            promissoryNoteAuctionService.finalizeAuction(
-                    auction.getTokenId(),
-                    currentBidderWallet.getWalletAddress(),
-                    BigInteger.valueOf(winningBid.getBidAmount()),
-                    metadata
-            );
+                PromissoryNoteAuction.AppendixMetadata metadata = AppendixMetadataMapper.toWeb3(dto);
 
-            // 낙찰자에게 성공 알림
-            notificationService.createNotification(
-                    NotificationRequestDTO.builder()
-                            .userId(winningBid.getUserId())
-                            .type(SysCommonCodes.NotificationType.AUCTION_SUCCESS)
-                            .relatedId(auctionId)
-                            .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
-                            .build()
-            );
+                MetamaskWallet currentBidderWallet = userService.getWalletByUserIdAndPrimaryFlagTrue(winningBid.getUserId());
+                promissoryNoteAuctionService.finalizeAuction(
+                        auction.getTokenId(),
+                        currentBidderWallet.getWalletAddress(),
+                        BigInteger.valueOf(winningBid.getBidAmount()),
+                        metadata
+                );
 
-            User winner = userService.findById(winningBid.getUserId());
-            mailService.sendMail(
-                    winner.getEmail(),
-                    SysCommonCodes.MailTemplateType.AUCTION_SUCCESS_WINNER,
-                    winner.getUserName(),
-                    auction.getTokenId()
-            );
+                // 낙찰자에게 성공 알림
+                notificationService.createNotification(
+                        NotificationRequestDTO.builder()
+                                .userId(winningBid.getUserId())
+                                .type(SysCommonCodes.NotificationType.AUCTION_SUCCESS)
+                                .relatedId(auctionId)
+                                .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
+                                .build()
+                );
+
+                User winner = userService.findById(winningBid.getUserId());
+                mailService.sendMail(
+                        winner.getEmail(),
+                        SysCommonCodes.MailTemplateType.AUCTION_SUCCESS_WINNER,
+                        winner.getUserName(),
+                        auction.getTokenId()
+                );
 
 
-            // 양도자에게 전송 예정 알림
-            notificationService.createNotification(
-                    NotificationRequestDTO.builder()
-                            .userId(auction.getUserId())
-                            .type(SysCommonCodes.NotificationType.AUCTION_TRANSFERRED)
-                            .relatedId(auctionId)
-                            .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
-                            .build()
-            );
+                // 양도자에게 전송 예정 알림
+                notificationService.createNotification(
+                        NotificationRequestDTO.builder()
+                                .userId(auction.getUserId())
+                                .type(SysCommonCodes.NotificationType.AUCTION_TRANSFERRED)
+                                .relatedId(auctionId)
+                                .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
+                                .build()
+                );
 
-            User seller = userService.findById(auction.getUserId());
-            mailService.sendMail(
-                    seller.getEmail(),
-                    SysCommonCodes.MailTemplateType.AUCTION_SUCCESS_SELLER,
-                    seller.getUserName(),
-                    auction.getTokenId()
-            );
+                User seller = userService.findById(auction.getUserId());
+                mailService.sendMail(
+                        seller.getEmail(),
+                        SysCommonCodes.MailTemplateType.AUCTION_SUCCESS_SELLER,
+                        seller.getUserName(),
+                        auction.getTokenId()
+                );
+            } catch (Exception e) {
+                throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR);
+            }
         }
 
         auctionRepository.save(auction);

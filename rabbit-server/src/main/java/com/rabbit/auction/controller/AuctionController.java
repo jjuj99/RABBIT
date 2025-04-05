@@ -86,21 +86,22 @@ public class AuctionController {
     @AuctionControllerSwagger.CancelAuctionApi
     @DeleteMapping("/{auctionId}")
     public ResponseEntity<CustomApiResponse<MessageResponse>> cancelAuction(
-            @PathVariable("auctionId") Integer auctionId) {
+            @PathVariable("auctionId") Integer auctionId, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
 
-        auctionService.cancelAuction(auctionId);
+        auctionService.cancelAuction(auctionId, Integer.valueOf(userId));
 
         return  ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("경매가 취소되었습니다.")));
     }
 
     @AuctionControllerSwagger.GetMyBidAuctionsApi
     @GetMapping("/my-bids")
-    public ResponseEntity<CustomApiResponse<?>> getMyBidAuctions(@Valid PageRequestDTO pageRequest) {
-        Integer userId = 4;
+    public ResponseEntity<CustomApiResponse<?>> getMyBidAuctions(@Valid PageRequestDTO pageRequest, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
 
         Pageable pageable = pageRequest.toPageable("bidDate", Sort.Direction.DESC);
 
-        PageResponseDTO<MyAuctionResponseDTO> myBidList = auctionService.getMyBidAuctions(userId, pageable);
+        PageResponseDTO<MyAuctionResponseDTO> myBidList = auctionService.getMyBidAuctions(Integer.parseInt(userId), pageable);
 
         return ResponseEntity.ok(CustomApiResponse.success(myBidList));
     }
@@ -108,7 +109,8 @@ public class AuctionController {
     @AuctionControllerSwagger.GetAuctionDetailApi
     @GetMapping("/{auctionId}")
     public ResponseEntity<CustomApiResponse<AuctionDetailResponseDTO>> getAuctionDetail(
-            @PathVariable("auctionId") Integer auctionId) {
+            @PathVariable("auctionId") Integer auctionId, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
 
         AuctionDetailResponseDTO auctionDetailResponse = auctionService.getAuctionDetail(auctionId);
 
@@ -116,7 +118,9 @@ public class AuctionController {
     }
 
     @GetMapping("/{auctionId}/similar")
-    public ResponseEntity<CustomApiResponse<?>> getSimilarAuctions(@Valid @PathVariable Integer auctionId) {
+    public ResponseEntity<CustomApiResponse<?>> getSimilarAuctions(@Valid @PathVariable Integer auctionId, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+
         SimilarAuctionResponseDTO response = auctionService.getSimilarAuctions(auctionId);
 
         return ResponseEntity.ok(CustomApiResponse.success(response));

@@ -12,10 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.http.*;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -38,8 +36,8 @@ public class CoinController {
 
     @CoinControllerSwagger.TossConfirmApi
     @PostMapping("/confirm")
-    public ResponseEntity<CustomApiResponse<?>> confirm(@RequestBody TossConfirmRequestDTO request) {
-        Integer userId=4;
+    public ResponseEntity<CustomApiResponse<?>> confirm(Authentication authentication, @RequestBody TossConfirmRequestDTO request) {
+        String userId = (String) authentication.getPrincipal();
 
         String url = "https://api.tosspayments.com/v1/payments/confirm";
         String encodedKey = Base64.getEncoder().encodeToString((secretKey + ":").getBytes());
@@ -57,11 +55,11 @@ public class CoinController {
         try {
             ResponseEntity<String> response = restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);
 
-            coinService.recordSuccess(request, userId); // 응답 성공
+            coinService.recordSuccess(request, Integer.parseInt(userId)); // 응답 성공
 
             return ResponseEntity.status(HttpStatus.CREATED).body(CustomApiResponse.success(MessageResponse.of("계좌 이체 성공했습니다.")));
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            coinService.recordFailure(request, userId); // 실패 기록
+            coinService.recordFailure(request, Integer.parseInt(userId)); // 실패 기록
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(CustomApiResponse.error(

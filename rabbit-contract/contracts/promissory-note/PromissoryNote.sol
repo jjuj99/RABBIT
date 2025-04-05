@@ -160,18 +160,25 @@ contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
             return _buildAppendixTokenURI(tokenId);
         }
 
-        // 본 NFT인 경우 기존 메타데이터 반환
+        return _buildPromissoryNoteTokenURI(tokenId);
+    }
+
+    function _buildPromissoryNoteTokenURI(uint256 tokenId) internal view returns (string memory) {
         PromissoryMetadata memory m = tokenMetadata[tokenId];
 
-        string memory part1 = _buildCebtorInfo(m); // 채권자 정보
-        string memory part2 = _buildDebtorInfo(m); // 채무자 정보
-        string memory part3 = _buildContractTerms(tokenId, m); // 계약 조건
-        
-        string memory json = string(abi.encodePacked(part1, part2, part3));
+        return _encodeBase64JSON(tokenId, m);
+    }
 
-        return string(abi.encodePacked(
-            "data:application/json;base64,", Base64.encode(bytes(json))
-        ));
+    function _encodeBase64JSON(uint256 tokenId, PromissoryMetadata memory m) internal pure returns (string memory) {
+        string memory json = _buildFullMetadata(tokenId, m);
+        return string(abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(json))));
+    }
+
+    function _buildFullMetadata(uint256 tokenId, PromissoryMetadata memory m) internal pure returns (string memory) {
+        string memory part1 = _buildCebtorInfo(m);
+        string memory part2 = _buildDebtorInfo(m);
+        string memory part3 = _buildContractTerms(tokenId, m);
+        return string(abi.encodePacked(part1, part2, part3));
     }
 
     // 채권자 정보 구성
@@ -241,8 +248,7 @@ contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
         // 본 차용증 NFT와 번들링
         tokenIdToAppendixIds[originalTokenId].push(newTokenId);
         
-        emit AppendixNFTMinted(newTokenId, originalTokenId, recipient);
-        emit AppendixNFTBundled(originalTokenId, newTokenId);
+        emit AppendixNFTMinted(newTokenId, originalTokenId, metadata.grantorWalletAddress, recipient);
         
         return newTokenId;
     }

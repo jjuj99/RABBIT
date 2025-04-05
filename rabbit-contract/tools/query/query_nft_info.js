@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 const fs = require("fs");
 
 const PROMISSORY_NOTE_ADDRESS = process.env.PROMISSORY_NOTE_ADDRESS;
-const TOKEN_IDS = [3, 4, 5]; // 조회할 토큰 ID
+const TOKEN_IDS = [1, 2, 3]; // 조회할 토큰 ID
 
 async function main() {
     console.log("차용증 NFT 정보 조회를 시작합니다...");

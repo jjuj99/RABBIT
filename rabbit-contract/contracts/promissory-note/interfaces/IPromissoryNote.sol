@@ -65,25 +65,22 @@ interface IPromissoryNote is IERC721 {
         string originalText;              // 계약서 원문 해시
     }
 
-    // 차용증 NFT 발행 이벤트
+    // 차용증 NFT 발행 이벤트 (토큰 id, 채권자, 차용증 메타데이터)
     event PromissoryNoteMinted(
         uint256 indexed tokenId,
         address indexed to,
         PromissoryMetadata metadata
     );
 
+    // 차용증 NFT 소각 이벤트 (소각된 토큰 id)
     event PromissoryNoteBurned(uint256 indexed tokenId);
 
-    // 부속 NFT 발행 이벤트
+    // 부속 NFT 발행 이벤트 (부속 토큰id, 본 토큰id, 양도인, 양수인)
     event AppendixNFTMinted(
         uint256 indexed appendixTokenId,
         uint256 indexed originalTokenId,
+        address from,
         address indexed newOwner
-    );
-
-    event AppendixNFTBundled(
-        uint256 indexed originalTokenId,
-        uint256 indexed appendixTokenId
     );
 
     function setSchedulerAddress(address schedulerAddress) external;

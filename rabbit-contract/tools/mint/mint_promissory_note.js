@@ -22,7 +22,7 @@ async function main() {
   const promissoryNoteContract = new ethers.Contract(
     CONTRACT_ADDRESS,
     PROMISSORY_NOTE_ABI,
-    wallet // wallet을 사용하여 트랜잭션 서명
+    wallet
   );
   
   // ============ 여기에 데이터를 입력하세요 ============
@@ -44,9 +44,9 @@ async function main() {
   
   // 계약 정보
   const nftImage = "https://cdn.pixabay.com/photo/2022/02/24/03/10/nft-7031679_1280.jpg";
-  const loanAmount = 50000000;
-  const interestRate = 600;
-  const loanTerm = 24;
+  const loanAmount = 10000000;
+  const interestRate = 800;
+  const loanTerm = 15;
   const repaymentType = "BP";
   
   // 현재 날짜 기준 계약일 설정
@@ -58,10 +58,10 @@ async function main() {
   maturityDate.setMonth(maturityDate.getMonth() + loanTerm);
   const maturityDateStr = maturityDate.toISOString().split('T')[0];
   
-  const monthlyPaymentDay = 5;                          // 이자 납부일 (매월 15일)
-  const defaultInterestRate = 1000;                     // 연체이자율 (10.00% = 1000)
+  const monthlyPaymentDay = 6;                          // 이자 납부일 (매월 6일)
+  const defaultInterestRate = 1500;                     // 연체이자율 (15.00% = 1500)
   const allowEarlyPayment = true;                       // 조기 상환 가능 여부
-  const earlyPaymentFee = 200;                          // 조기 상환 수수료 (1.00% = 100)
+  const earlyPaymentFee = 300;                          // 조기 상환 수수료 (3.00% = 300)
   const accelerationAfterMissedPayments = 2;            // 연속 미납 횟수
   
   // 추가 약관

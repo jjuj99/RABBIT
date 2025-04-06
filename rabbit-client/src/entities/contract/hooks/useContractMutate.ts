@@ -30,7 +30,7 @@ export const useContractMutate = ({ contractId }: UseContractMutateProps) => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["contract", contractId] });
-      navigate(`/contract/${contractId}`);
+      navigate(`/contract/received/complete`, { state: data.data });
       console.log(data);
     },
     onError: (error) => {
@@ -40,7 +40,7 @@ export const useContractMutate = ({ contractId }: UseContractMutateProps) => {
     },
   });
   // 계약 취소
-  const { mutate: cancelContract } = useMutation({
+  const { mutateAsync: cancelContract } = useMutation({
     mutationFn: () => {
       if (contractId) {
         return cancelContractAPI(contractId);

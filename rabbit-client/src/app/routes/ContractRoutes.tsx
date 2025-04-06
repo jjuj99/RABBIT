@@ -19,6 +19,9 @@ const ContractSentList = withLazyComponent(
 const ContractFinalReview = withLazyComponent(
   () => import("@/pages/contract/ui/ContractFinalReview"),
 );
+const ContractComplete = withLazyComponent(
+  () => import("@/pages/contract/ui/ContractComplete"),
+);
 
 const ContractRoutes = () => {
   return (
@@ -31,6 +34,7 @@ const ContractRoutes = () => {
       <Route path="/received/final-review" element={<ContractFinalReview />} />
       <Route path="sent/:contractId" element={<ContractDetail />} />
       <Route path="received/:contractId" element={<ContractDetail />} />
+      <Route path="received/complete" element={<ContractComplete />} />
     </Routes>
   );
 };

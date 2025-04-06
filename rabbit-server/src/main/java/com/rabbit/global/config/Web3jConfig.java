@@ -35,12 +35,6 @@ public class Web3jConfig {
     @Value("${blockchain.rabbitCoin.address}")
     private String rabbitCoinAddress;
 
-    @Value("${blockchain.repaymentScheduler.address}")
-    private String repaymentSchedulerAddress;
-
-    @Value("${blockchain.promissoryNote.address}")
-    private String promissoryNoteAddress;
-
     @Bean
     public Web3j web3j() { // Spring 프로젝트 어디서든 블록체인과 연결
         Web3j web3j = Web3j.build(new HttpService(rpcUrl));
@@ -79,15 +73,5 @@ public class Web3jConfig {
     @Bean
     public RabbitCoin rabbitCoin(Web3j web3j, Credentials credentials) {
         return RabbitCoin.load(rabbitCoinAddress, web3j, credentials, new DefaultGasProvider());
-    }
-
-    @Bean
-    public RepaymentScheduler repaymentScheduler(Web3j web3j, Credentials credentials) {
-        return RepaymentScheduler.load(repaymentSchedulerAddress, web3j, credentials, new DefaultGasProvider());
-    }
-
-    @Bean
-    public PromissoryNote promissoryNote(Web3j web3j, Credentials credentials) {
-        return PromissoryNote.load(promissoryNoteAddress, web3j, credentials, new DefaultGasProvider());
     }
 }

@@ -18,11 +18,11 @@ spring:
         format_sql: true
         use_sql_comments: true
         highlight_sql: true  # SQL 로그 하이라이팅 활성화
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+#  rabbitmq:
+#    host: localhost
+#    port: 5672
+#    username: guest
+#    password: guest
 
 # 로컬 환경 로깅 설정
 logging:

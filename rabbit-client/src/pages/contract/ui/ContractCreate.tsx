@@ -18,6 +18,7 @@ import BasicDialog from "@/widget/common/ui/BasicDialog";
 import EmailSearchDialog from "@/widget/common/ui/EmailSearchDialog";
 import PASSDialog from "@/widget/common/ui/PASSDialog";
 import { useState } from "react";
+import { InfoIcon } from "lucide-react";
 
 const ContractCreate = () => {
   const {
@@ -30,6 +31,8 @@ const ContractCreate = () => {
     isPassDialogOpen,
     setIsPassDialogOpen,
     setPassState,
+    isModify,
+    rejectMessage,
   } = useContractForm();
 
   const [isSearchUserDialogOpen, setIsSearchUserDialogOpen] = useState(false);
@@ -146,8 +149,16 @@ const ContractCreate = () => {
                         id="crEmail"
                         readOnly
                         placeholder="이메일을 입력하세요."
-                        onInputClick={() => setIsSearchUserDialogOpen(true)}
-                        onClick={() => setIsSearchUserDialogOpen(true)}
+                        onInputClick={
+                          isModify
+                            ? undefined
+                            : () => setIsSearchUserDialogOpen(true)
+                        }
+                        onClick={
+                          isModify
+                            ? undefined
+                            : () => setIsSearchUserDialogOpen(true)
+                        }
                         buttonText="검색"
                         {...field}
                       />
@@ -370,6 +381,9 @@ const ContractCreate = () => {
                         id="defCnt"
                         type="number"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(Number(e.target.value));
+                        }}
                       />
                     )}
                   />
@@ -441,17 +455,16 @@ const ContractCreate = () => {
                       <FormField
                         control={form.control}
                         name="earlypayFee"
-                        render={({ field }) => (
+                        render={() => (
                           <UnitInput
                             disabled={!form.watch("earlypay")}
-                            {...form.register("earlypayFee", {
-                              valueAsNumber: true,
-                            })}
                             wrapperClassName="w-[80px] inline-flex"
                             unit="%"
                             type="number"
                             id="earlypayFee"
-                            {...field}
+                            {...form.register("earlypayFee", {
+                              valueAsNumber: true,
+                            })}
                           />
                         )}
                       />
@@ -493,6 +506,34 @@ const ContractCreate = () => {
                 )}
               />
             </div>
+            {isModify && (
+              <div className="flex w-full flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-bold md:text-2xl">
+                    6. 거절 사유
+                  </h3>
+                  <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600">
+                    참고용
+                  </span>
+                </div>
+                <div className="rounded-lg bg-gray-600 p-4">
+                  <div className="flex items-start gap-2">
+                    <InfoIcon className="h-5 w-5 text-gray-400" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-50">
+                        이전 거절 사유를 참고하여 새로운 차용증을 작성해주세요.
+                      </p>
+                      <div className="mt-2 rounded-sm bg-gray-700 p-3 text-base text-gray-50">
+                        {rejectMessage
+                          ? rejectMessage
+                          : "채권자가 거절 사유를 작성하지 않았습니다."}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex w-full justify-center gap-3">
               <Button
                 className="h-11 flex-1 text-lg font-bold text-gray-700 md:max-w-[170px] md:text-xl"

@@ -9,7 +9,7 @@ import {
   CreateContractResponse,
   RejectContractResponse,
 } from "../types/response";
-import { CreateContractRequest } from "../types/request";
+import { CreateContractRequest, RejectContractRequest } from "../types/request";
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 const VITE_API_VERSION = import.meta.env.VITE_API_VERSION;
@@ -55,12 +55,6 @@ export const getContractDetailAPI = async (
   }
   return await response.json();
 };
-
-interface RejectContractRequest {
-  contractId: string;
-  rejectMessage: string;
-  isCanceled: boolean;
-}
 
 export const rejectContractAPI = async (
   data: RejectContractRequest,

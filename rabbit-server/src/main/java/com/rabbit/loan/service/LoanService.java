@@ -42,8 +42,6 @@ public class LoanService {
     private final EventService eventService;
 
     private final ContractRepository contractRepository;
-
-    private final ContractRepository contractRepository;
     private final AuctionRepository auctionRepository;
     private final BankService bankService;
     private final LoanUtil loanUtil;

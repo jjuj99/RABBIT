@@ -14,6 +14,7 @@ import com.rabbit.global.request.PageRequestDTO;
 import com.rabbit.global.response.CustomApiResponse;
 import com.rabbit.global.response.MessageResponse;
 import com.rabbit.global.response.PageResponseDTO;
+import com.rabbit.loan.domain.dto.response.ContractEventDTO;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Pageable;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/auctions")
@@ -117,6 +119,7 @@ public class AuctionController {
         return ResponseEntity.ok(CustomApiResponse.success(auctionDetailResponse));
     }
 
+    @AuctionControllerSwagger.GetSimilarAuctionsApi
     @GetMapping("/{auctionId}/similar")
     public ResponseEntity<CustomApiResponse<?>> getSimilarAuctions(@Valid @PathVariable Integer auctionId, Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
@@ -124,5 +127,15 @@ public class AuctionController {
         SimilarAuctionResponseDTO response = auctionService.getSimilarAuctions(auctionId);
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
+
+    @AuctionControllerSwagger.GetAuctionEventApi
+    @GetMapping("/{auctionId}/event")
+    public ResponseEntity<CustomApiResponse<?>> getAuctionEvents(@Valid @PathVariable Integer auctionId, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+
+        List<ContractEventDTO> events = auctionService.getAuctionEvents(auctionId);
+
+        return ResponseEntity.ok(CustomApiResponse.success(events));
     }
 }

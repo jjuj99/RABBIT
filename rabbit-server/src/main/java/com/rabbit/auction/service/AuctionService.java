@@ -11,9 +11,7 @@ import com.rabbit.bankApi.service.BankService;
 import com.rabbit.blockchain.domain.dto.RepaymentInfo;
 import com.rabbit.blockchain.domain.dto.response.AppendixMetadataDTO;
 import com.rabbit.blockchain.mapper.AppendixMetadataMapper;
-import com.rabbit.blockchain.service.PromissoryNoteAuctionService;
-import com.rabbit.blockchain.service.PromissoryNoteService;
-import com.rabbit.blockchain.service.RepaymentSchedulerService;
+import com.rabbit.blockchain.service.*;
 import com.rabbit.blockchain.wrapper.PromissoryNote;
 import com.rabbit.blockchain.wrapper.PromissoryNoteAuction;
 import com.rabbit.blockchain.wrapper.RepaymentScheduler;
@@ -30,6 +28,7 @@ import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.response.PageResponseDTO;
 import com.rabbit.global.util.DateTimeUtils;
 import com.rabbit.global.util.LoanUtil;
+import com.rabbit.loan.domain.dto.response.ContractEventDTO;
 import com.rabbit.mail.service.MailService;
 import com.rabbit.global.util.SignatureUtil;
 import com.rabbit.notification.domain.dto.request.NotificationRequestDTO;
@@ -74,6 +73,7 @@ public class AuctionService {
     private final PromissoryNoteService promissoryNoteService;
     private final BankService bankService;
     private final LoanUtil loanUtil;
+    private final EventService eventService;
 
     private final SysCommonCodeService sysCommonCodeService;
     private final RepaymentSchedulerService repaymentSchedulerService;
@@ -288,7 +288,7 @@ public class AuctionService {
         //블록체인에서 직접 읽어온 값 추가 필요
         try {
             PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(auction.getTokenId());
-            RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(auction.getTokenId());
+            RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(auction.getTokenId());
 
             BigDecimal ir = new BigDecimal(promissoryMetadata.ir).divide(BigDecimal.valueOf(10000));
             BigDecimal dir = new BigDecimal(promissoryMetadata.dir).divide(BigDecimal.valueOf(10000));
@@ -482,5 +482,14 @@ public class AuctionService {
                 .targetAuction(targetAuctionResponseDTO)
                 .comparisonAuctions(comparisonList)
                 .build();
+    }
+
+    public List<ContractEventDTO> getAuctionEvents(@Valid Integer auctionId) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
+
+        List<ContractEventDTO> events = eventService.getEventList(auction.getTokenId());
+
+        return events;
     }
 }

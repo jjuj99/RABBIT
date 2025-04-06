@@ -5,6 +5,7 @@ import com.rabbit.global.response.CustomApiResponse;
 import com.rabbit.global.response.PageResponseDTO;
 import com.rabbit.loan.domain.dto.response.*;
 import com.rabbit.loan.service.LoanService;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -51,9 +52,11 @@ public class LoanController {
     }
 
     @GetMapping("/borrow/me")
-    public ResponseEntity<CustomApiResponse<List<BorrowListResponseDTO>>> borrowList(@RequestParam int pageNumber, @RequestParam int pageSize, Authentication authentication) {
+    public ResponseEntity<CustomApiResponse<PageResponseDTO<BorrowListResponseDTO>>> borrowList(@ModelAttribute PageRequestDTO request, Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
-        List<BorrowListResponseDTO> response = loanService.borrowList(Integer.parseInt(userId));
+
+        Pageable pageable = request.toPageable("contractId", Sort.Direction.DESC);
+        PageResponseDTO<BorrowListResponseDTO> response = loanService.borrowList(Integer.parseInt(userId), pageable);
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }
@@ -75,9 +78,11 @@ public class LoanController {
     }
 
     @GetMapping("/lent/me")
-    public ResponseEntity<CustomApiResponse<List<LentListResponseDTO>>> lentList(@RequestParam int pageNumber, @RequestParam int pageSize, Authentication authentication) {
+    public ResponseEntity<CustomApiResponse<PageResponseDTO<LentListResponseDTO>>> lentList(@ModelAttribute PageRequestDTO request, Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
-        List<LentListResponseDTO> response = loanService.lentList(Integer.parseInt(userId));
+
+        Pageable pageable = request.toPageable("contractId", Sort.Direction.DESC);
+        PageResponseDTO<LentListResponseDTO> response = loanService.lentList(Integer.parseInt(userId), pageable);
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }

@@ -3,8 +3,10 @@ package com.rabbit.auction.controller.swagger;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
 import com.rabbit.auction.domain.dto.response.AuctionDetailResponseDTO;
 import com.rabbit.auction.domain.dto.response.MyAuctionResponseDTO;
+import com.rabbit.auction.domain.dto.response.SimilarAuctionResponseDTO;
 import com.rabbit.global.response.CustomApiResponse;
 import com.rabbit.global.response.PageResponseDTO;
+import com.rabbit.loan.domain.dto.response.ContractEventDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -381,6 +383,71 @@ public interface AuctionControllerSwagger {
     )
     public @interface GetMyBidAuctionsApi {}
 
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Operation(
+            summary = "유사 경매 조회",
+            description = "경매 ID 기준으로 유사한 경매를 조회합니다.",
+            security = {@SecurityRequirement(name = "bearerAuth")},
+            parameters = {
+                    @Parameter(
+                            name = "auctionId",
+                            description = "기준 경매 ID",
+                            required = true,
+                            in = ParameterIn.PATH,
+                            schema = @Schema(type = "integer", format = "int32")
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "유사 경매 조회 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class, subTypes = {SimilarAuctionResponseDTO.class}),
+                                    examples = @ExampleObject(
+                                            name = "성공 응답",
+                                            summary = "유사 경매 데이터",
+                                            value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"targetAuction\": {\n      \"auctionId\": 1,\n      \"rp\": 1000000,\n      \"rd\": 100,\n      \"rr\": 20.0,\n      \"percentile\": 75\n    },\n    \"comparisonAuctions\": [\n      {\n        \"auctionId\": 2,\n        \"rp\": 950000,\n        \"rd\": 98,\n        \"rr\": 19.5\n      }\n    ]\n  },\n  \"error\": null\n}"
+                                    )
+                            )
+                    )
+            }
+    )
+    @interface GetSimilarAuctionsApi {}
+
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Operation(
+            summary = "경매 이벤트 조회",
+            description = "해당 경매에 대한 스마트컨트랙트 이벤트 목록을 조회합니다.",
+            security = {@SecurityRequirement(name = "bearerAuth")},
+            parameters = {
+                    @Parameter(
+                            name = "auctionId",
+                            description = "이벤트를 조회할 경매 ID",
+                            required = true,
+                            in = ParameterIn.PATH,
+                            schema = @Schema(type = "integer", format = "int32")
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "이벤트 목록 조회 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class, subTypes = {ContractEventDTO.class}),
+                                    examples = @ExampleObject(
+                                            name = "성공 응답",
+                                            summary = "이벤트 데이터",
+                                            value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": [\n    {\n      \"event_type\": \"상환\",\n      \"int_amt\": 91,\n      \"from\": \"0x3i3o...\",\n      \"to\": \"0xpwk3...\",\n      \"timestamp\": \"0x8fe2...3a7b\"\n    },\n    {\n      \"event_type\": \"양도\",\n      \"int_amt\": 91,\n      \"from\": \"0x3i3o...\",\n      \"to\": \"0xpwk3...\",\n      \"timestamp\": \"0x8fe2...3a7b\"\n    }\n  ],\n  \"error\": null\n}"
+                                    )
+                            )
+                    )
+            }
+    )
+    @interface GetAuctionEventApi {}
 
     @Target({ElementType.PARAMETER})
     @Retention(RetentionPolicy.RUNTIME)

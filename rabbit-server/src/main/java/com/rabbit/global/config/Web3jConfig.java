@@ -56,18 +56,8 @@ public class Web3jConfig {
     }
 
     @Bean
-    public PromissoryNote promissoryNote(Web3j web3j, Credentials credentials) {
-        return PromissoryNote.load(promissoryNoteAddress, web3j, credentials, new DefaultGasProvider());
-    }
-
-    @Bean
     public PromissoryNoteAuction promissoryNoteAuction(Web3j web3j, Credentials credentials) {
         return PromissoryNoteAuction.load(promissoryNoteAuctionAddress, web3j, credentials, new DefaultGasProvider());
-    }
-
-    @Bean
-    public RepaymentScheduler repaymentScheduler(Web3j web3j, Credentials credentials) {
-        return RepaymentScheduler.load(repaymentSchedulerAddress, web3j, credentials, new DefaultGasProvider());
     }
 
     @Bean

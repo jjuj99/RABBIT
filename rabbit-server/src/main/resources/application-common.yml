@@ -53,6 +53,9 @@ spring:
     jpa:
       repositories:
         base-package: com.rabbit.**.repository
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
   # Jackson 설정
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss # 필요하다면 yyyy-MM-dd HH:mm:ss Z 또는 yyyy-MM-dd'T'HH:mm:ss.SSSXXX
@@ -108,6 +111,11 @@ spring:
 #        - classpath:/public/
 #        - classpath:/resources/
 #        - classpath:/META-INF/resources/
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: 5672
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
 
 file:
   upload:

@@ -104,6 +104,9 @@ dependencies {
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    // itextpdf
+    implementation group: 'com.itextpdf', name: 'itext-core', version: '9.1.0'
 }
 
 tasks.named('test') {

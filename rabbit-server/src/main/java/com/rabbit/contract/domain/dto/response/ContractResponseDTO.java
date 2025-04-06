@@ -80,6 +80,12 @@ public class ContractResponseDTO {
     @Schema(description = "계약 조항", example = "이 계약의 조항은...")
     private String addTerms;
 
+    @Schema(description = "NFT 토큰 ID", example = "123456")
+    private BigInteger tokenId;
+
+    @Schema(description = "NFT 이미지 URL", example = "https://example.com/nft.png")
+    private String nftImageUrl;
+
     @Schema(description = "계약 상태", example = "PENDING")
     private SysCommonCodes.Contract contractStatus;
 
@@ -131,6 +137,8 @@ public class ContractResponseDTO {
                 .earlypay(contract.getEarlyPayment())
                 .pnTransFlag(contract.getPromissoryNoteTransferabilityFlag())
                 .addTerms(contract.getContractTerms())
+                .tokenId(contract.getTokenId())
+                .nftImageUrl(contract.getNftImageUrl())
                 .contractStatus(contract.getContractStatus())
                 .contractStatusName(contract.getContractStatus().getCodeName())
                 .message(contract.getMessage())

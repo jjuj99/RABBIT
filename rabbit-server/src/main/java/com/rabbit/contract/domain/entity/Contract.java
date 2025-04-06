@@ -101,6 +101,12 @@ public class Contract {
     private BigInteger tokenId;
 
     /**
+     * NFT 이미지 URL
+     */
+    @Column(nullable = true)
+    private String nftImageUrl;
+
+    /**
      * 계약 조항 (추가 조항)
      */
     @Column(nullable = true, length = 1000)
@@ -192,6 +198,14 @@ public class Contract {
     @Column(nullable = true)
     private ZonedDateTime rejectedAt;
 
+    // 새로 추가된 필드: 암호화 키 (마스터 키로 암호화된 상태로 저장)
+    @Column(name = "encrypted_contract_key", nullable = true, length = 1024)
+    private String encryptedContractKey;
+
+    // 생성된 키 버전 (키 순환 대비)
+    @Column(name = "key_version", nullable = true)
+    private Integer keyVersion;
+
     // 확장 개념
 //    /**
 //     * 채권자에게 숨김 여부
@@ -228,9 +242,9 @@ public class Contract {
      * @param tokenId NFT 토큰 ID
 //     * @param imageUrl NFT 이미지 URL
      */
-    public void setNftInfo(BigInteger tokenId /*, String imageUrl*/ ) {
+    public void setNftInfo(BigInteger tokenId, String imageUrl ) {
         this.tokenId = tokenId;
-//        this.nftImageUrl = imageUrl;
+        this.nftImageUrl = imageUrl;
     }
 
     /**
@@ -282,6 +296,17 @@ public class Contract {
 //        }
 //        return false; // 해당 사용자가 계약의 당사자가 아닌 경우
 //    }
+
+    /**
+     * 암호화 키 설정
+     * @param encryptedKey 마스터 키로 암호화된 계약 키
+     * @param version 키 버전
+     */
+    public void setEncryptionKey(String encryptedKey, Integer version) {
+        this.encryptedContractKey = encryptedKey;
+        this.keyVersion = version;
+        this.updatedAt = ZonedDateTime.now();
+    }
 
     /**
      * ContractRequestDTO로부터 Contract 엔티티 생성

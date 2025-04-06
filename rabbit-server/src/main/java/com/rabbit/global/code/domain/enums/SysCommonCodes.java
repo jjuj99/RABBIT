@@ -262,7 +262,13 @@ public class SysCommonCodes {
         AUCTION_FAILED("경매 유찰", "경매에 낙찰자가 없어 유찰되었습니다.", 1),
         AUCTION_SUCCESS("경매 낙찰 성공", "경매에 낙찰되었습니다. NFT가 곧 전송됩니다.", 2),
         AUCTION_TRANSFERRED("NFT 전송 예정", "경매가 완료되어 NFT가 낙찰자에게 전송됩니다.", 3),
-        BID_FAILED("입찰 실패", "다른 입찰자가 더 높은 금액을 입찰했습니다.", 4);
+        BID_FAILED("입찰 실패", "다른 입찰자가 더 높은 금액을 입찰했습니다.", 4),
+
+        // 기존 NotificationType enum에 추가
+        CONTRACT_REQUESTED("계약 요청", "새로운 계약이 요청되었습니다.", 5),
+        CONTRACT_COMPLETED("계약 체결", "계약이 성공적으로 체결되었습니다.", 6),
+        CONTRACT_MODIFICATION_REQUESTED("계약 수정 요청", "계약 수정이 요청되었습니다.", 7),
+        CONTRACT_CANCELED("계약 취소", "계약이 취소되었습니다.", 8);
 
         private final String codeName;
         private final String description;
@@ -400,6 +406,89 @@ public class SysCommonCodes {
                 해당 채권에 대한 권리는 이제 새로운 채권자에게 있으며,
                 상환 및 기타 문의는 새로운 채권자를 통해 진행해 주시기 바랍니다.
     
+                감사합니다.
+                Rabbit 팀 드림.
+                """
+        ),
+
+        /**
+         * 계약 요청 알림 (채권자에게)
+         */
+        CONTRACT_REQUESTED(
+                "[Rabbit] 새로운 계약 요청이 도착했습니다",
+                """
+                %s님으로부터 새로운 계약 요청이 도착했습니다.
+                
+                - 계약 ID: %s
+                - 요청 금액: %s
+                
+                웹사이트에서 계약 내용을 확인하고 승인하거나 수정을 요청할 수 있습니다.
+                
+                감사합니다.
+                Rabbit 팀 드림.
+                """
+        ),
+
+        /**
+         * 계약 체결 완료 알림
+         */
+        CONTRACT_COMPLETED(
+                "[Rabbit] 계약 체결이 완료되었습니다",
+                """
+                %s님과의 계약(#%s)이 성공적으로 체결되었습니다.
+                
+                첨부된 PDF 파일에서 계약 내용을 확인하실 수 있습니다.
+                또한 웹사이트에서도 계약 내용을 확인하실 수 있습니다.
+                
+                추가 문의사항이 있으시면 고객센터로 연락해 주세요.
+                
+                감사합니다.
+                Rabbit 팀 드림.
+                """
+        ),
+
+        /**
+         * 계약 수정 요청 알림
+         */
+        CONTRACT_MODIFICATION_REQUESTED(
+                "[Rabbit] 계약 수정 요청",
+                """
+                %s님이 계약(#%s)의 수정을 요청하였습니다.
+                
+                요청 사유: %s
+                
+                웹사이트에서 계약 내용을 수정하여 다시 요청해 주세요.
+                
+                감사합니다.
+                Rabbit 팀 드림.
+                """
+        ),
+
+        /**
+         * 계약 취소 알림
+         */
+        CONTRACT_CANCELED(
+                "[Rabbit] 계약이 취소되었습니다",
+                """
+                %s님과의 계약(#%s)이 취소되었습니다.
+                
+                웹사이트에서 자세한 내용을 확인하실 수 있습니다.
+                
+                감사합니다.
+                Rabbit 팀 드림.
+                """
+        ),
+
+        /**
+         * 계약 관련 문제 발생 시 폴백 메일
+         */
+        CONTRACT_FALLBACK(
+                "[Rabbit] 계약 알림",
+                """
+                %s
+                
+                PDF 첨부 이메일 발송에 실패하였습니다. 웹사이트에서 계약서를 확인해주세요.
+                
                 감사합니다.
                 Rabbit 팀 드림.
                 """

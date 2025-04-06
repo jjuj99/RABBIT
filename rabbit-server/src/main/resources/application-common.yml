@@ -229,8 +229,8 @@ app:
       - docx
       - xls
       - xlsx
-
-
+  encryption:
+    master-key: ${ENCRYPTION_MASTER_KEY}
 
 # 커스텀 설정
 

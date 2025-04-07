@@ -18,6 +18,7 @@ interface InputFormProps {
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onInputClick?: (e: React.MouseEvent<HTMLInputElement>) => void;
   asChild?: boolean;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const InputForm = ({
@@ -33,12 +34,13 @@ const InputForm = ({
   onInputClick,
   buttonText,
   asChild = false,
+  onChange,
   ...props
 }: InputFormProps) => {
   return (
     <FormItem className={cn("flex w-full flex-col", className)}>
       <div className="flex items-center justify-between">
-        <FormLabel className="text-xl" htmlFor={id}>
+        <FormLabel className="text-lg md:text-xl" htmlFor={id}>
           {label}
         </FormLabel>
         {/* <FormMessage /> */}
@@ -52,6 +54,7 @@ const InputForm = ({
               id={id}
               placeholder={placeholder}
               {...props}
+              onChange={onChange}
             />
           ) : (
             <Input
@@ -62,6 +65,7 @@ const InputForm = ({
               placeholder={placeholder}
               type={type}
               {...props}
+              onChange={onChange}
             />
           )}
 

@@ -9,13 +9,9 @@ import {
 } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
 import { useState } from "react";
+import useSearchUserByEmail from "../hook/useSearchUserByEmail";
+import { SearchUserResponse } from "../types/response";
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  wallet: string;
-}
 interface EmailSearchDialogProps {
   children: React.ReactNode;
   title: string;
@@ -23,7 +19,7 @@ interface EmailSearchDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   onCancel?: () => void;
-  onUserSelect: (user: User) => void;
+  onUserSelect: (user: SearchUserResponse) => void;
   cancelText?: string;
   searchText?: string;
 }
@@ -40,57 +36,28 @@ const EmailSearchDialog = ({
   searchText = "검색",
 }: EmailSearchDialogProps) => {
   const [email, setEmail] = useState("");
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SearchUserResponse | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
+  const { isLoading, error, refetch } = useSearchUserByEmail(email);
+
   const handleSearch = async () => {
     if (!email) return;
-
     setIsSearching(true);
     setHasSearched(true);
     setNotFound(false);
     setUser(null);
 
     try {
-      // 이 부분은 실제 API 호출로 대체해야 합니다
-      // const response = await fetch(`/api/users/search?email=${encodeURIComponent(email)}`);
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   if (data.user) {
-      //     setUser(data.user);
-      //   } else {
-      //     setNotFound(true);
-      //   }
-      // } else {
-      //   setNotFound(true);
-      // }
-
-      // 임시 데이터 - 정확히 일치하는 이메일만 찾기
-      const mockUsers: User[] = [
-        {
-          id: "1",
-          email: "user1@example.com",
-          name: "사용자1",
-          wallet: "0x123...",
-        },
-        {
-          id: "2",
-          email: "user2@example.com",
-          name: "사용자2",
-          wallet: "0x45612314123...",
-        },
-      ];
-
-      const foundUser = mockUsers.find((u) => u.email === email);
-
-      if (foundUser) {
-        setUser(foundUser);
+      const result = await refetch();
+      if (result.data) {
+        setUser(result.data);
       } else {
         setNotFound(true);
       }
-    } catch (error) {
+    } catch {
       console.error("사용자 검색 중 오류 발생:", error);
       setNotFound(true);
     } finally {
@@ -141,14 +108,17 @@ const EmailSearchDialog = ({
           ) : user ? (
             <div className="w-full rounded border border-gray-700 p-4">
               <div className="flex flex-col gap-2">
-                <p className="text-lg font-medium">{user.name}</p>
+                <p className="text-lg font-medium">{user.userName}</p>
                 <p className="text-gray-200">{user.email}</p>
-                {user.wallet && (
-                  <p className="text-sm text-gray-400">지갑: {user.wallet}</p>
+                {user.walletAddress && (
+                  <p className="text-sm text-gray-400">
+                    지갑: {user.walletAddress}
+                  </p>
                 )}
                 <Button
                   variant="primary"
                   className="mt-2"
+                  isLoading={isLoading}
                   onClick={handleUserSelect}
                 >
                   선택

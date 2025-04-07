@@ -4,7 +4,7 @@ import com.rabbit.auth.controller.swagger.AuthControllerSwagger;
 import com.rabbit.auth.domain.dto.request.LoginRequestDTO;
 import com.rabbit.auth.domain.dto.request.NonceRequestDTO;
 import com.rabbit.auth.domain.dto.request.SignupRequestDTO;
-import com.rabbit.auth.domain.dto.response.CheckNicknameResponseDTO;
+import com.rabbit.auth.domain.dto.response.CheckDuplicatedResponseDTO;
 import com.rabbit.auth.domain.dto.response.LoginResponseDTO;
 import com.rabbit.auth.domain.dto.response.NonceResponseDTO;
 import com.rabbit.auth.domain.dto.response.RefreshResponseDTO;
@@ -17,11 +17,14 @@ import com.rabbit.global.response.MessageResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,6 +41,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Validated
 public class AuthController {
+
+    @Value("${cookie.secure}")
+    private boolean cookieSecure;
 
     private final AuthService authService;
 
@@ -62,7 +68,7 @@ public class AuthController {
 
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", result.getRefreshToken())
                 .httpOnly(true)
-                .secure(true)
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(60 * 60 * 24 * 7)
                 .sameSite("Strict")
@@ -84,39 +90,49 @@ public class AuthController {
 
     @AuthControllerSwagger.logoutApi
     @PostMapping("/logout")
-    public ResponseEntity<CustomApiResponse<MessageResponse>> logout(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = getRefreshTokenFromCookie(request)
-                .orElseThrow(() -> new BusinessException(ErrorCode.JWT_REQUIRED));
+    public ResponseEntity<CustomApiResponse<MessageResponse>> logout(Authentication authentication, HttpServletResponse httpResponse) {
+        String userId = (String) authentication.getPrincipal();
 
-        authService.logout(refreshToken);
+        authService.logout(Integer.parseInt(userId));
 
         ResponseCookie emptyCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(0) // 쿠키 만료
                 .sameSite("Strict")
                 .build();
 
-        response.addHeader("Set-Cookie", emptyCookie.toString());
+        httpResponse.addHeader("Set-Cookie", emptyCookie.toString());
 
         return ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("로그아웃에 성공했습니다.")));
     }
 
+    @AuthControllerSwagger.checkEmailApi
+    @GetMapping("/check-email")
+    public ResponseEntity<CustomApiResponse<CheckDuplicatedResponseDTO>> checkEmail(@RequestParam
+                                                                                     @NotBlank(message = "이메일을 입력하지 않았습니다.")
+                                                                                        @Email(message = "이메일 형식이 올바르지 않습니다.")
+                                                                                     String email) {
+        CheckDuplicatedResponseDTO response = authService.checkEmail(email);
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
+
     @AuthControllerSwagger.checkNicknameApi
     @GetMapping("/check-nickname")
-    public ResponseEntity<CustomApiResponse<CheckNicknameResponseDTO>> checkNickname(@RequestParam
+    public ResponseEntity<CustomApiResponse<CheckDuplicatedResponseDTO>> checkNickname(@RequestParam
                                                                                          @NotBlank(message = "닉네임을 입력하지 않았습니다.")
                                                                                          @Size(max = 12, message = "닉네임은 12자 이하로 입력해야 합니다.")
                                                                                          String nickname) {
-        CheckNicknameResponseDTO response = authService.checkNickname(nickname);
+        CheckDuplicatedResponseDTO response = authService.checkNickname(nickname);
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }
 
     @AuthControllerSwagger.refreshApi
     @PostMapping("/refresh")
-    public ResponseEntity<CustomApiResponse<?>> refresh(HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<RefreshResponseDTO>> refresh(HttpServletRequest request) {
         String refreshToken = getRefreshTokenFromCookie(request)
                 .orElseThrow(() -> new BusinessException(ErrorCode.JWT_REQUIRED));
 

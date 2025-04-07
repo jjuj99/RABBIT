@@ -10,10 +10,10 @@ interface MAT_DTSectionProps {
 }
 
 const MAT_DTSection: React.FC<MAT_DTSectionProps> = ({ triggerApi }) => {
-  const maturity = useAuctionFilterStore((state) => state.mat_term);
+  const maturity = useAuctionFilterStore((state) => state.matTerm);
   const setMaturity = useAuctionFilterStore((state) => state.setMatTerm);
-  const startDate = useAuctionFilterStore((state) => state.mat_start);
-  const endDate = useAuctionFilterStore((state) => state.mat_end);
+  const startDate = useAuctionFilterStore((state) => state.matStart);
+  const endDate = useAuctionFilterStore((state) => state.matEnd);
   const setStartDate = useAuctionFilterStore((state) => state.setMatStart);
   const setEndDate = useAuctionFilterStore((state) => state.setMatEnd);
 

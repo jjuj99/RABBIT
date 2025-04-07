@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,28 +9,44 @@ import {
   DialogOverlay,
 } from "@/shared/ui/dialog";
 import PASS from "@/features/common/ui/PASS";
+import { useAuthUser } from "@/entities/auth/hooks/useAuth";
+import { passType } from "@/shared/type/Types";
 
 interface PASSDialogProps {
   children: ReactNode;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  userName: string;
-  phoneNumber: string;
-  onUserNameChange: (value: string) => void;
-  onPhoneNumberChange: (value: string) => void;
-  onComplete: (phoneNumber: string, name: string) => boolean;
+  setPassState: (state: passType) => void;
 }
 
 const PASSDialog = ({
   children,
   isOpen,
   onOpenChange,
-  userName,
-  phoneNumber,
-  onUserNameChange,
-  onPhoneNumberChange,
-  onComplete,
+  setPassState,
 }: PASSDialogProps) => {
+  const { user } = useAuthUser();
+  const [userName, setUserName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+
+  const handleComplete = (phoneNumber: string, name: string) => {
+    const isVerified = name === user?.userName;
+    if (isVerified) {
+      const passResult: passType = {
+        phoneNumber: phoneNumber,
+        name: name,
+        passAuthToken: isVerified
+          ? btoa(encodeURIComponent(name + phoneNumber))
+          : "",
+        txId: "rabbit",
+        authResultCode: isVerified ? "SUCCESS" : "FAIL",
+      };
+      setPassState(passResult);
+      return true;
+    }
+    return false;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogOverlay className="bg-transparent" />
@@ -45,9 +61,10 @@ const PASSDialog = ({
         <PASS
           userName={userName}
           phoneNumber={phoneNumber}
-          onUserNameChange={onUserNameChange}
-          onPhoneNumberChange={onPhoneNumberChange}
-          onComplete={onComplete}
+          onUserNameChange={setUserName}
+          onPhoneNumberChange={setPhoneNumber}
+          onComplete={handleComplete}
+          onClose={() => onOpenChange(false)}
         />
       </DialogContent>
     </Dialog>

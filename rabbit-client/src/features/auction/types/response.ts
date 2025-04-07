@@ -1,36 +1,35 @@
-// API 응답 타입
+import { Pagination } from "@/shared/type/PaginationResponse";
+import {
+  auctionStatus,
+  auctionStatusName,
+  bidStatus,
+  bidStatusName,
+} from "@/shared/type/Types";
 
-export interface AuctionListResponse {
-  content: PNInfoListResponse[];
-  pageNumber: number;
-  pageSize: number;
-  totalElements: number;
-  totalPages: number;
-  last: boolean;
-  hasNext: boolean;
-}
+export type AuctionListResponse = Pagination<PNInfoListResponse>;
 
 export interface PNInfoListResponse {
-  auction_id: number;
+  //경매 정보..
+  auctionId: number;
   price: number;
-  end_date: string;
+  endDate: string;
   ir: number; //
-  created_at: string;
-  repay_type: string; //
-  total_amount: number; //
-  mat_dt: string; //
+  createdAt: string;
+  repayType: string; //
+  totalAmount: number; //
+  matDt: string; //
   dir: number; //
   la: number; //
-  earlypay_flag: boolean; //
-  earlypay_fee: number; //
-  credit_score: number; //
-  def_cnt: number; //
+  earlypayFlag: boolean; //
+  earlypayFee: number; //
+  creditScore: number; //
+  defCnt: number; //
 }
 
 export interface BidListResponse {
-  bid_id: number;
-  bid_amount: number;
-  created_at: string;
+  bidId: number;
+  bidAmount: number;
+  createdAt: string;
 }
 
 export interface SubmitAuctionBidResponse {
@@ -38,4 +37,53 @@ export interface SubmitAuctionBidResponse {
 }
 export interface CreateAuctionResponse {
   message: string;
+}
+
+export interface BidHistoryResponse {
+  auctionId: number;
+  bidDate: string;
+  auctionStatus: auctionStatus;
+  auctionStatusName: auctionStatusName;
+  price: number;
+  bidAmount: number;
+  bidStatus: bidStatus;
+  bidStatusName: bidStatusName;
+  bidderNum: number;
+}
+
+export interface AvailableAuctionsResponse {
+  crId: number; //채권자 id
+  crName: string; //채권자 이금
+  matDt: string; //만기일
+  tokenId: string;
+  la: number; //원금
+  ir: number; //이자율
+  totalAmount: number; //만기수취액
+  repayType: "원리금 균등 상환" | "원금 균등 상환" | "만기 일시 상환"; //상환 방식
+  dir: number; //연체 이자율
+  earlypayFlag: boolean; //중도 상환 가능 여부
+  earlypayFee: number; //중도 상환 수수료
+  defCnt: number; //연체 횟수
+  creditScore: number; //신용점수
+}
+
+export interface TargetAuction {
+  auctionId: number;
+  rp: number;
+  rd: number;
+  rr: number;
+  percentile: number;
+}
+
+export interface ComparisonAuction {
+  auctionId: number;
+  rp: number;
+  rd: number;
+  rr: number;
+  percentile: number;
+}
+
+export interface AuctionSimilarListResponse {
+  targetAuction: TargetAuction;
+  comparisonAuctions: ComparisonAuction[];
 }

@@ -12,21 +12,24 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
 import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
 import com.rabbit.auction.domain.dto.response.MyAuctionResponseDTO;
+import com.rabbit.auction.domain.entity.Auction;
 import com.rabbit.auction.domain.entity.QAuction;
 import com.rabbit.auction.domain.entity.QBid;
-import com.rabbit.auction.domain.enums.AuctionStatus;
+import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import static com.querydsl.core.types.Projections.fields;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RequiredArgsConstructor
 public class AuctionRepositoryCustomImpl implements AuctionRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
+
 
     @Override
     public Page<AuctionResponseDTO> searchAuctions(AuctionFilterRequestDTO req, Pageable pageable) {
@@ -37,7 +40,7 @@ public class AuctionRepositoryCustomImpl implements AuctionRepositoryCustom {
         if (req.getMaxPrice() != null) builder.and(auction.price.loe(req.getMaxPrice()));
 
         //진행중인 경매만 가져오기
-        builder.and(auction.auctionStatus.eq(AuctionStatus.ING));
+        builder.and(auction.auctionStatus.eq(SysCommonCodes.Auction.ING));
         
         List<AuctionResponseDTO> content = queryFactory
                 .select(fields(
@@ -45,7 +48,8 @@ public class AuctionRepositoryCustomImpl implements AuctionRepositoryCustom {
                         auction.auctionId.as("auctionId"),
                         auction.price,
                         auction.endDate,
-                        auction.createdAt
+                        auction.createdAt,
+                        auction.tokenId
                 ))
                 .from(auction)
                 .where(builder)
@@ -84,7 +88,7 @@ public class AuctionRepositoryCustomImpl implements AuctionRepositoryCustom {
                         bid.bidAmount,
                         ExpressionUtils.as(
                                 new CaseBuilder()
-                                        .when(auction.auctionStatus.eq(AuctionStatus.ING)).then("PENDING")
+                                        .when(auction.auctionStatus.eq(SysCommonCodes.Auction.ING)).then("PENDING")
                                         .when(auction.winningBidder.eq(userId)).then("WON")
                                         .otherwise("LOST"),
                                 "bidStatus"
@@ -112,6 +116,29 @@ public class AuctionRepositoryCustomImpl implements AuctionRepositoryCustom {
                 .fetchOne();
 
         return new PageImpl<>(content, pageable, total);
+    }
+
+    @Override
+    public List<Auction> findSimilarAuctionsByPrincipalAndDays(Integer targetId, Long basePrincipal, Integer baseDays) {
+        QAuction auction = QAuction.auction;
+
+        BigDecimal principal = BigDecimal.valueOf(basePrincipal);
+
+        return queryFactory.selectFrom(auction)
+                .where(
+                        auction.auctionStatus.eq(SysCommonCodes.Auction.COMPLETED),
+                        auction.auctionId.ne(targetId),
+                        auction.remainPrincipal.between(
+                                principal.multiply(BigDecimal.valueOf(0.9)),
+                                principal.multiply(BigDecimal.valueOf(1.1))
+                        ),
+                        auction.remainRepaymentDate.between(
+                                (int)(baseDays * 0.9),
+                                (int)(baseDays * 1.1)
+                        )
+                )
+                .orderBy(auction.returnRate.asc())
+                .fetch();
     }
 }
 

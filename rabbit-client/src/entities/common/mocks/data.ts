@@ -1,0 +1,88 @@
+import { NFTEvent } from "@/shared/type/NFTEventList";
+
+export const nftEvents: NFTEvent[] = [
+  {
+    eventType: "양도",
+    intAmt: null,
+    from: "0xeeA80d84EdEaE98501d95E8ac1355Ef311e6d3e0",
+    to: "0xB275ECE9d86c3ABE3c0b23c26c7EEcD867CE1E8E",
+    timestamp: "2025-03-25 14:32",
+  },
+  {
+    eventType: "연체",
+    intAmt: 1629065300,
+    from: null,
+    to: null,
+    timestamp: "2025-03-24 14:32",
+  },
+  {
+    eventType: "연체",
+    intAmt: 1147759100,
+    from: null,
+    to: null,
+    timestamp: "2025-03-23 14:32",
+  },
+  {
+    eventType: "양도",
+    intAmt: null,
+    from: "0x55Bf8b57451CeBE4c6123B6C04FC8Ca00A1ac0C2",
+    to: "0x5C9100A6b4497aA20a0FA78Db318b5f83dfd2BCE",
+    timestamp: "2025-03-22 14:32",
+  },
+  {
+    eventType: "연체",
+    intAmt: 2016688600,
+    from: null,
+    to: null,
+    timestamp: "2025-03-21 14:32",
+  },
+  {
+    eventType: "상환",
+    intAmt: 44518361,
+    from: "0xDbc4170f447de1A34c2cdd29aFDCe96eE6a92b18",
+    to: "0xAf276cA93BAa4b7C82327f2Fc84a4876e10dFC77",
+    timestamp: "2025-03-20 14:32",
+  },
+  {
+    eventType: "연체",
+    intAmt: 1414087800,
+    from: null,
+    to: null,
+    timestamp: "2025-03-19 14:32",
+  },
+  {
+    eventType: "상환",
+    intAmt: 44800029,
+    from: "0x6D62E9E7F72540e9BAed4C43C1E79E7972b2074f",
+    to: "0xDC5D377Ec80Aaf96dEbb75D7cfCa73307F317B5B",
+    timestamp: "2025-03-18 14:32",
+  },
+  {
+    eventType: "양도",
+    intAmt: null,
+    from: "0x6459Ee263e7c97FeEAF145BB8D190Dd7DAb5A8Ec",
+    to: "0x07C4E9fBE2D7E1EcD163C893b9f1F053Dd44D8a9",
+    timestamp: "2025-03-17 14:32",
+  },
+  {
+    eventType: "연체",
+    intAmt: 2827771800,
+    from: null,
+    to: null,
+    timestamp: "2025-03-16 14:32",
+  },
+  {
+    eventType: "상환",
+    intAmt: 26931527,
+    from: "0x4D9c7DfE45D6Cc9d103Fe01Cb1234567890ABcde",
+    to: "0xB3aDf1c2E56789abC0123Df4567890abcdefEdc9",
+    timestamp: "2025-03-15 14:32",
+  },
+  {
+    eventType: "양도",
+    intAmt: null,
+    from: "0xA21fCd34E45b78Ec23A7890cDeF12345678AbC98",
+    to: "0xE321cb7890ABCdE45678fedCba1234567890aBcD",
+    timestamp: "2025-03-14 14:32",
+  },
+];

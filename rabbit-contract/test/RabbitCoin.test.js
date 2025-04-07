@@ -8,9 +8,14 @@ describe("RabbitCoin", function () {
   let addr1;
   let addr2;
   let addrs;
-  
+  let systemContract;
+
   // 초기 공급량을 1,000,000 RAB로 설정
   const initialSupply = 1000000;
+
+  // EIP-712 관련 도메인 설정
+  let domain;
+  let types;
 
   beforeEach(async function () {
     // 컨트랙트 및 계정 설정
@@ -19,6 +24,26 @@ describe("RabbitCoin", function () {
     
     // 컨트랙트 배포
     rabbitCoin = await RabbitCoin.deploy(initialSupply);
+  
+    // EIP-712 도메인 설정
+    const { chainId } = await ethers.provider.getNetwork();
+    domain = {
+      name: await rabbitCoin.name(),
+      version: await rabbitCoin.version(),
+      chainId: chainId,
+      verifyingContract: await rabbitCoin.getAddress()
+    };
+  
+    // EIP-712 허가 타입 설정
+    types = {
+      Permit: [
+        { name: "owner", type: "address" },
+        { name: "spender", type: "address" },
+        { name: "value", type: "uint256" },
+        { name: "nonce", type: "uint256" },
+        { name: "deadline", type: "uint256" }
+      ]
+    };
   });
 
   // describe: 테스트 그룹을 정의
@@ -54,7 +79,7 @@ describe("RabbitCoin", function () {
       // owner에서 addr1로 50 RAB 전송
       const transferAmount = ethers.parseUnits("50", 0);
       await rabbitCoin.transfer(addr1.address, transferAmount);
-      
+
       // addr1의 잔액이 50 RAB이어야 함
       expect(await rabbitCoin.balanceOf(addr1.address)).to.equal(transferAmount);
     });
@@ -62,7 +87,7 @@ describe("RabbitCoin", function () {
     it("잔액이 부족할 때 전송이 실패해야 함", async function () {
       // addr1은 초기에 0 RAB를 가지고 있음
       const initialBalance = await rabbitCoin.balanceOf(addr1.address);
-      
+
       // addr1이 1 RAB를 전송하려 하면 실패해야 함
       await expect(
         rabbitCoin.connect(addr1).transfer(addr2.address, 1)
@@ -73,17 +98,17 @@ describe("RabbitCoin", function () {
       // owner가 addr1에게 100 RAB를 사용할 수 있도록 승인
       const approveAmount = ethers.parseUnits("100", 0);
       await rabbitCoin.approve(addr1.address, approveAmount);
-      
+
       // 승인된 금액 확인
       expect(await rabbitCoin.allowance(owner.address, addr1.address)).to.equal(approveAmount);
-      
+
       // addr1이 owner의 50 RAB를 addr2에게 전송
       const transferAmount = ethers.parseUnits("50", 0);
       await rabbitCoin.connect(addr1).transferFrom(owner.address, addr2.address, transferAmount);
-      
+
       // 잔액 확인
       expect(await rabbitCoin.balanceOf(addr2.address)).to.equal(transferAmount);
-      
+
       // 남은 allowance 확인
       expect(await rabbitCoin.allowance(owner.address, addr1.address)).to.equal(approveAmount - transferAmount);
     });
@@ -106,7 +131,32 @@ describe("RabbitCoin", function () {
         rabbitCoin.transfer(ethers.ZeroAddress, 100)
       ).to.be.revertedWith("ERC20: transfer to the zero address");
     });
-    
+  });
+
+  describe("민팅", function () {
+    it("소유자가 새 RAB를 민팅할 수 있어야 함", async function () {
+      const mintAmount = ethers.parseUnits("5000", 0);
+      const initialSupplyBN = ethers.parseUnits(initialSupply.toString(), 0);
+
+      await rabbitCoin.mint(addr1.address, mintAmount);
+
+      // addr1의 잔액이 민팅된 금액과 일치해야 함
+      expect(await rabbitCoin.balanceOf(addr1.address)).to.equal(mintAmount);
+
+      // 총 공급량이 증가해야 함
+      expect(await rabbitCoin.totalSupply()).to.equal(initialSupplyBN + mintAmount);
+    });
+
+    it("소유자가 아닌 계정은 민팅을 할 수 없어야 함", async function () {
+      const mintAmount = ethers.parseUnits("5000", 0);
+
+      // addr1이 민팅을 시도하면 실패해야 함
+      await expect(
+        rabbitCoin.connect(addr1).mint(addr2.address, mintAmount)
+      ).to.be.revertedWithCustomError(rabbitCoin, "OwnableUnauthorizedAccount")
+        .withArgs(addr1.address);
+    });
+
     it("제로 주소로 민팅하면 실패해야 함", async function () {
       await expect(
         rabbitCoin.mint(ethers.ZeroAddress, 100)
@@ -114,50 +164,26 @@ describe("RabbitCoin", function () {
     });
   });
 
-  describe("민팅과 소각", function () {
-    it("소유자가 새 RAB를 발행할 수 있어야 함", async function () {
-      const mintAmount = ethers.parseUnits("5000", 0);
-      const initialSupplyBN = ethers.parseUnits(initialSupply.toString(), 0);
-      
-      await rabbitCoin.mint(addr1.address, mintAmount);
-      
-      // addr1의 잔액이 민팅된 금액과 일치해야 함
-      expect(await rabbitCoin.balanceOf(addr1.address)).to.equal(mintAmount);
-      
-      // 총 공급량이 증가해야 함
-      expect(await rabbitCoin.totalSupply()).to.equal(initialSupplyBN + mintAmount);
-    });
-
-    it("소유자가 아닌 계정은 민팅을 할 수 없어야 함", async function () {
-      const mintAmount = ethers.parseUnits("5000", 0);
-      
-      // addr1이 민팅을 시도하면 실패해야 함
-      await expect(
-        rabbitCoin.connect(addr1).mint(addr2.address, mintAmount)
-      ).to.be.revertedWithCustomError(rabbitCoin, "OwnableUnauthorizedAccount")
-       .withArgs(addr1.address);
-    });
-
+  describe("소각", function () {
     it("사용자가 RAB를 소각할 수 있어야 함", async function () {
       // 먼저 addr1에게 RAB 전송 (사용자 주소에서 소각할 수 있도록 RAB 전송)
       const transferAmount = ethers.parseUnits("100", 0);
       await rabbitCoin.transfer(addr1.address, transferAmount);
-      
+
       // addr1이 50 RAB를 소각
       const burnAmount = ethers.parseUnits("50", 0);
       await rabbitCoin.connect(addr1).burn(burnAmount);
-      
+
       // addr1의 잔액이 감소해야 함
       expect(await rabbitCoin.balanceOf(addr1.address)).to.equal(transferAmount - burnAmount);
-      
+
       // 총 공급량이 감소해야 함
       const initialSupplyBN = ethers.parseUnits(initialSupply.toString(), 0);
       expect(await rabbitCoin.totalSupply()).to.equal(initialSupplyBN - burnAmount);
     });
 
     it("잔액보다 많은 RAB를 소각할 수 없어야 함", async function () {
-      // addr1은 초기에 0 RAB를 가지고 있음
-      // 잔액이 없는데 소각을 시도하면 실패해야 함
+      // addr1은 초기에 0 RAB를 가지고 있음, 잔액이 없는데 소각을 시도하면 실패해야 함
       await expect(
         rabbitCoin.connect(addr1).burn(1)
       ).to.be.revertedWith("ERC20: burn amount exceeds balance");
@@ -167,8 +193,7 @@ describe("RabbitCoin", function () {
   describe("이벤트", function () {
     it("전송 시 Transfer 이벤트를 발생시켜야 함", async function () {
       const transferAmount = ethers.parseUnits("50", 0);
-      
-      // Transfer 이벤트 확인
+
       await expect(rabbitCoin.transfer(addr1.address, transferAmount))
         .to.emit(rabbitCoin, "Transfer")
         .withArgs(owner.address, addr1.address, transferAmount);
@@ -176,8 +201,7 @@ describe("RabbitCoin", function () {
 
     it("승인 시 Approval 이벤트를 발생시켜야 함", async function () {
       const approveAmount = ethers.parseUnits("100", 0);
-      
-      // Approval 이벤트 확인
+
       await expect(rabbitCoin.approve(addr1.address, approveAmount))
         .to.emit(rabbitCoin, "Approval")
         .withArgs(owner.address, addr1.address, approveAmount);
@@ -185,21 +209,19 @@ describe("RabbitCoin", function () {
 
     it("민팅 시 Transfer 이벤트를 발생시켜야 함", async function () {
       const mintAmount = ethers.parseUnits("1000", 0);
-      
-      // 민팅 시 Transfer 이벤트 확인 (from은 0 주소)
+
       await expect(rabbitCoin.mint(addr1.address, mintAmount))
         .to.emit(rabbitCoin, "Transfer")
         .withArgs(ethers.ZeroAddress, addr1.address, mintAmount);
     });
 
     it("소각 시 Transfer 이벤트를 발생시켜야 함", async function () {
-      // 먼저 addr1에게 RAB를 전송 (사용자 주소에서 소각할 수 있도록 RAB 전송)
+      // 먼저 addr1에게 RAB를 전송
       const transferAmount = ethers.parseUnits("100", 0);
       await rabbitCoin.transfer(addr1.address, transferAmount);
-      
-      const burnAmount = ethers.parseUnits("50", 0);
-      
-      // 소각 시 Transfer 이벤트 확인 (to는 0 주소)
+
+      const burnAmount = ethers.parseUnits("25", 0);
+
       await expect(rabbitCoin.connect(addr1).burn(burnAmount))
         .to.emit(rabbitCoin, "Transfer")
         .withArgs(addr1.address, ethers.ZeroAddress, burnAmount);
@@ -210,17 +232,16 @@ describe("RabbitCoin", function () {
     it("소유자가 바뀌면 새 소유자만 민팅할 수 있어야 함", async function () {
       // 컨트랙트 소유권 이전
       await rabbitCoin.transferOwnership(addr1.address);
-      
+
       // 기존 소유자는 민팅 불가
       await expect(
         rabbitCoin.mint(addr2.address, 100)
       ).to.be.revertedWithCustomError(rabbitCoin, "OwnableUnauthorizedAccount")
-       .withArgs(owner.address);
-      
+        .withArgs(owner.address);
+
       // 새 소유자는 민팅 가능
       await rabbitCoin.connect(addr1).mint(addr2.address, 100);
       expect(await rabbitCoin.balanceOf(addr2.address)).to.equal(100);
     });
   });
-
 });

@@ -61,12 +61,34 @@ public class UserService {
     @Transactional(readOnly = true)
     public SearchUserResponseDTO searchUserByEmail(String searchEmail) {
         return userRepository.findByEmail(searchEmail)
-                .map(user -> SearchUserResponseDTO.builder()
-                        .userId(user.getUserId())
-                        .email(user.getEmail())
-                        .userName(user.getUserName())
-                        .nickname(user.getNickname())
-                        .build())
+                .map(user -> {
+                    String walletAddress = metamaskWalletRepository.findByUser_UserIdAndPrimaryFlagTrue(user.getUserId())
+                                    .map(MetamaskWallet::getWalletAddress)
+                                    .orElseGet(() -> null);
+
+                    return SearchUserResponseDTO.builder()
+                            .userId(user.getUserId())
+                            .email(user.getEmail())
+                            .userName(user.getUserName())
+                            .nickname(user.getNickname())
+                            .walletAddress(walletAddress)
+                            .build();
+                })
                 .orElseGet(() -> null);
+    }
+
+    @Transactional
+    public void deleteByUserId(int userId) {
+        userRepository.deleteById(userId);
+    }
+
+    public MetamaskWallet getWalletByUserIdAndPrimaryFlagTrue(Integer userId) {
+        return metamaskWalletRepository.findByUser_UserIdAndPrimaryFlagTrue(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 유저의 지갑 정보가 없습니다."));
+    }
+
+    public User findById(Integer userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 유저를 찾을 수 없습니다."));
     }
 }

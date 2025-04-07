@@ -1,32 +1,38 @@
 import UnitInput from "@/entities/common/ui/UnitInput";
 import { Button } from "@/shared/ui/button";
-
 import { Textarea } from "@/shared/ui/textarea";
-
 import { InputForm, SelectRepayType } from "@/entities/contract";
 import { useContractForm } from "@/features/contract";
+import { Calendar } from "@/shared/ui/calendar";
 import { Checkbox } from "@/shared/ui/checkbox";
-import { Form, FormField } from "@/shared/ui/form";
-import PASSDialog from "@/widget/common/ui/PASSDialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/shared/ui/form";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
+import dateFormat from "@/shared/utils/dateFormat";
 import BasicDialog from "@/widget/common/ui/BasicDialog";
-import { useState } from "react";
 import EmailSearchDialog from "@/widget/common/ui/EmailSearchDialog";
+import PASSDialog from "@/widget/common/ui/PASSDialog";
+import { useState } from "react";
+import { InfoIcon } from "lucide-react";
 
 const ContractCreate = () => {
   const {
     form,
     onSubmit,
-    passUserName,
-    passPhoneNumber,
-    isPassDialogOpen,
-    setPassUserName,
-    setPassPhoneNumber,
-    setIsPassDialogOpen,
-    handlePassComplete,
     dialogOpen,
     setDialogOpen,
     dialogMessage,
     setDialogMessage,
+    isPassDialogOpen,
+    setIsPassDialogOpen,
+    setPassState,
+    isModify,
+    rejectMessage,
   } = useContractForm();
 
   const [isSearchUserDialogOpen, setIsSearchUserDialogOpen] = useState(false);
@@ -44,33 +50,29 @@ const ContractCreate = () => {
             className="flex w-full flex-col items-center gap-9 bg-gray-900 px-4 py-9 md:px-11"
           >
             <div className="flex w-full flex-col items-center gap-2">
-              <h2 className="text-3xl">신규 차용증 작성</h2>
-              <span className="text-text-disabled text-2xl">
+              <h2 className="text-2xl md:text-3xl">신규 차용증 작성</h2>
+              <span className="text-text-disabled text-lg md:text-2xl">
                 입력된 내용은 계약서에 반영되면, 법적 효력이 발생합니다.
               </span>
             </div>
             <div className="flex w-full flex-col gap-3 md:flex-row">
               {/* 채무자 정보 */}
               <div className="flex w-full flex-col gap-3">
-                <h3 className="text-2xl font-bold">채무자 정보</h3>
+                <h3 className="text-xl font-bold md:text-2xl">채무자 정보</h3>
                 <FormField
                   control={form.control}
-                  name="DR_PHONE"
+                  name="drPhone"
                   render={({ field }) => (
                     <PASSDialog
                       isOpen={isPassDialogOpen}
                       onOpenChange={setIsPassDialogOpen}
-                      userName={passUserName}
-                      phoneNumber={passPhoneNumber}
-                      onUserNameChange={setPassUserName}
-                      onPhoneNumberChange={setPassPhoneNumber}
-                      onComplete={handlePassComplete}
+                      setPassState={setPassState}
                     >
                       <InputForm
                         type="tel"
                         label="휴대폰 번호"
                         readOnly
-                        id="DR-PHONE"
+                        id="drPhone"
                         placeholder="휴대폰 번호를 입력하세요."
                         buttonText={field.value ? "완료" : "인증받기"}
                         onInputClick={
@@ -94,12 +96,12 @@ const ContractCreate = () => {
                 <div className="flex w-full items-center gap-3">
                   <FormField
                     control={form.control}
-                    name="DR_NAME"
+                    name="drName"
                     render={({ field }) => (
                       <InputForm
                         type="text"
                         label="이름"
-                        id="DR-NAME"
+                        id="drName"
                         placeholder="이름을 입력하세요."
                         readOnly
                         {...field}
@@ -109,12 +111,12 @@ const ContractCreate = () => {
 
                   <FormField
                     control={form.control}
-                    name="DR_WALLET"
+                    name="drWallet"
                     render={({ field }) => (
                       <InputForm
                         type="text"
                         label="지갑 정보"
-                        id="DR-WALLET"
+                        id="drWallet"
                         placeholder="지갑 정보를 입력하세요."
                         readOnly
                         {...field}
@@ -125,10 +127,10 @@ const ContractCreate = () => {
               </div>
               {/* 채권자 정보 */}
               <div className="flex w-full flex-col gap-3">
-                <h3 className="text-2xl font-bold">채권자 정보</h3>
+                <h3 className="text-xl font-bold md:text-2xl">채권자 정보</h3>
                 <FormField
                   control={form.control}
-                  name="CR_EMAIL"
+                  name="crEmail"
                   render={({ field }) => (
                     <EmailSearchDialog
                       title="사용자 검색"
@@ -136,19 +138,27 @@ const ContractCreate = () => {
                       open={isSearchUserDialogOpen}
                       setOpen={setIsSearchUserDialogOpen}
                       onUserSelect={(user) => {
-                        form.setValue("CR_EMAIL", user.email);
-                        form.setValue("CR_NAME", user.name);
-                        form.setValue("CR_WALLET", user.wallet);
+                        form.setValue("crEmail", user.email);
+                        form.setValue("crName", user.userName);
+                        form.setValue("crWallet", user.walletAddress);
                       }}
                     >
                       <InputForm
                         label="이메일"
                         type="email"
-                        id="CR-EMAIL"
+                        id="crEmail"
                         readOnly
                         placeholder="이메일을 입력하세요."
-                        onInputClick={() => setIsSearchUserDialogOpen(true)}
-                        onClick={() => setIsSearchUserDialogOpen(true)}
+                        onInputClick={
+                          isModify
+                            ? undefined
+                            : () => setIsSearchUserDialogOpen(true)
+                        }
+                        onClick={
+                          isModify
+                            ? undefined
+                            : () => setIsSearchUserDialogOpen(true)
+                        }
                         buttonText="검색"
                         {...field}
                       />
@@ -158,12 +168,12 @@ const ContractCreate = () => {
                 <div className="flex w-full items-center gap-3">
                   <FormField
                     control={form.control}
-                    name="CR_NAME"
+                    name="crName"
                     render={({ field }) => (
                       <InputForm
                         type="text"
                         label="이름"
-                        id="CR-NAME"
+                        id="crName"
                         placeholder="이름을 입력하세요."
                         readOnly
                         {...field}
@@ -173,12 +183,12 @@ const ContractCreate = () => {
 
                   <FormField
                     control={form.control}
-                    name="CR_WALLET"
+                    name="crWallet"
                     render={({ field }) => (
                       <InputForm
                         type="text"
                         label="지갑 정보"
-                        id="CR-WALLET"
+                        id="crWallet"
                         placeholder="지갑 정보를 입력하세요."
                         readOnly
                         {...field}
@@ -190,39 +200,53 @@ const ContractCreate = () => {
             </div>
             {/* 1. 기본 정보 */}
             <div className="flex w-full flex-col gap-3">
-              <h3 className="text-2xl font-bold">1. 기본 정보</h3>
+              <h3 className="text-xl font-bold md:text-2xl">1. 기본 정보</h3>
               <div className="grid grid-cols-2 items-center gap-3 md:grid-cols-4">
                 <FormField
                   control={form.control}
-                  name="LA"
+                  name="la"
                   render={({ field }) => (
                     <InputForm
                       label="대출 금액"
                       unit="RAB"
                       placeholder="100,000원 이상"
                       type="number"
-                      id="LA"
+                      id="la"
                       {...field}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? undefined
+                            : e.target.valueAsNumber,
+                        )
+                      }
                     />
                   )}
                 />
                 <FormField
                   control={form.control}
-                  name="IR"
+                  name="ir"
                   render={({ field }) => (
                     <InputForm
                       label="이자율(연)"
                       unit="%"
                       type="number"
                       placeholder="20% 이하(법정 최고)"
-                      id="IR"
+                      id="ir"
                       {...field}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? undefined
+                            : e.target.valueAsNumber,
+                        )
+                      }
                     />
                   )}
                 />
                 <FormField
                   control={form.control}
-                  name="LT"
+                  name="lt"
                   render={({ field }) => (
                     <InputForm
                       min={1}
@@ -230,14 +254,21 @@ const ContractCreate = () => {
                       unit="개월"
                       type="number"
                       placeholder="대출 기간을 입력하세요."
-                      id="LT"
+                      id="lt"
                       {...field}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? undefined
+                            : e.target.valueAsNumber,
+                        )
+                      }
                     />
                   )}
                 />
                 <FormField
                   control={form.control}
-                  name="REPAY_TYPE"
+                  name="repayType"
                   render={({ field }) => (
                     <SelectRepayType
                       {...field}
@@ -248,36 +279,90 @@ const ContractCreate = () => {
                 />
                 <FormField
                   control={form.control}
-                  name="MP_DT"
+                  name="mpDt"
                   render={({ field }) => (
                     <InputForm
                       label="상환일"
                       unit="일"
                       placeholder="상환일을 입력하세요."
                       type="number"
-                      id="MP_DT"
+                      id="mpDt"
                       {...field}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? undefined
+                            : e.target.valueAsNumber,
+                        )
+                      }
                     />
                   )}
                 />
                 <FormField
                   control={form.control}
-                  name="DIR"
+                  name="dir"
                   render={({ field }) => (
                     <InputForm
                       label="연체 이자율(연)"
                       unit="%"
                       placeholder="20% 이하(법정 최고)"
                       type="number"
-                      id="DIR"
+                      id="dir"
                       {...field}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? undefined
+                            : e.target.valueAsNumber,
+                        )
+                      }
                     />
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="contractDt"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="text-lg md:text-xl">
+                        계약 시행일
+                      </FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              className="rounded-sm bg-gray-600 font-medium"
+                              variant={"outline"}
+                            >
+                              {field.value
+                                ? dateFormat(String(field.value))
+                                : "날짜 선택"}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            id="contractDt"
+                            mode="single"
+                            {...field}
+                            initialFocus
+                            disabled={(date) => date < new Date()}
+                            selected={field.value}
+                            onSelect={(e: Date | undefined) => {
+                              if (e) {
+                                field.onChange(e);
+                              }
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </FormItem>
                   )}
                 />
               </div>
             </div>
             <div className="flex w-full flex-col gap-3 border-b-2 pb-4">
-              <h3 className="text-2xl font-bold">2. 기한이익상실</h3>
+              <h3 className="text-xl font-bold md:text-2xl">2. 기한이익상실</h3>
               <div className="flex flex-col gap-4 pl-4">
                 <span>
                   1. 채무자가 아래 사유 중 하나에 해당하는 경우, 채권자는 기한의
@@ -288,14 +373,17 @@ const ContractCreate = () => {
                   <span>{"\u2022"} 원금 또는 이자를 </span>
                   <FormField
                     control={form.control}
-                    name="DEF_CNT"
+                    name="defCnt"
                     render={({ field }) => (
                       <UnitInput
                         wrapperClassName="w-[80px] inline-flex"
                         unit="회"
-                        id="DEF_CNT"
+                        id="defCnt"
                         type="number"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(Number(e.target.value));
+                        }}
                       />
                     )}
                   />
@@ -314,7 +402,7 @@ const ContractCreate = () => {
               </div>
             </div>
             <div className="flex w-full flex-col gap-3">
-              <h3 className="text-2xl font-bold">3. 선택항목</h3>
+              <h3 className="text-xl font-bold md:text-2xl">3. 선택항목</h3>
               <div className="flex flex-col gap-1 pl-4">
                 <span className="text-text-secondary">
                   차용증 양도 가능 여부 (선택사항)
@@ -322,17 +410,17 @@ const ContractCreate = () => {
                 <div className="border-border-primary flex items-center gap-2 border-b-2 pb-3">
                   <FormField
                     control={form.control}
-                    name="PN_TRANS"
+                    name="pnTransFlag"
                     render={({ field }) => (
                       <Checkbox
                         checkboxType="brand"
-                        id="PN_TRANS"
+                        id="pnTransFlag"
                         checked={field.value}
                         onCheckedChange={field.onChange}
                       />
                     )}
                   />
-                  <label htmlFor="PN_TRANS">
+                  <label htmlFor="pnTransFlag">
                     채권자가 본 차용증을 자유롭게 양도할 수 있음에 동의하며,
                     등록한 이메일로 양도 통지를 받는 것에 동의합니다.
                   </label>
@@ -345,11 +433,11 @@ const ContractCreate = () => {
                 <div className="border-border-primary flex items-center gap-2 border-b-2 pb-3">
                   <FormField
                     control={form.control}
-                    name="EARLYPAY"
+                    name="earlypay"
                     render={({ field }) => (
                       <Checkbox
                         checkboxType="brand"
-                        id="EARLYPAY"
+                        id="earlypay"
                         checked={field.value}
                         onCheckedChange={field.onChange}
                       />
@@ -357,7 +445,7 @@ const ContractCreate = () => {
                   />
                   <div>
                     <label
-                      htmlFor="EARLYPAY"
+                      htmlFor="earlypay"
                       className="flex flex-wrap items-center gap-1"
                     >
                       <span>
@@ -366,18 +454,17 @@ const ContractCreate = () => {
                       </span>
                       <FormField
                         control={form.control}
-                        name="EARLYPAY_FEE"
-                        render={({ field }) => (
+                        name="earlypayFee"
+                        render={() => (
                           <UnitInput
-                            disabled={!form.watch("EARLYPAY")}
-                            {...form.register("EARLYPAY_FEE", {
-                              valueAsNumber: true,
-                            })}
+                            disabled={!form.watch("earlypay")}
                             wrapperClassName="w-[80px] inline-flex"
                             unit="%"
                             type="number"
-                            id="EARLYPAY_FEE"
-                            {...field}
+                            id="earlypayFee"
+                            {...form.register("earlypayFee", {
+                              valueAsNumber: true,
+                            })}
                           />
                         )}
                       />
@@ -388,13 +475,15 @@ const ContractCreate = () => {
               </div>
             </div>
             <div className="flex w-full flex-col gap-3">
-              <h3 className="text-2xl font-bold">4. 추가조항(선택)</h3>
+              <h3 className="text-xl font-bold md:text-2xl">
+                4. 추가조항(선택)
+              </h3>
               <FormField
                 control={form.control}
-                name="ADD_TERMS"
+                name="addTerms"
                 render={({ field }) => (
                   <Textarea
-                    id="ADD_TERMS"
+                    id="addTerms"
                     className="border-border-primary w-full rounded-md border bg-gray-600 p-3 md:text-xl"
                     placeholder="추가조항을 입력하세요."
                     {...field}
@@ -403,13 +492,13 @@ const ContractCreate = () => {
               />
             </div>
             <div className="flex w-full flex-col gap-3">
-              <h3 className="text-2xl font-bold">5. 메세지(선택)</h3>
+              <h3 className="text-xl font-bold md:text-2xl">5. 메세지(선택)</h3>
               <FormField
                 control={form.control}
-                name="MESSAGE"
+                name="message"
                 render={({ field }) => (
                   <Textarea
-                    id="MESSAGE"
+                    id="message"
                     className="border-border-primary w-full rounded-md border bg-gray-600 p-3 md:text-xl"
                     placeholder="채권자에게 전달할 메세지를 입력하세요."
                     {...field}
@@ -417,16 +506,44 @@ const ContractCreate = () => {
                 )}
               />
             </div>
+            {isModify && (
+              <div className="flex w-full flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-bold md:text-2xl">
+                    6. 거절 사유
+                  </h3>
+                  <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600">
+                    참고용
+                  </span>
+                </div>
+                <div className="rounded-lg bg-gray-600 p-4">
+                  <div className="flex items-start gap-2">
+                    <InfoIcon className="h-5 w-5 text-gray-400" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-50">
+                        이전 거절 사유를 참고하여 새로운 차용증을 작성해주세요.
+                      </p>
+                      <div className="mt-2 rounded-sm bg-gray-700 p-3 text-base text-gray-50">
+                        {rejectMessage
+                          ? rejectMessage
+                          : "채권자가 거절 사유를 작성하지 않았습니다."}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex w-full justify-center gap-3">
               <Button
-                className="h-11 w-[170px] text-xl font-bold text-gray-700"
+                className="h-11 flex-1 text-lg font-bold text-gray-700 md:max-w-[170px] md:text-xl"
                 variant="secondary"
               >
                 취소
               </Button>
               <Button
                 type="submit"
-                className="h-11 w-[170px] text-xl font-bold text-gray-700"
+                className="h-11 flex-1 text-lg font-bold text-gray-700 md:max-w-[170px] md:text-xl"
                 variant="primary"
               >
                 제출

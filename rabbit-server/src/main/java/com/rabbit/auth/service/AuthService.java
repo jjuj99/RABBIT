@@ -3,16 +3,20 @@ package com.rabbit.auth.service;
 import com.rabbit.auth.domain.dto.request.LoginRequestDTO;
 import com.rabbit.auth.domain.dto.request.NonceRequestDTO;
 import com.rabbit.auth.domain.dto.request.SignupRequestDTO;
-import com.rabbit.auth.domain.dto.response.CheckNicknameResponseDTO;
+import com.rabbit.auth.domain.dto.response.CheckDuplicatedResponseDTO;
 import com.rabbit.auth.domain.dto.response.NonceResponseDTO;
 import com.rabbit.auth.domain.dto.response.RefreshResponseDTO;
+import com.rabbit.auth.domain.entity.SsafyAccount;
 import com.rabbit.auth.domain.entity.UserToken;
+import com.rabbit.auth.repository.SsafyAccountRepository;
 import com.rabbit.auth.repository.UserTokenRepository;
 import com.rabbit.auth.service.dto.LoginServiceResult;
+import com.rabbit.bankApi.service.BankApiService;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.util.JwtUtil;
 import com.rabbit.global.util.SignatureUtil;
+import com.rabbit.global.util.WalletAddressUtil;
 import com.rabbit.user.domain.entity.MetamaskWallet;
 import com.rabbit.user.domain.entity.RefundAccount;
 import com.rabbit.user.domain.entity.User;
@@ -22,13 +26,13 @@ import com.rabbit.user.repository.UserRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.time.ZonedDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -37,37 +41,42 @@ public class AuthService {
     private final UserTokenRepository userTokenRepository;
     private final RefundAccountRepository refundAccountRepository;
     private final MetamaskWalletRepository metamaskWalletRepository;
+    private final SsafyAccountRepository ssafyAccountRepository;
 
-    private final SignatureUtil signatureUtil;
+    private final BankApiService bankApiService;
     private final JwtUtil jwtUtil;
 
     public NonceResponseDTO nonce(NonceRequestDTO request) {
-        // 존재하는 회원인지 확인
-        return metamaskWalletRepository.findByWalletAddress(request.getWalletAddress())
+        // 전체 스트림을 호출 -> 대소문자 무시하여 지갑 주소 비교
+        return metamaskWalletRepository.findByPrimaryFlagTrue().stream()
+                .filter(wallet -> {
+                    return WalletAddressUtil.compareAddresses(request.getWalletAddress(), wallet.getWalletAddress());
+                })
+                .findFirst()
                 .map(wallet -> NonceResponseDTO.builder()
-                            .nonce(createNonce()) // 난수 생성
-                            .build()
+                        .nonce(SignatureUtil.createNonce())
+                        .build()
                 )
                 .orElseGet(() -> null);
-    }
-
-    private String createNonce() {
-        SecureRandom random = new SecureRandom();
-        return new BigInteger(130, random).toString(32);
     }
 
     @Transactional
     public LoginServiceResult login(LoginRequestDTO request) {
         // 지갑 주소로 회원 정보 불러오기
-        User user = metamaskWalletRepository.findByWalletAddress(request.getWalletAddress())
+        User user = metamaskWalletRepository.findByPrimaryFlagTrue().stream()
+                .filter(wallet -> {
+                    return WalletAddressUtil.compareAddresses(request.getWalletAddress(), wallet.getWalletAddress());
+                })
+                .findFirst()
                 .map(MetamaskWallet::getUser)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "존재하지 않는 지갑 주소입니다."));
 
-        // 서명에서 주소 복원
-        String recoverAddress = signatureUtil.recoverAddress(request.getSignature(), request.getNonce());
+        userTokenRepository.deleteByUser_UserId(user.getUserId());
+
+        String recoverAddress = SignatureUtil.recoverAddress(request.getSignature(), request.getNonce());
 
         // 서명 검증
-        if (!request.getWalletAddress().equalsIgnoreCase(recoverAddress)) {
+        if (!WalletAddressUtil.compareAddresses(request.getWalletAddress(), recoverAddress)) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "서명이 일치하지 않습니다.");
         }
 
@@ -105,10 +114,21 @@ public class AuthService {
                 });
 
         // 이미 존재하는 지갑 주소인지 확인
-        metamaskWalletRepository.findByWalletAddress(request.getWalletAddress())
-                .ifPresent(metamaskWallet -> {
-                    throw new BusinessException(ErrorCode.ALREADY_EXISTS, "이미 등록된 지갑 주소입니다.");
+        boolean walletExists = metamaskWalletRepository.findAll().stream()
+                .anyMatch(wallet -> {
+                    return WalletAddressUtil.compareAddresses(request.getWalletAddress(), wallet.getWalletAddress());
                 });
+        if (walletExists) {
+            throw new BusinessException(ErrorCode.ALREADY_EXISTS, "이미 등록된 지갑 주소입니다.");
+        }
+
+        // 싸피 은행 계정 정보 호출
+        SsafyAccount ssafyAccount = ssafyAccountRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED, "계좌 인증을 다시 시도해주세요."));
+
+        if (ssafyAccount.getUserKey() == null || ssafyAccount.getAccountNo() == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "계좌 인증을 다시 시도해주세요.");
+        }
 
         // 유저 엔티티 생성
         User user = userRepository.save(User.builder()
@@ -134,9 +154,11 @@ public class AuthService {
         );
 
         // 메타마스크 지갑 엔티티 생성
+        // 표준 체크섬 주소로 변환
+        String checksumAddress = WalletAddressUtil.toChecksumAddress(request.getWalletAddress());
         metamaskWalletRepository.save(MetamaskWallet.builder()
                 .user(user)
-                .walletAddress(request.getWalletAddress())
+                .walletAddress(checksumAddress)
                 .primaryFlag(true)
                 .createdAt(ZonedDateTime.now())
                 .updatedAt(ZonedDateTime.now())
@@ -145,17 +167,24 @@ public class AuthService {
     }
 
     @Transactional
-    public void logout(String refreshToken) {
-        String userId = jwtUtil.getUserIdFromToken(refreshToken);
-
-        userTokenRepository.deleteByUser_UserId(Integer.parseInt(userId));
+    public void logout(int userId) {
+        userTokenRepository.deleteByUser_UserId(userId);
     }
 
     @Transactional(readOnly = true)
-    public CheckNicknameResponseDTO checkNickname(String nickname) {
+    public CheckDuplicatedResponseDTO checkEmail(String email) {
+        boolean duplicated = userRepository.existsByEmail(email);
+
+        return CheckDuplicatedResponseDTO.builder()
+                .duplicated(duplicated)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public CheckDuplicatedResponseDTO checkNickname(String nickname) {
         boolean duplicated = userRepository.existsByNickname(nickname);
 
-        return CheckNicknameResponseDTO.builder()
+        return CheckDuplicatedResponseDTO.builder()
                 .duplicated(duplicated)
                 .build();
     }

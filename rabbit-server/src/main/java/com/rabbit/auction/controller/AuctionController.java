@@ -5,6 +5,7 @@ import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
 import com.rabbit.auction.domain.dto.response.AuctionDetailResponseDTO;
 import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
 import com.rabbit.auction.domain.dto.response.MyAuctionResponseDTO;
+import com.rabbit.auction.domain.dto.response.SimilarAuctionResponseDTO;
 import com.rabbit.auction.service.AuctionService;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
 import com.rabbit.global.exception.BusinessException;
@@ -13,18 +14,20 @@ import com.rabbit.global.request.PageRequestDTO;
 import com.rabbit.global.response.CustomApiResponse;
 import com.rabbit.global.response.MessageResponse;
 import com.rabbit.global.response.PageResponseDTO;
+import com.rabbit.loan.domain.dto.response.ContractEventDTO;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/auctions")
@@ -34,7 +37,9 @@ public class AuctionController {
 
     @AuctionControllerSwagger.InsertAuctionApi
     @PostMapping
-    public ResponseEntity<CustomApiResponse<?>> addAuction(@Valid @RequestBody AuctionRequestDTO auctionRequest) {
+    public ResponseEntity<CustomApiResponse<?>> addAuction(@Valid @RequestBody AuctionRequestDTO auctionRequest, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+
         //최소 입찰가
         if(auctionRequest.getMinimumBid()<=0){
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "최소 입찰가는 0보다 커야 합니다.");
@@ -49,7 +54,7 @@ public class AuctionController {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "필수 파라미터가 누락되었습니다.");
         }
 
-        auctionService.addAuction(auctionRequest);
+        auctionService.addAuction(auctionRequest, Integer.parseInt(userId));
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(CustomApiResponse.success(MessageResponse.of("경매 등록 성공했습니다.")));
@@ -83,21 +88,22 @@ public class AuctionController {
     @AuctionControllerSwagger.CancelAuctionApi
     @DeleteMapping("/{auctionId}")
     public ResponseEntity<CustomApiResponse<MessageResponse>> cancelAuction(
-            @PathVariable("auctionId") Integer auctionId) {
+            @PathVariable("auctionId") Integer auctionId, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
 
-        auctionService.cancelAuction(auctionId);
+        auctionService.cancelAuction(auctionId, Integer.valueOf(userId));
 
         return  ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("경매가 취소되었습니다.")));
     }
 
     @AuctionControllerSwagger.GetMyBidAuctionsApi
     @GetMapping("/my-bids")
-    public ResponseEntity<CustomApiResponse<?>> getMyBidAuctions(@Valid PageRequestDTO pageRequest) {
-        Integer userId = 4;
+    public ResponseEntity<CustomApiResponse<?>> getMyBidAuctions(@Valid PageRequestDTO pageRequest, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
 
         Pageable pageable = pageRequest.toPageable("bidDate", Sort.Direction.DESC);
 
-        PageResponseDTO<MyAuctionResponseDTO> myBidList = auctionService.getMyBidAuctions(userId, pageable);
+        PageResponseDTO<MyAuctionResponseDTO> myBidList = auctionService.getMyBidAuctions(Integer.parseInt(userId), pageable);
 
         return ResponseEntity.ok(CustomApiResponse.success(myBidList));
     }
@@ -105,10 +111,37 @@ public class AuctionController {
     @AuctionControllerSwagger.GetAuctionDetailApi
     @GetMapping("/{auctionId}")
     public ResponseEntity<CustomApiResponse<AuctionDetailResponseDTO>> getAuctionDetail(
-            @PathVariable("auctionId") Integer auctionId) {
+            @PathVariable("auctionId") Integer auctionId, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
 
         AuctionDetailResponseDTO auctionDetailResponse = auctionService.getAuctionDetail(auctionId);
 
         return ResponseEntity.ok(CustomApiResponse.success(auctionDetailResponse));
+    }
+
+    @AuctionControllerSwagger.GetSimilarAuctionsApi
+    @GetMapping("/{auctionId}/similar")
+    public ResponseEntity<CustomApiResponse<?>> getSimilarAuctions(@Valid @PathVariable Integer auctionId, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+
+        SimilarAuctionResponseDTO response = auctionService.getSimilarAuctions(auctionId);
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
+
+    @AuctionControllerSwagger.GetAuctionEventApi
+    @GetMapping("/{auctionId}/event")
+    public ResponseEntity<CustomApiResponse<?>> getAuctionEvents(@Valid @PathVariable Integer auctionId, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+
+        List<ContractEventDTO> events = auctionService.getAuctionEvents(auctionId);
+
+        return ResponseEntity.ok(CustomApiResponse.success(events));
+    }
+
+    @PostMapping("/{auctionId}/force-end")
+    public ResponseEntity<CustomApiResponse<?>> forceEndAuction(@PathVariable Integer auctionId) {
+        auctionService.processAuctionEnd(auctionId);
+        return ResponseEntity.ok(CustomApiResponse.success("경매 종료 처리 완료"));
     }
 }

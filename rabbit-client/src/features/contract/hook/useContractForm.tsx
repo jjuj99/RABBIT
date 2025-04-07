@@ -1,53 +1,72 @@
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { useAuthUser } from "@/entities/auth/hooks/useAuth";
-import { useState } from "react";
+import useContractMutate from "@/entities/contract/hooks/useContractMutate";
+import useCreateContract from "@/entities/contract/hooks/useCreateContract";
 import useGetWallet from "@/entities/wallet/hooks/useGetWallet";
+import { useWeb3 } from "@/shared/lib/web3/context/useWeb3";
+import { passType } from "@/shared/type/Types";
+import dateFormat from "@/shared/utils/dateFormat";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useLocation } from "react-router";
+import { z } from "zod";
 
 const useContractForm = () => {
   const { user } = useAuthUser();
-  const [passUserName, setPassUserName] = useState("");
-  const [passPhoneNumber, setPassPhoneNumber] = useState("");
-  const [isPassDialogOpen, setIsPassDialogOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
+  const [isPassDialogOpen, setIsPassDialogOpen] = useState(false);
+  const [isModifyDialogOpen, setIsModifyDialogOpen] = useState(false);
+  const { state } = useLocation();
+  console.log("state", state);
+  const { cancelContract } = useContractMutate({
+    contractId: state?.contractId ?? "",
+  });
+  const [passState, setPassState] = useState<passType>({
+    authResultCode: "FAIL",
+    passAuthToken: "",
+    txId: "",
+    phoneNumber: "",
+    name: "",
+  });
   const { address } = useGetWallet();
+  const { web3 } = useWeb3();
+  const { createContractMutation } = useCreateContract();
 
   const contractSchema = z.object({
-    DR_PHONE: z.string().min(1, { message: "전화번호를 입력해주세요" }),
-    DR_NAME: z.string().min(1, { message: "이름을 입력해주세요" }),
-    DR_WALLET: z.string().min(1, { message: "지갑 주소를 입력해주세요" }),
-    CR_EMAIL: z
+    drPhone: z.string().min(1, { message: "전화번호를 입력해주세요" }),
+    drName: z.string().min(1, { message: "이름을 입력해주세요" }),
+    drWallet: z.string().min(1, { message: "지갑 주소를 입력해주세요" }),
+    crEmail: z
       .string()
       .min(1, { message: "이메일을 입력해주세요" })
       .email({ message: "올바른 이메일 형식이 아닙니다" }),
-    CR_NAME: z.string().min(1, { message: "이름을 입력해주세요" }),
-    CR_WALLET: z.string().min(1, { message: "지갑 주소를 입력해주세요" }),
-    LA: z.number().min(1000000, { message: "100,000원 이상" }),
-    IR: z
+    crName: z.string().min(1, { message: "이름을 입력해주세요" }),
+    crWallet: z.string().min(1, { message: "지갑 주소를 입력해주세요" }),
+    la: z.number().min(99999, { message: "100,000원 이상" }),
+    ir: z
       .number()
       .min(0, { message: "이자율은 0% 이상이어야 합니다" })
       .max(20, { message: "이자율은 20%를 초과할 수 없습니다" })
       .step(0.1, { message: "이자율은 0.1% 단위로 입력해주세요" }),
-    LT: z
+    lt: z
       .number()
       .min(1, { message: "대출 기간은 1개월 이상이어야 합니다" })
       .int({ message: "대출 기간은 정수로 입력해주세요" }),
-    REPAY_TYPE: z.string().min(1, { message: "상환 방식을 선택해주세요" }),
-    MP_DT: z
+    repayType: z.enum(["EPIP", "EPP", "BP"]),
+    mpDt: z
       .number()
       .min(1, { message: "납입일은 1일 이상이어야 합니다" })
       .max(31, { message: "납입일은 31일을 초과할 수 없습니다" }),
-    DIR: z
+    dir: z
       .number()
       .min(0, { message: "연체이자율은 0% 이상이어야 합니다" })
       .max(20, { message: "연체이자율은 20%를 초과할 수 없습니다" })
       .step(0.1, { message: "연체이자율은 0.1% 단위로 입력해주세요" }),
-    DEF_CNT: z.number().min(0, { message: "기한이익상실 기준을 입력해주세요" }),
-    PN_TRANS: z.boolean().optional(),
-    EARLYPAY: z.boolean().optional(),
-    EARLYPAY_FEE: z
+    defCnt: z.number().min(0, { message: "기한이익상실 기준을 입력해주세요" }),
+    pnTransFlag: z.boolean(),
+    earlypay: z.boolean(),
+    earlypayFee: z
       .number()
       .min(0, { message: "중도상환 수수료율은 0% 이상이어야 합니다" })
       .max(20, { message: "중도상환 수수료율은 20%를 초과할 수 없습니다" })
@@ -62,80 +81,116 @@ const useContractForm = () => {
           message: "중도상환 수수료율을 입력해주세요",
         },
       ),
-    ADD_TERMS: z.string().optional(),
-    MESSAGE: z.string().optional(),
+    addTerms: z.string().optional(),
+    message: z.string().optional(),
+    passAuthToken: z.string(),
+    txId: z.string(),
+    authResultCode: z.string(),
+    contractDt: z.date(),
   });
+
+  useEffect(() => {
+    if (address) {
+      form.setValue("drWallet", address);
+    }
+  }, [address]);
+
+  useEffect(() => {
+    if (passState.authResultCode === "SUCCESS") {
+      handlePassComplete();
+    }
+  }, [passState]);
 
   const form = useForm<z.infer<typeof contractSchema>>({
     resolver: zodResolver(contractSchema),
     defaultValues: {
-      DR_PHONE: "",
-      DR_NAME: user?.nickname,
-      DR_WALLET: address ?? "",
-      CR_EMAIL: "",
-      CR_NAME: "",
-      CR_WALLET: "",
-      // LA: 0,
-      // IR: 0,
-      // LT: 0,
-      REPAY_TYPE: "",
-      // MP_DT: 0,
-      // DIR: 0,
-      DEF_CNT: 0,
-      PN_TRANS: false,
-      EARLYPAY: false,
-      EARLYPAY_FEE: 0,
-      ADD_TERMS: "",
-      MESSAGE: "",
+      drName: user?.userName ?? "",
+      drPhone: state?.drPhone ?? "",
+      drWallet: state?.drWallet ?? "",
+      crName: state?.crName ?? "",
+      crEmail: state?.crEmail ?? "",
+      crWallet: state?.crWallet ?? "",
+      la: state?.la ?? undefined,
+      ir: state?.ir ?? undefined,
+      lt: state?.lt ?? undefined,
+      repayType: state?.repayType ?? undefined,
+      mpDt: state?.mpDt ?? undefined,
+      dir: state?.dir ?? undefined,
+      defCnt: state?.defCnt ?? 0,
+      pnTransFlag: state?.pnTransFlag ?? false,
+      earlypay: state?.earlypay ?? false,
+      earlypayFee: state?.earlypayFee ?? 0,
+      addTerms: state?.addTerms ?? "",
+      message: "",
+      passAuthToken: "",
+      txId: "",
+      authResultCode: "",
+      contractDt: new Date(),
     },
   });
 
-  const onSubmit = (data: z.infer<typeof contractSchema>) => {
-    // if (!data.DR_NAME) {
-    //   setDialogMessage("계약자 이름을 입력해주세요.");
-    //   setDialogOpen(true);
-    //   return;
-    // }
-
-    if (!data.DR_PHONE) {
-      setDialogMessage("휴대폰 번호를 인증해주세요.");
-      console.log("여기");
-
-      setDialogOpen(true);
+  const onSubmit = async (data: z.infer<typeof contractSchema>) => {
+    const account = await web3?.eth.getAccounts();
+    if (!account) {
       return;
     }
-
-    console.log(data);
+    if (state) {
+      try {
+        setIsModifyDialogOpen(true);
+        await cancelContract();
+      } catch (error) {
+        console.error(error);
+        return;
+      }
+    }
+    createContractMutation.mutate({
+      ...data,
+      earlypayFee: data.earlypayFee ?? 0,
+      repayType: data.repayType as "EPIP" | "EPP" | "BP",
+      addTerms: data.addTerms ?? null,
+      message: data.message ?? null,
+      contractDt: dateFormat(String(data.contractDt)),
+    });
   };
 
-  const handlePassComplete = (phoneNumber: string, name: string) => {
-    const loggedInUserName = form.getValues("DR_NAME");
-
-    if (loggedInUserName && name !== loggedInUserName) {
-      alert("인증하신 이름이 회원정보와 일치하지 않습니다.");
-      return false;
+  const handlePassComplete = () => {
+    console.log("passState", passState);
+    if (passState.authResultCode === "SUCCESS") {
+      form.setValue("drPhone", passState.phoneNumber);
+      form.setValue("drName", passState.name);
+      form.setValue("passAuthToken", passState.passAuthToken);
+      form.setValue("txId", passState.txId);
+      form.setValue("authResultCode", passState.authResultCode);
+      setIsPassDialogOpen(false);
     }
+  };
 
-    form.setValue("DR_PHONE", phoneNumber);
-    setIsPassDialogOpen(false);
-    return true;
+  const handleModifyConfirm = async () => {
+    try {
+      await cancelContract();
+      setIsModifyDialogOpen(false);
+    } catch (error) {
+      console.error("Contract cancellation failed:", error);
+    }
   };
 
   return {
     form,
     onSubmit,
-
-    passUserName,
-    passPhoneNumber,
-    isPassDialogOpen,
-    setPassUserName,
-    setPassPhoneNumber,
-    setIsPassDialogOpen,
+    passState,
+    setPassState,
     handlePassComplete,
     dialogOpen,
     setDialogOpen,
     dialogMessage,
     setDialogMessage,
+    isPassDialogOpen,
+    setIsPassDialogOpen,
+    isModify: state ?? false,
+    rejectMessage: state?.rejectMessage ?? "",
+    isModifyDialogOpen,
+    setIsModifyDialogOpen,
+    handleModifyConfirm,
   };
 };
 

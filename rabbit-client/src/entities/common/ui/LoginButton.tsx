@@ -1,21 +1,25 @@
 import useGetNonce from "@/entities/auth/hooks/useGetNonce";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-import { cn } from "@/shared/lib/utils";
 import { useMetaMaskInstalled } from "@/entities/wallet/hooks/useMetaMaskInstalled";
-import { toast } from "sonner";
-import ensureCorrectNetwork from "@/entities/wallet/utils/ensureCorrectNetwork";
-import getMetaMaskProvider from "@/entities/wallet/utils/getMetaMaskProvider";
+import checkRabbitTokenRegister from "@/entities/wallet/utils/checkRabbitTokenRegister";
 import connectWallet from "@/entities/wallet/utils/connectWallet";
+import ensureCorrectNetwork from "@/entities/wallet/utils/ensureCorrectNetwork";
 import generateSignature from "@/entities/wallet/utils/generateSignature";
+import getMetaMaskProvider from "@/entities/wallet/utils/getMetaMaskProvider";
+import { cn } from "@/shared/lib/utils";
+import { toast } from "sonner";
 
+import { LoginAPI } from "@/entities/auth/api/authApi";
 import { setAccessToken } from "@/entities/auth/utils/authUtils";
 import { LOGIN_MESSAGE } from "@/entities/wallet/constant";
-import { LoginAPI } from "@/entities/auth/api/authApi";
 import { useQueryClient } from "@tanstack/react-query";
+
+import SignupDialog from "@/features/auth/ui/SignupDialog";
 
 const LoginButton = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignupDialogOpen, setIsSignupDialogOpen] = useState(false);
 
   const {
     isInstalled,
@@ -62,6 +66,20 @@ const LoginButton = () => {
       setIsLoading(false);
       return;
     }
+
+    // 토큰 등록 확인 및 등록 시도
+    try {
+      const { isRegistered, error: tokenError } =
+        await checkRabbitTokenRegister();
+      if (!isRegistered && tokenError) {
+        toast.error(tokenError);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+    }
+
     // 3. 지갑 연결 요청 - 예외 처리 toast 띄우기, 지갑 연결을 거부했을 때?
     // 4. 지갑 주소 반환 - 예외 처리 toast 띄우기
     const provider = await getMetaMaskProvider();
@@ -90,17 +108,21 @@ const LoginButton = () => {
     // 6. 난수 요청
 
     const { data: nonce } = await nonceMutation.mutateAsync(address);
+    console.log(nonce);
     if (!nonce) {
-      toast.error("난수 요청에 실패했습니다.");
+      setIsSignupDialogOpen(true);
       setIsLoading(false);
       return;
     }
 
     // 7. 시그니처 생성
+
     const { signature, error: signatureError } = await generateSignature(
       address,
       LOGIN_MESSAGE(address, nonce.nonce),
     );
+    console.log(signature);
+
     if (!signature) {
       switch (signatureError) {
         case "PROVIDER_NOT_FOUND":
@@ -121,20 +143,28 @@ const LoginButton = () => {
       const loginRes = await LoginAPI({
         walletAddress: address,
         signature,
-        nonce: nonce.nonce,
+        nonce: LOGIN_MESSAGE(address, nonce.nonce),
       });
 
       if (loginRes.status === "SUCCESS" && loginRes.data) {
         toast.success("로그인에 성공했습니다.");
         setAccessToken(loginRes.data.accessToken);
+
         queryClient.setQueryData(["user"], {
           isAuthenticated: true,
-          user: loginRes.data.user,
+          user: {
+            nickname: loginRes.data.nickname,
+            userName: loginRes.data.userName,
+          },
         });
         setIsLoading(false);
         return;
       } else {
-        // 회원가입
+        if (loginRes.status === "ERROR") {
+          toast.error(loginRes.error?.message);
+          setIsLoading(false);
+          return;
+        }
       }
     } catch {
       toast.error("로그인에 실패했습니다.");
@@ -148,18 +178,25 @@ const LoginButton = () => {
   }
 
   return (
-    <div className="flex flex-col items-center">
-      <button
-        className={cn(
-          "cursor-pointer rounded-md px-4 py-2",
-          isLoading ? "opacity-50" : "",
-        )}
-        onClick={handleLogin}
-        disabled={isLoading}
-      >
-        {isLoading ? "로그인 중..." : "로그인"}
-      </button>
-    </div>
+    <>
+      <div className="flex flex-col items-center">
+        <button
+          className={cn(
+            "cursor-pointer rounded-md px-4 pb-1.5 text-xl text-nowrap",
+            isLoading ? "opacity-50" : "",
+          )}
+          onClick={handleLogin}
+          disabled={isLoading}
+        >
+          {isLoading ? "로그인 중..." : "로그인"}
+        </button>
+      </div>
+
+      <SignupDialog
+        isOpen={isSignupDialogOpen}
+        onOpenChange={setIsSignupDialogOpen}
+      />
+    </>
   );
 };
 

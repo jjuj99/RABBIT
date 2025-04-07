@@ -1,12 +1,20 @@
 package com.rabbit.auction.domain.entity;
 
-import com.rabbit.auction.domain.enums.AuctionStatus;
+import com.rabbit.global.code.domain.enums.SysCommonCodes;
+import com.rabbit.user.domain.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 
-@Table(name="auctions")
+@Table(
+        name = "auctions",
+        indexes = {
+                @Index(name = "idx_auction_status", columnList = "auction_status")
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -18,10 +26,9 @@ public class Auction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer auctionId;
 
-    @Column(nullable = false)
-//    @JoinColumn(name="user_id")
-//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private Integer userId;
+    @JoinColumn(name="user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private User assignor;
 
     @Column(nullable = false)
     private Long minimumBid;
@@ -30,11 +37,11 @@ public class Auction {
     private ZonedDateTime endDate;
 
     @Column(nullable = false)
-    private String tokenId;
+    private BigInteger tokenId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private AuctionStatus auctionStatus;
+    @Column(name = "auction_status", nullable = false, length = 50)
+    private SysCommonCodes.Auction auctionStatus;
 
     private Long price;
 
@@ -45,6 +52,14 @@ public class Auction {
 
     @Column(nullable = false)
     private ZonedDateTime createdAt;
+
+    private Long remainPrincipal;
+
+    private Integer remainRepaymentDate;
+
+    private BigDecimal returnRate;
+
+    private String contractIpfsUrl;
 
     public void updatePriceAndBidder(Long price, Integer bidderId) {
         this.price = price;

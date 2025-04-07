@@ -1,0 +1,7 @@
+export type CommonCodeType =
+  | "AUCTION_STATUS"
+  | "CONTRACT_STATUS"
+  | "BID_STATUS"
+  | "EMAIL_LOG_STATUS"
+  | "PROMISSORY_NOTE_STATUS"
+  | "COIN_LOG_STATUS";

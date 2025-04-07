@@ -1,0 +1,932 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_promissoryNoteAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_rabbitCoinAddress",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableInvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxInterestRate",
+        "type": "uint256"
+      }
+    ],
+    "name": "AccelReached",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "feeAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "EarlyRepaymentFee",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "principalAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "remainingPrincipal",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isFullRepayment",
+        "type": "bool"
+      }
+    ],
+    "name": "EarlyRepaymentPrincipal",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "debtor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "requiredAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "currentBalance",
+        "type": "uint256"
+      }
+    ],
+    "name": "InsufficientBalance",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isOverdue",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "accumulatedOverdueInterest",
+        "type": "uint256"
+      }
+    ],
+    "name": "OverdueInfoUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newInterest",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalAccumulatedInterest",
+        "type": "uint256"
+      }
+    ],
+    "name": "OverdueInterestAccumulated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "paidOverdueAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      }
+    ],
+    "name": "OverdueResolved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "RepaymentCompleted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "overdueStartDate",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalDefaultCount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "aoi",
+        "type": "uint256"
+      }
+    ],
+    "name": "RepaymentOverdue",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "remainingPrincipal",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "nextMpDt",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      }
+    ],
+    "name": "RepaymentProcessed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "remainingPrincipal",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "nextMpDt",
+        "type": "uint256"
+      }
+    ],
+    "name": "RepaymentScheduleCreated",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_OVERDUE_INTEREST_RATE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "activeRepayments",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "name": "checkUpkeep",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "upkeepNeeded",
+        "type": "bool"
+      },
+      {
+        "internalType": "bytes",
+        "name": "performData",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "cleanupRepaymentData",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getActiveRepayments",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paymentAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "getEarlyRepaymentFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "feeAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRepaymentInfo",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "initialPrincipal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "remainingPrincipal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "ir",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "dir",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "mpDt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nextMpDt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalPayments",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "remainingPayments",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "fixedPaymentAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "repayType",
+            "type": "string"
+          },
+          {
+            "internalType": "address",
+            "name": "drWalletAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "activeFlag",
+            "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bool",
+                "name": "overdueFlag",
+                "type": "bool"
+              },
+              {
+                "internalType": "uint256",
+                "name": "overdueStartDate",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "overdueDays",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "aoi",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "defCnt",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "accel",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "currentIr",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "totalDefCnt",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IRepaymentScheduler.OverdueInfo",
+            "name": "overdueInfo",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct IRepaymentScheduler.RepaymentInfo",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "performData",
+        "type": "bytes"
+      }
+    ],
+    "name": "performUpkeep",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paymentAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "feeAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "processEarlyRepayment",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "processRepayment",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "promissoryNoteAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "rabbitCoinAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "registerRepaymentSchedule",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "repaymentSchedules",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "initialPrincipal",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "remainingPrincipal",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "ir",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dir",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "mpDt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "nextMpDt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalPayments",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "remainingPayments",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fixedPaymentAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "repayType",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "drWalletAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "activeFlag",
+        "type": "bool"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "overdueFlag",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "overdueStartDate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "overdueDays",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "aoi",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "defCnt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accel",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "currentIr",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalDefCnt",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IRepaymentScheduler.OverdueInfo",
+        "name": "overdueInfo",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_promissoryNoteAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_rabbitCoinAddress",
+        "type": "address"
+      }
+    ],
+    "name": "updateContractAddresses",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "overdueFlag",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "overdueStartDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "overdueDays",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "aoi",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "defCnt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentIr",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalDefCnt",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateOverdueInfo",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "remainingPrincipal",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "remainingPayments",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "nextPaymentDate",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateRepaymentInfo",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

@@ -12,7 +12,7 @@ interface REPAY_TYPEProps {
 }
 
 const REPAY_TYPESection = ({ triggerApi }: REPAY_TYPEProps) => {
-  const paymentTypes = useAuctionFilterStore((state) => state.repay_type);
+  const paymentTypes = useAuctionFilterStore((state) => state.repayType);
   const setPaymentTypes = useAuctionFilterStore((state) => state.setRepayType);
 
   const handlePaymentTypeChange = (id: string) => {

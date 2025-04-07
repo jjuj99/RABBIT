@@ -3,7 +3,8 @@ export interface RequestNonceResponse {
 }
 export interface LoginResponse {
   accessToken: string;
-  user: User;
+  nickname: string;
+  userName: string;
 }
 
 export interface LogoutResponse {
@@ -29,8 +30,18 @@ export interface VerifyAccountResponse {
 }
 export interface RefreshTokenResponse {
   accessToken: string;
-  user: User;
+  nickname: string;
+  userName: string;
 }
 export interface User {
   nickname: string;
+  userName: string;
+}
+
+export interface SignupResponse {
+  message: string;
+}
+
+export interface CheckNicknameResponse {
+  duplicated: boolean;
 }

@@ -1,25 +1,34 @@
-import { PNInfoListResponse } from "@/features/auction/types/response";
+import { AvailableAuctionsResponse } from "@/features/auction/types/response";
 import { cn } from "@/shared/lib/utils";
 import { Separator } from "@/shared/ui/Separator";
 import dateFormat from "@/shared/utils/dateFormat";
+import { useState } from "react";
 
 type NFTCardProps = {
-  item: PNInfoListResponse;
+  item: AvailableAuctionsResponse;
 };
 
 export const MyNFTcard = ({ item }: NFTCardProps) => {
+  const [isTouched, setIsTouched] = useState(false);
+
   return (
-    <div className="group bg-black-glass border-white-glass shadow-glow w- fit flex h-fit w-[300px] flex-col items-center gap-4 rounded-lg border px-3 pt-4 pb-7">
+    <div
+      className="bg-black-glass border-white-glass shadow-glow w- fit flex h-fit w-[300px] flex-col items-center gap-4 rounded-lg border px-3 pt-4 pb-7"
+      onClick={() => setIsTouched(!isTouched)}
+    >
       <div className="text-brand-primary font-bit flex w-full items-center justify-center text-base">
-        <span>RABBIT #1234567890</span>
+        <span>RABBIT#{item.tokenId}</span>
       </div>
       <div className="relative h-[192px] w-full">
-        <MyNFTCardInfo item={item} />
+        <MyNFTCardInfo item={item} isTouched={isTouched} />
         <div className="flex justify-center">
           <img
             src="/images/NFT.png"
             alt="NTF"
-            className="h-[192px] w-[192px] opacity-100 transition-opacity duration-300 ease-in-out group-hover:opacity-0"
+            className={cn(
+              "h-[192px] w-[192px] transition-opacity duration-300 ease-in-out",
+              isTouched ? "opacity-0" : "opacity-100",
+            )}
           />
         </div>
       </div>
@@ -27,11 +36,11 @@ export const MyNFTcard = ({ item }: NFTCardProps) => {
       <div className="bg-radial-accent flex h-fit w-full flex-col items-center gap-2 rounded-sm px-6 py-3">
         <div className="flex w-full justify-between">
           <span>채권자</span>
-          <span>박성문</span>
+          <span>{item.crName}</span>
         </div>
         <div className="flex w-full justify-between">
           <span>만기일</span>
-          <span>{dateFormat(item.mat_dt)}</span>
+          <span>{dateFormat(item.matDt)}</span>
         </div>
         <div className="flex w-full justify-between">
           <span>원금</span>
@@ -44,7 +53,7 @@ export const MyNFTcard = ({ item }: NFTCardProps) => {
         <Separator />
         <div className="flex w-full justify-between">
           <span> 만기 총 수취액</span>
-          <span>{item.total_amount.toLocaleString()}원</span>
+          <span>{item.totalAmount.toLocaleString()}원</span>
         </div>
       </div>
     </div>
@@ -53,20 +62,26 @@ export const MyNFTcard = ({ item }: NFTCardProps) => {
 
 interface NFTcardInfoProps {
   className?: string;
-  item: PNInfoListResponse;
+  item: AvailableAuctionsResponse;
+  isTouched: boolean;
 }
 
-export const MyNFTCardInfo = ({ className, item }: NFTcardInfoProps) => {
+export const MyNFTCardInfo = ({
+  className,
+  item,
+  isTouched,
+}: NFTcardInfoProps) => {
   return (
     <div
       className={cn(
-        "absolute flex h-full w-full flex-col justify-between px-6 py-4 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100",
+        "absolute flex h-full w-full flex-col justify-between px-6 py-4 transition-opacity duration-300 ease-in-out",
+        isTouched ? "opacity-100" : "opacity-0",
         className,
       )}
     >
       <div className="flex justify-between">
         <span>종류</span>
-        <span>{item.repay_type}</span>
+        <span>{item.repayType}</span>
       </div>
 
       <div className="flex justify-between">
@@ -76,16 +91,16 @@ export const MyNFTCardInfo = ({ className, item }: NFTcardInfoProps) => {
         </div>
       </div>
       <div className="flex justify-between">
-        <span>{item.earlypay_flag ? `중도 상환 수수료` : "중도 상환"}</span>
-        <span>{item.earlypay_flag ? `${item.earlypay_fee}%` : "불가"}</span>
+        <span>{item.earlypayFlag ? `중도 상환 수수료` : "중도 상환"}</span>
+        <span>{item.earlypayFlag ? `${item.earlypayFee}%` : "불가"}</span>
       </div>
       <div className="flex justify-between">
         <span>신용 점수</span>
-        <span>{item.credit_score}</span>
+        <span>{item.creditScore}</span>
       </div>
       <div className="flex justify-between">
         <span>연체</span>
-        <span>{item.def_cnt}</span>
+        <span>{item.defCnt}</span>
       </div>
     </div>
   );

@@ -13,9 +13,9 @@ const NavItem = ({ to, children, isActive, size = "main" }: NavItemProps) => {
     <Link
       to={to}
       className={cn(
-        "box-content flex items-center gap-2 px-0.5 pb-1",
+        "box-content flex items-center gap-2 px-0.5 pb-1 text-nowrap",
         "border-b-2",
-        size === "main" ? "text-lg" : "text-base",
+        size === "main" ? "text-xl" : "text-base md:text-lg",
         isActive
           ? "border-white text-white"
           : "text-text-disabled border-transparent hover:border-white",

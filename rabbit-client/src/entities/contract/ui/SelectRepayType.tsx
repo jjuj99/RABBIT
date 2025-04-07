@@ -6,15 +6,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
+import { SelectProps } from "@radix-ui/react-select";
 
-const SelectRepayType = ({ ...props }) => {
+interface SelectRepayTypeProps extends SelectProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+const SelectRepayType = ({
+  value,
+  onChange,
+  ...props
+}: SelectRepayTypeProps) => {
   return (
     <FormItem>
       <div className="flex items-center justify-between">
         <FormLabel className="text-xl">상환방식</FormLabel>
         {/* <FormMessage /> */}
       </div>
-      <Select name="REPAY_TYPE" {...props}>
+      <Select value={value} onValueChange={onChange} {...props}>
         <SelectTrigger className="w-full bg-gray-600 text-base">
           <SelectValue placeholder="상환방식" />
         </SelectTrigger>

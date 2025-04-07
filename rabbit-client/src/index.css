@@ -112,9 +112,74 @@
 @plugin 'tailwindcss-animate';
 @custom-variant dark (&:is(.dark *));
 
+@keyframes cardEntrance {
+  0% {
+    transform: perspective(2000px) rotateY(0deg) translateY(100vh);
+    opacity: 0;
+  }
+  100% {
+    transform: perspective(2000px) rotateY(360deg) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes flashEffect {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes enhancedGlow {
+  0% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
 @layer base {
   html,
   body {
+    min-height: 100vh;
     font-family: "Pretendard", sans-serif;
     background-image: var(--gradient-radial-lg);
     /* height: 100%; */
@@ -269,6 +334,10 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* 애니메이션 관련 변수 추가 */
+  --animation-spin-slow: spin 20s linear infinite;
+  --animation-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* 커스텀 유틸리티 클래스 정의 */
@@ -465,5 +534,35 @@
   /* 글자색 강제 적용 */
   .text-force-white {
     color: white !important;
+  }
+
+  .animate-card-entrance {
+    animation: cardEntrance 2s ease-out forwards;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    transform-origin: center;
+    -webkit-backface-visibility: visible;
+    backface-visibility: visible;
+  }
+
+  .animate-text-entrance {
+    animation: slideUp 1s ease-out forwards;
+    animation-delay: 1.5s; /* 카드 회전이 어느정도 완료된 후 시작 */
+    opacity: 0; /* 애니메이션 시작 전까지 숨김 */
+  }
+
+  .animate-button-entrance {
+    animation: slideUp 1s ease-out forwards;
+    animation-delay: 1.8s; /* 텍스트보다 조금 더 늦게 시작 */
+    opacity: 0; /* 애니메이션 시작 전까지 숨김 */
+  }
+
+  /* 애니메이션 유틸리티 클래스 */
+  .animate-spin-slow {
+    animation: var(--animation-spin-slow);
+  }
+
+  .animate-pulse-slow {
+    animation: var(--animation-pulse-slow);
   }
 }

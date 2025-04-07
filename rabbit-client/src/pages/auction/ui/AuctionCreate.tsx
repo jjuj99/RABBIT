@@ -1,23 +1,36 @@
 import { UnitInput } from "@/entities/common";
 import { MyNFTcard } from "@/entities/NFT/ui/MyNFTcard";
-import { createAuctionAPI } from "@/features/auction/api/auctionApi";
-import { PNInfoListResponse } from "@/features/auction/types/response";
+import {
+  createAuctionAPI,
+  // getAvailableAuctionsAPI,
+} from "@/features/auction/api/auctionApi";
+import { AvailableAuctionsResponse } from "@/features/auction/types/response";
 import { Button } from "@/shared/ui/button";
 import { Sheet, SheetContent, SheetOverlay } from "@/shared/ui/CustomSheet";
 import { Separator } from "@/shared/ui/Separator";
-
+import generateSignature from "@/entities/wallet/utils/generateSignature";
+import { getMetaMaskProvider } from "@/entities/wallet/utils/getMetaMaskProvider";
+import getWalletAddress from "@/entities/wallet/utils/getWalletAddress";
 import { useState } from "react";
+// import { useQuery } from "@tanstack/react-query";
+import { availableAuctionsMock } from "@/features/auction/mocks/data";
+// import { availableAuctionsMock } from "@/features/auction/mocks/data";
 
 const AuctionCreate = () => {
-  const [selectedItem, setSelectedItem] = useState<PNInfoListResponse | null>(
-    null,
-  );
+  const [selectedItem, setSelectedItem] =
+    useState<AvailableAuctionsResponse | null>(null);
   const [startPrice, setStartPrice] = useState<number>(0);
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [endDateday, setendDateday] = useState(0);
   const [endDatehour, setendDatehour] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  // const { data: availableAuctions } = useQuery({
+  //   queryKey: ["availableAuctions"],
+  //   queryFn: () => getAvailableAuctionsAPI(),
+  // });
+  const availableAuctions = availableAuctionsMock;
 
   const handleDayChange = (value: number) => {
     if (value > 7) {
@@ -72,27 +85,9 @@ const AuctionCreate = () => {
     });
   };
 
-  // 임시 데이터
-  const mockItem: PNInfoListResponse = {
-    auction_id: 1,
-    price: 1000000,
-    end_date: "2025-12-31T23:59:59",
-    ir: 5.5,
-    created_at: "2024-01-01T00:00:00",
-    repay_type: "BULLET",
-    total_amount: 10000000,
-    mat_dt: "2025-01-01",
-    dir: 100,
-    la: 1000000,
-    earlypay_flag: false,
-    earlypay_fee: 0,
-    credit_score: 800,
-    def_cnt: 0,
-  };
-
-  const handleCardClick = (item: PNInfoListResponse) => {
+  const handleCardClick = (item: AvailableAuctionsResponse) => {
     setSelectedItem(item);
-    setStartPrice(item.total_amount);
+    setStartPrice(item.totalAmount);
     setIsOpen(true);
   };
 
@@ -115,15 +110,39 @@ const AuctionCreate = () => {
   const handleSubmit = async () => {
     if (!selectedItem) return;
     try {
+      const provider = await getMetaMaskProvider();
+      if (!provider) {
+        setError("메타마스크를 찾을 수 없습니다.");
+        return;
+      }
+
+      const walletAddress = await getWalletAddress({ provider });
+      if (!walletAddress || !walletAddress.address) {
+        setError("지갑 주소를 가져올 수 없습니다.");
+        return;
+      }
+
+      const message = `경매 생성: ${selectedItem.tokenId} - ${startPrice} RAB`;
+      const { signature, error: signError } = await generateSignature(
+        walletAddress.address,
+        message,
+      );
+
+      if (signError || !signature) {
+        setError("서명에 실패했습니다.");
+        return;
+      }
+
       await createAuctionAPI({
-        minimum_bid: startPrice,
-        end_date: calculateEndDate().toISOString(),
-        token_id: "selectedItem.token_id",
-        seller_sign: "selectedItem.seller_sign",
+        minimumBid: startPrice,
+        endDate: calculateEndDate().toISOString(),
+        tokenId: selectedItem.tokenId,
+        sellerSign: signature,
       });
       handleClose();
     } catch (error) {
       console.error("경매 생성 실패:", error);
+      setError("경매 생성에 실패했습니다.");
     }
   };
 
@@ -222,31 +241,31 @@ const AuctionCreate = () => {
             <div className="flex flex-col items-center gap-4">
               <div className="mb-4 flex flex-col items-center">
                 <div className="flex items-center gap-1">
-                  <span className="text-brand-primary text-lg font-bold">
+                  <span className="text-brand-primary font-bold sm:text-lg">
                     등록 시
                   </span>
-                  <span className="text-whites-primary text-lg font-medium">
+                  <span className="text-whites-primary font-medium sm:text-lg">
                     경매가 즉시 시작되며
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-lg font-medium text-white">
+                  <span className="font-medium text-white sm:text-lg">
                     입찰 발생시
                   </span>
-                  <span className="text-fail text-xl font-bold">
+                  <span className="text-fail font-bold sm:text-xl">
                     경매를 취소하실 수 없습니다.
                   </span>
                 </div>
               </div>
 
               {selectedItem && <MyNFTcard item={selectedItem} />}
-              <div className="flex w-full flex-col items-start gap-3 rounded-sm bg-gray-900 py-4">
+              <div className="flex w-full flex-col items-start gap-3 rounded-sm bg-gray-900 px-5 py-3 sm:px-0 sm:py-4">
                 <div className="flex w-full flex-col gap-0">
                   <div className="flex flex-row items-start justify-between gap-2">
-                    <span className="text-lg font-light text-gray-50">
+                    <span className="text-sm font-light text-gray-50 sm:text-lg">
                       경매 마감일
                     </span>
-                    <span className="text-xl font-medium">
+                    <span className="text-smfont-medium sm:text-xl">
                       {formatDisplayDate(calculateEndDate())}
                     </span>
                   </div>
@@ -254,10 +273,10 @@ const AuctionCreate = () => {
                 </div>
                 <div className="flex w-full flex-col gap-0">
                   <div className="flex w-full flex-row justify-between gap-2">
-                    <span className="text-lg font-light text-gray-50">
+                    <span className="text-sm font-light text-gray-50 sm:text-lg">
                       경매 시작가
                     </span>
-                    <span className="text-xl font-medium">
+                    <span className="text-sm font-medium sm:text-xl">
                       {startPrice.toLocaleString()} RAB
                     </span>
                   </div>
@@ -289,53 +308,29 @@ const AuctionCreate = () => {
   };
 
   return (
-    <section className="flex flex-col items-center justify-center gap-9 px-6 pt-9">
+    <section className="flex flex-col items-center justify-center gap-9 px-2 pt-9 sm:px-6">
       <div className="flex flex-col items-center gap-4">
-        <h2 className="text-3xl font-semibold whitespace-nowrap">경매 생성</h2>
-        <h3 className="text-text-secondary text-lg">
-          등록시 경매가 시작되며, 구매자의 입찰 발생시 경매를 취소할 수
-          없습니다.
+        <h2 className="text-xl font-semibold whitespace-nowrap sm:text-3xl">
+          경매 생성
+        </h2>
+        <h3 className="text-text-secondary flex flex-wrap justify-center text-sm sm:text-lg">
+          <span>등록시 경매가 시작되며, </span>
+          <span>구매자의 입찰 발생시 경매를 취소할 수 없습니다.</span>
         </h3>
       </div>
-      <div className="flex w-full flex-col items-start gap-4 px-7">
+      <div className="flex w-full flex-col items-start gap-4 sm:px-7">
         <h3 className="text-lg">보유중인 차용증</h3>
-        <ul className="flex flex-wrap gap-6">
-          <div
-            onClick={() => handleCardClick(mockItem)}
-            className="cursor-pointer"
-          >
-            <MyNFTcard item={mockItem} />
-          </div>
-          <div
-            onClick={() => handleCardClick(mockItem)}
-            className="cursor-pointer"
-          >
-            <MyNFTcard item={mockItem} />
-          </div>
-          <div
-            onClick={() => handleCardClick(mockItem)}
-            className="cursor-pointer"
-          >
-            <MyNFTcard item={mockItem} />
-          </div>
-          <div
-            onClick={() => handleCardClick(mockItem)}
-            className="cursor-pointer"
-          >
-            <MyNFTcard item={mockItem} />
-          </div>{" "}
-          <div
-            onClick={() => handleCardClick(mockItem)}
-            className="cursor-pointer"
-          >
-            <MyNFTcard item={mockItem} />
-          </div>{" "}
-          <div
-            onClick={() => handleCardClick(mockItem)}
-            className="cursor-pointer"
-          >
-            <MyNFTcard item={mockItem} />
-          </div>
+        <ul className="flex flex-wrap justify-center gap-6">
+          {/* {availableAuctions?.data?.map((item) => ( */}
+          {availableAuctions?.map((item: AvailableAuctionsResponse) => (
+            <div
+              key={item.tokenId}
+              onClick={() => handleCardClick(item)}
+              className="cursor-pointer"
+            >
+              <MyNFTcard item={item} />
+            </div>
+          ))}
         </ul>
       </div>
       <Sheet
@@ -348,7 +343,10 @@ const AuctionCreate = () => {
         }}
       >
         <SheetOverlay className="bg-black/40" />
-        <SheetContent side="right" className="w-[30vw] bg-transparent">
+        <SheetContent
+          side="right"
+          className="w-[100vw] bg-transparent lg:w-[40vw]"
+        >
           <div className="flex h-full flex-col items-center justify-center gap-8">
             {renderStepContent()}
           </div>

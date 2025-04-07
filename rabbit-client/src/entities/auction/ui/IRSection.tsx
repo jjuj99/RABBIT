@@ -9,8 +9,8 @@ interface IRSectionProps {
 }
 
 const IRSection = ({ triggerApi }: IRSectionProps) => {
-  const minIR = useAuctionFilterStore((state) => state.min_ir);
-  const maxIR = useAuctionFilterStore((state) => state.max_ir);
+  const minIR = useAuctionFilterStore((state) => state.minIr);
+  const maxIR = useAuctionFilterStore((state) => state.maxIr);
   const setMinIR = useAuctionFilterStore((state) => state.setMinIr);
   const setMaxIR = useAuctionFilterStore((state) => state.setMaxIr);
 

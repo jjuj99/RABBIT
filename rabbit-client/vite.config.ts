@@ -38,5 +38,17 @@ export default defineConfig({
 
   build: {
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "three-vendor": [
+            "three",
+            "@react-three/fiber",
+            "@react-three/drei",
+            "@react-three/postprocessing",
+          ],
+        },
+      },
+    },
   },
 });

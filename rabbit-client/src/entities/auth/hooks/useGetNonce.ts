@@ -6,6 +6,12 @@ const useGetNonce = () => {
     mutationFn: async (walletAddress: string) => {
       return await GetNonceAPI(walletAddress);
     },
+    onSuccess: (data) => {
+      console.log(data);
+    },
+    onError: (error) => {
+      console.log(error);
+    },
   });
 };
 

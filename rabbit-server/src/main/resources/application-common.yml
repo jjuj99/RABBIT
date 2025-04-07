@@ -53,19 +53,25 @@ spring:
     jpa:
       repositories:
         base-package: com.rabbit.**.repository
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
   # Jackson 설정
   jackson:
-    date-format: yyyy-MM-dd HH:mm:ss
+    date-format: yyyy-MM-dd HH:mm:ss # 필요하다면 yyyy-MM-dd HH:mm:ss Z 또는 yyyy-MM-dd'T'HH:mm:ss.SSSXXX
     #property-naming-strategy: SNAKE_CASE
     property-naming-strategy: LOWER_CAMEL_CASE
     serialization:
       fail-on-empty-beans: false
+      write-dates-as-timestamps: false  # ISO-8601 형식으로 날짜 직렬화
     time-zone: Asia/Seoul
   jpa:
     hibernate:
       ddl-auto: update  # 운영 환경에서는 none 권장
     properties:
       hibernate:
+        jdbc:
+          time_zone: Asia/Seoul  # 데이터베이스 타임존 설정 (한국 시간)
         format_sql: true
         show_sql: true  # 개발 환경에서만 사용
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -82,21 +88,21 @@ spring:
       timeout: 3600  # 세션 만료 시간 (초)
     cookie:
       http-only: true  # 보안 강화를 위해 HttpOnly 설정
-#  mail:
-#    host: smtp.gmail.com
-#    port: 587
-#    username: ${GMAIL_USERNAME}
-#    password: ${GMAIL_PASSWORD}
-#    properties:
-#      mail:
-#        smtp:
-#          auth: true
-#          starttls:
-#            enable: true
-#            required: true
-#          connection-timeout: 5000
-#          timeout: 5000
-#          write-timeout: 5000
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_USERNAME}
+    password: ${GMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connection-timeout: 5000
+          timeout: 5000
+          write-timeout: 5000
   web:
     resources:
       static-path-pattern: /file/**
@@ -105,6 +111,11 @@ spring:
 #        - classpath:/public/
 #        - classpath:/resources/
 #        - classpath:/META-INF/resources/
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: 5672
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
 
 file:
   upload:
@@ -155,8 +166,53 @@ jwt:
   access-token-refresh-threshold: 300000
   secret: ${JWT_SECRET}
 
+# CORS 허용 origin
+cors:
+  allowed-origins:
+    - "http://localhost:8080"
+    - "http://localhost:5173"
+    - "http://127.0.0.1:5500"
+
+# 쿠키 설정
+cookie:
+  secure: false
+
+# TOSS 설정
 toss:
   secret: ${TOSS_SECRET}
+
+# SSAFY BANK 설정
+ssafy:
+  api-key: ${SSAFY_API_KEY}
+
+# Block Chain Contract 설정
+blockchain:
+  rpcUrl: https://sepolia.infura.io/v3/${INFURA_API_KEY}
+  privateKey: ${BLOCKCHAIN_PRIVATE_KEY}
+
+  rabbitCoin:
+    address: ${RABBIT_COIN_ADDRESS}
+
+  promissoryNote:
+    address: ${PROMISSORY_NOTE_ADDRESS}
+
+  promissoryNoteAuction:
+    address: ${PROMISSORY_NOTE_AUCTION}
+
+  repaymentScheduler:
+    address: ${REPAYMENT_SCHEDULER}
+
+  network:
+    chainId: 11155111  # Sepolia 테스트넷 체인 ID
+
+  gas:
+    price: 20000000000
+    limit: 4500000
+
+# Pinata (IPFS) 설정
+pinata:
+  apiKey: ${PINATA_API_KEY}
+  secretKey: ${PINATA_API_SECRET}
 
 # 파일 설정
 app:
@@ -173,8 +229,8 @@ app:
       - docx
       - xls
       - xlsx
-
-
+  encryption:
+    master-key: ${ENCRYPTION_MASTER_KEY}
 
 # 커스텀 설정
 

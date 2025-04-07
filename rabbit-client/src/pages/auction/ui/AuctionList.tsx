@@ -10,43 +10,43 @@ import { useNavigate } from "react-router";
 const AuctionList = () => {
   const queryClient = useQueryClient();
 
-  const min_price = useAuctionFilterStore((state) => state.min_price);
-  const max_price = useAuctionFilterStore((state) => state.max_price);
-  const max_ir = useAuctionFilterStore((state) => state.max_ir);
-  const min_ir = useAuctionFilterStore((state) => state.min_ir);
-  const max_rate = useAuctionFilterStore((state) => state.max_rate);
-  const repay_type = useAuctionFilterStore((state) => state.repay_type);
-  const mat_term = useAuctionFilterStore((state) => state.mat_term);
-  const mat_start = useAuctionFilterStore((state) => state.mat_start);
-  const mat_end = useAuctionFilterStore((state) => state.mat_end);
+  const minPrice = useAuctionFilterStore((state) => state.minPrice);
+  const maxPrice = useAuctionFilterStore((state) => state.maxPrice);
+  const maxIr = useAuctionFilterStore((state) => state.maxIr);
+  const minIr = useAuctionFilterStore((state) => state.minIr);
+  const maxRate = useAuctionFilterStore((state) => state.maxRate);
+  const repayType = useAuctionFilterStore((state) => state.repayType);
+  const matTerm = useAuctionFilterStore((state) => state.matTerm);
+  const matStart = useAuctionFilterStore((state) => state.matStart);
+  const matEnd = useAuctionFilterStore((state) => state.matEnd);
   const navigate = useNavigate();
 
   const { data: auctionData, isLoading } = useQuery({
     queryKey: [
       "auctionList",
       {
-        min_price,
-        max_price,
-        max_ir,
-        min_ir,
-        max_rate,
-        repay_type,
-        mat_term,
-        mat_start,
-        mat_end,
+        minPrice,
+        maxPrice,
+        maxIr,
+        minIr,
+        maxRate,
+        repayType,
+        matTerm,
+        matStart,
+        matEnd,
       },
     ],
     queryFn: () =>
       getAuctionListAPI({
-        min_price,
-        max_price,
-        max_ir,
-        min_ir,
-        max_rate,
-        repay_type,
-        mat_term,
-        mat_start,
-        mat_end,
+        minPrice: Number(minPrice),
+        maxPrice: Number(maxPrice),
+        maxIr: Number(maxIr),
+        minIr: Number(minIr),
+        maxRate: Number(maxRate),
+        repayType,
+        matTerm: Number(matTerm),
+        matStart,
+        matEnd,
       }),
   });
 
@@ -100,7 +100,7 @@ const AuctionList = () => {
               <li>진행중인 경매가 없습니다.</li>
             ) : (
               auctionData.data.content.map((item) => (
-                <li key={item.auction_id}>
+                <li key={item.auctionId}>
                   <NFTCard item={item} />
                 </li>
               ))

@@ -1,15 +1,15 @@
 import { create } from "zustand";
 
-export interface AuctionFilterState {
-  max_price: string;
-  min_price: string;
-  max_ir: string;
-  min_ir: string;
-  max_rate: string;
-  repay_type: string[];
-  mat_term: string;
-  mat_start: string;
-  mat_end: string;
+interface AuctionFilterState {
+  maxPrice: string;
+  minPrice: string;
+  maxIr: string;
+  minIr: string;
+  maxRate: string;
+  repayType: string[];
+  matTerm: string;
+  matStart: string;
+  matEnd: string;
   setMaxPrice: (value: string) => void;
   setMinPrice: (value: string) => void;
   setMaxIr: (value: string) => void;
@@ -22,22 +22,22 @@ export interface AuctionFilterState {
 }
 
 export const useAuctionFilterStore = create<AuctionFilterState>((set) => ({
-  max_price: "",
-  min_price: "",
-  max_ir: "",
-  min_ir: "",
-  max_rate: "",
-  repay_type: [],
-  mat_term: "",
-  mat_start: "",
-  mat_end: "",
-  setMaxPrice: (max_price) => set({ max_price }),
-  setMinPrice: (min_price) => set({ min_price }),
-  setMaxIr: (max_ir) => set({ max_ir }),
-  setMinIr: (min_ir) => set({ min_ir }),
-  setMaxRate: (max_rate) => set({ max_rate }),
-  setRepayType: (repay_type) => set({ repay_type }),
-  setMatTerm: (mat_term) => set({ mat_term }),
-  setMatStart: (mat_start) => set({ mat_start }),
-  setMatEnd: (mat_end) => set({ mat_end }),
+  maxPrice: "",
+  minPrice: "",
+  maxIr: "",
+  minIr: "",
+  maxRate: "",
+  repayType: [],
+  matTerm: "",
+  matStart: "",
+  matEnd: "",
+  setMaxPrice: (maxPrice) => set({ maxPrice }),
+  setMinPrice: (minPrice) => set({ minPrice }),
+  setMaxIr: (maxIr) => set({ maxIr }),
+  setMinIr: (minIr) => set({ minIr }),
+  setMaxRate: (maxRate) => set({ maxRate }),
+  setRepayType: (repayType) => set({ repayType }),
+  setMatTerm: (matTerm) => set({ matTerm }),
+  setMatStart: (matStart) => set({ matStart }),
+  setMatEnd: (matEnd) => set({ matEnd }),
 }));

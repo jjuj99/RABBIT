@@ -22,3 +22,9 @@ export interface CreateContractRequest {
   authResultCode: string;
   contractDt: string;
 }
+
+export interface RejectContractRequest {
+  contractId: string;
+  rejectMessage: string;
+  isCanceled: boolean;
+}

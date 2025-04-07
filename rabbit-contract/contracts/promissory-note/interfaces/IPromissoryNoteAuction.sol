@@ -21,6 +21,18 @@ interface IPromissoryNoteAuction {
     // 경매 취소 이벤트
     event AuctionCancelled(uint256 indexed tokenId, address indexed seller, uint256 timestamp);
 
+    /**
+    * @dev 컨트랙트 주소 업데이트 함수 (관리자 전용)
+    * @param _rabbitCoinAddress 새 RABBIT 코인 컨트랙트 주소
+    */
+    function updateRabbitCoinAddress(address _rabbitCoinAddress) external;
+
+    /**
+    * @dev PromissoryNote 주소 업데이트 함수 (관리자 전용)
+    * @param _promissoryNoteAddress 새 PromissoryNote 컨트랙트 주소
+    */
+    function updatePromissoryNoteAddress(address _promissoryNoteAddress) external;
+
     // ========== NFT 예치 ==========
 
     /**

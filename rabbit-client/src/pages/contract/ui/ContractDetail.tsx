@@ -1,19 +1,30 @@
 import { Button } from "@/shared/ui/button";
-import { useNavigate, useParams } from "react-router";
 import { wonFormat } from "@/shared/utils/wonFormat";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router";
 
-import useGetContractDetail from "@/entities/contract/hooks/useGetContractDetail";
-import useGetWallet from "@/entities/wallet/hooks/useGetWallet";
-import ContractStatusBadge from "@/entities/contract/ui/ContractStatusBadge";
-import { truncateAddress } from "@/shared/utils/truncateAddress";
-import { Checkbox } from "@/shared/ui/checkbox";
-import currencyFormat from "@/shared/utils/currencyFormat";
-import { cn } from "@/shared/lib/utils";
-import RejectDialog from "@/entities/contract/ui/RejectDialog";
 import useContractMutate from "@/entities/contract/hooks/useContractMutate";
-import PASSDialog from "@/widget/common/ui/PASSDialog";
+import useGetContractDetail from "@/entities/contract/hooks/useGetContractDetail";
+import ContractStatusBadge from "@/entities/contract/ui/ContractStatusBadge";
+import RejectDialog from "@/entities/contract/ui/RejectDialog";
+import useGetWallet from "@/entities/wallet/hooks/useGetWallet";
+import useContractForm from "@/features/contract/hook/useContractForm";
+import { cn } from "@/shared/lib/utils";
 import { passType } from "@/shared/type/Types";
+import { Checkbox } from "@/shared/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/ui/dialog";
+import currencyFormat from "@/shared/utils/currencyFormat";
+import { truncateAddress } from "@/shared/utils/truncateAddress";
+import PASSDialog from "@/widget/common/ui/PASSDialog";
+import { DialogTrigger } from "@radix-ui/react-dialog";
+import { toast } from "sonner";
 
 const ContractDetail = () => {
   const navigate = useNavigate();
@@ -22,6 +33,7 @@ const ContractDetail = () => {
   const { data } = useGetContractDetail(contractId);
   const contract = data?.data;
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [isPassDialogOpen, setIsPassDialogOpen] = useState(false);
   const [passState, setPassState] = useState<passType>({
     authResultCode: "FAIL",
@@ -38,11 +50,18 @@ const ContractDetail = () => {
   } = useContractMutate({
     contractId: contractId ?? "",
   });
+  const { isModifyDialogOpen, setIsModifyDialogOpen, handleModifyConfirm } =
+    useContractForm();
+
   const handleApprove = () => {
     try {
       completeContract(passState);
     } catch (error) {
-      console.error("계약 승인 중 오류 발생:", error);
+      if (error instanceof Error && error.message) {
+        toast.error(`계약 승인 실패 ${error.message}`);
+      } else {
+        toast.error("계약 승인 실패, 알 수 없는 오류");
+      }
     }
   };
   // passState가 변경될 때마다 실행
@@ -59,8 +78,15 @@ const ContractDetail = () => {
   const handleCancel = async () => {
     try {
       cancelContract();
+      toast.success("계약이 취소되었습니다.");
+      setIsCancelDialogOpen(false);
+      navigate("/contract/sent");
     } catch (error) {
-      console.error("계약 취소 중 오류 발생:", error);
+      if (error instanceof Error && error.message) {
+        toast.error(`취소 실패 ${error.message}`);
+      } else {
+        toast.error("취소 실패, 알 수 없는 오류");
+      }
     }
   };
 
@@ -68,9 +94,14 @@ const ContractDetail = () => {
     try {
       rejectContract({ rejectMessage });
       setIsRejectDialogOpen(false);
-      navigate("/contracts"); // 목록 페이지로 이동
+      toast.success("거절 완료");
+      navigate("/contract/received"); // 목록 페이지로 이동
     } catch (error) {
-      console.error("계약 거절 중 오류 발생:", error);
+      if (error instanceof Error && error.message) {
+        toast.error(`거절 실패 ${error.message}`);
+      } else {
+        toast.error("거절 실패, 알 수 없는 오류");
+      }
     }
   };
 
@@ -78,9 +109,14 @@ const ContractDetail = () => {
     try {
       requestModifyContract({ rejectMessage });
       setIsRejectDialogOpen(false);
-      navigate("/contracts"); // 목록 페이지로 이동
+      toast.success("수정 요청 완료");
+      navigate("/contract/received"); // 목록 페이지로 이동
     } catch (error) {
-      console.error("수정 요청 중 오류 발생:", error);
+      if (error instanceof Error && error.message) {
+        toast.error(`수정 요청 실패 ${error.message}`);
+      } else {
+        toast.error("수정 요청 실패, 알 수 없는 오류");
+      }
     }
   };
 
@@ -97,32 +133,76 @@ const ContractDetail = () => {
             >
               목록으로
             </Button>
-            <Button
-              onClick={handleCancel}
-              className="flex-1 text-base font-bold text-gray-700 md:max-w-[150px] md:text-lg"
-              variant="destructive"
+            <Dialog
+              open={isCancelDialogOpen}
+              onOpenChange={setIsCancelDialogOpen}
             >
-              취소하기
-            </Button>
+              <DialogTrigger asChild>
+                <Button
+                  className="flex-1 text-base font-bold text-gray-700 md:max-w-[150px] md:text-lg"
+                  variant="destructive"
+                >
+                  취소하기
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogTitle>계약 취소 안내</DialogTitle>
+                <DialogDescription>계약을 취소하시겠습니까?</DialogDescription>
+                <DialogFooter>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setIsCancelDialogOpen(false)}
+                  >
+                    닫기
+                  </Button>
+                  <Button variant="destructive" onClick={handleCancel}>
+                    확인
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </>
         );
       }
       if (contract.contractStatus === "MODIFICATION_REQUESTED") {
         return (
           <>
-            <Button
-              onClick={handleCancel}
-              className="flex-1 text-base font-bold text-gray-700 md:max-w-[150px] md:text-lg"
-              variant="destructive"
+            <Dialog
+              open={isCancelDialogOpen}
+              onOpenChange={setIsCancelDialogOpen}
             >
-              취소하기
-            </Button>
+              <DialogTrigger asChild>
+                <Button
+                  className="flex-1 text-base font-bold text-gray-700 md:max-w-[150px] md:text-lg"
+                  variant="destructive"
+                >
+                  취소하기
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogTitle>계약 취소 안내</DialogTitle>
+                <DialogDescription>계약을 취소하시겠습니까?</DialogDescription>
+                <DialogFooter>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setIsCancelDialogOpen(false)}
+                  >
+                    닫기
+                  </Button>
+                  <Button variant="destructive" onClick={handleCancel}>
+                    확인
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <Button
-              onClick={() => setIsRejectDialogOpen(true)}
               className="flex-1 text-base font-bold text-gray-700 md:max-w-[150px] md:text-lg"
-              variant="destructive"
+              variant="primary"
+              onClick={() => {
+                navigate("/contract/new", { state: contract });
+              }}
             >
-              거절하기
+              수정하기
             </Button>
           </>
         );
@@ -179,15 +259,8 @@ const ContractDetail = () => {
             >
               목록으로
             </Button>
-            <Button
-              onClick={() => setIsRejectDialogOpen(true)}
-              className="flex-1 text-base font-bold text-gray-700 md:max-w-[150px] md:text-lg"
-              variant="destructive"
-            >
-              거절하기
-            </Button>
           </>
-        ); // 목록으로 버튼만 표시
+        );
       }
       if (contract.contractStatus === "REJECTED") {
         navigate("/contracts/rejected");
@@ -513,8 +586,43 @@ const ContractDetail = () => {
         onReject={handleReject}
         onModify={handleModifyRequest}
       />
+
+      <ModifyConfirmDialog
+        isOpen={isModifyDialogOpen}
+        onOpenChange={setIsModifyDialogOpen}
+        onConfirm={handleModifyConfirm}
+      />
     </>
   );
 };
 
 export default ContractDetail;
+const ModifyConfirmDialog = ({
+  isOpen,
+  onOpenChange,
+  onConfirm,
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}) => {
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>수정 확인</DialogTitle>
+          <DialogDescription>
+            수정을 진행하시면 이전 요청은 자동으로 취소됩니다. 계속
+            진행하시겠습니까?
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            취소
+          </Button>
+          <Button onClick={onConfirm}>확인</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};

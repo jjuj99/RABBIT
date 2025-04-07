@@ -19,27 +19,26 @@ import com.rabbit.contract.domain.entity.Contract;
 import com.rabbit.contract.repository.ContractRepository;
 import com.rabbit.contract.service.ContractService;
 import com.rabbit.blockchain.service.PromissoryNoteAuctionService;
-import com.rabbit.contract.domain.entity.Contract;
-import com.rabbit.contract.repository.ContractRepository;
 import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import com.rabbit.global.code.service.SysCommonCodeService;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
+import com.rabbit.global.ipfs.PinataUploader;
 import com.rabbit.global.response.PageResponseDTO;
 import com.rabbit.global.util.DateTimeUtils;
+import com.rabbit.global.util.IntegrityHashUtil;
 import com.rabbit.global.util.LoanUtil;
 import com.rabbit.loan.domain.dto.response.ContractEventDTO;
+import com.rabbit.mail.service.ExtendedMailService;
 import com.rabbit.mail.service.MailService;
 import com.rabbit.global.util.SignatureUtil;
 import com.rabbit.notification.domain.dto.request.NotificationRequestDTO;
 import com.rabbit.notification.service.NotificationService;
-import com.rabbit.sse.domain.dto.response.NotiResponseDTO;
 import com.rabbit.sse.service.SseEventPublisher;
 import com.rabbit.user.domain.dto.response.ProfileInfoResponseDTO;
 import com.rabbit.user.domain.entity.User;
 import com.rabbit.user.service.UserService;
 import com.rabbit.user.domain.entity.MetamaskWallet;
-import com.rabbit.user.repository.MetamaskWalletRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,9 +49,12 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 
@@ -74,6 +76,11 @@ public class AuctionService {
     private final BankService bankService;
     private final LoanUtil loanUtil;
     private final EventService eventService;
+    private final PinataUploader pinataUploader;
+    private final AuctionTransferPdfService auctionTransferPdfService;
+    private final IntegrityHashUtil integrityHashUtil;
+    private final AuctionTransferNoticePdfService auctionTransferNoticePdfService;
+    private final ExtendedMailService extendedMailService;
 
     private final SysCommonCodeService sysCommonCodeService;
     private final RepaymentSchedulerService repaymentSchedulerService;
@@ -97,8 +104,10 @@ public class AuctionService {
                     throw new BusinessException(ErrorCode.ALREADY_EXISTS, "해당 NFT는 이미 경매가 진행 중입니다.");
                 });
 
+        User assignor = userService.findById(userId);
+
         Auction auction= Auction.builder()
-                .userId(userId)  //아직 임의로 설정해둠
+                .assignor(assignor)  //아직 임의로 설정해둠
                 .minimumBid(auctionRequest.getMinimumBid())
                 .endDate(auctionRequest.getEndDate())
                 .tokenId(auctionRequest.getTokenId())
@@ -126,16 +135,19 @@ public class AuctionService {
 
         //블록체인 읽어와 다른 조건 필터링 구현 필요
         List<AuctionResponseDTO> fullList = result.getContent().stream()
+                .filter(dto -> !dto.getTokenId().equals(BigInteger.valueOf(9))) // tokenId가 9인 항목 제외
                 .map(dto -> {
                     try {
+                        log.info("[Auction] 경매 목록을 위한 정보 호출 auctionId={}, tokenId={}", dto.getAuctionId(), dto.getTokenId());
+
                         // 블록체인 메타데이터 조회
-                        PromissoryNote.PromissoryMetadata metadata = promissoryNoteService.getPromissoryMetadata(BigInteger.valueOf(dto.getAuctionId()));
+                        PromissoryNote.PromissoryMetadata metadata = promissoryNoteService.getPromissoryMetadata(dto.getTokenId());
 
                         // 상환 정보 조회 (연체 횟수, 남은 원금)
-                        RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(dto.getTokenId());
+                        RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(dto.getTokenId());
 
                         // 채무자 조회 및 신용 점수 조회
-                        User debtor = contractService.getDebtorByTokenId(BigInteger.valueOf(dto.getAuctionId()));
+                        User debtor = contractService.getDebtorByTokenId(dto.getTokenId());
                         String creditScore = bankService.getCreditScore(debtor.getUserId());
 
                         ZonedDateTime matDt = DateTimeUtils.toZonedDateTimeAtEndOfDay(metadata.matDt);
@@ -170,8 +182,8 @@ public class AuctionService {
                                 .la(repaymentInfo.remainingPrincipal.longValue())
                                 .earlypayFlag(metadata.earlyPayFlag)
                                 .earlypayFee(new BigDecimal(metadata.earlyPayFee))
-                                .creditScore(Integer.parseInt(creditScore))  // String → Integer 변환
-                                .defCnt(repaymentInfo.defCnt.intValue())
+                                .creditScore(creditScore)
+                                .defCnt(repaymentInfo.overdueInfo.defCnt.intValue())
                                 .build();
 
                     } catch (Exception e) {
@@ -232,7 +244,7 @@ public class AuctionService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
 
         // 내 auction이 아니면 취소 불가
-        if(!auction.getUserId().equals(userId)){
+        if(!auction.getAssignor().getUserId().equals(userId)){
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "경매 취소 권한이 없습니다.");
         }
 
@@ -345,7 +357,7 @@ public class AuctionService {
             //양도자에게 알림
             notificationService.createNotification(
                     NotificationRequestDTO.builder()
-                            .userId(auction.getUserId())
+                            .userId(auction.getAssignor().getUserId())
                             .type(SysCommonCodes.NotificationType.AUCTION_FAILED)
                             .relatedId(auctionId)
                             .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
@@ -357,31 +369,59 @@ public class AuctionService {
             auction.setAuctionStatus(SysCommonCodes.Auction.COMPLETED);
 
             // 낙찰 종료 트랜잭션 실행
-            ProfileInfoResponseDTO grantor = userService.getProfileInfo(auction.getUserId());
+            ProfileInfoResponseDTO grantor = userService.getProfileInfo(auction.getAssignor().getUserId());
             ProfileInfoResponseDTO grantee = userService.getProfileInfo(winningBid.getUserId());
 
             // 상환 정보 조회 (연체 횟수, 남은 원금)
             try {
                 RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(auction.getTokenId());
 
+                // 채무자 정보 가져오기
+                User debtor = contractService.getDebtorByTokenId(auction.getTokenId());
+                MetamaskWallet debtorWallet = userService.getWalletByUserIdAndPrimaryFlagTrue(debtor.getUserId());
+
+                // pdf 만들기
+                byte[] transferPdfBytes = auctionTransferPdfService.generateTransferAgreementPdf(
+                        grantor.getUserName(),
+                        grantor.getWalletAddress(),
+                        grantee.getUserName(),
+                        grantee.getWalletAddress(),
+                        debtor.getUserName(),
+                        debtorWallet.getWalletAddress(),
+                        new BigDecimal(repaymentInfo.remainingPrincipal),
+                        LocalDate.now()
+                );
+
+                // pdf pinata에 업로드하기
+                String pdfFileName = "양도양수계약서_" + auction.getAuctionId() + ".pdf";
+                String pdfUrl = pinataUploader.uploadContent(transferPdfBytes, pdfFileName, "application/pdf");
+
+                auction.setContractIpfsUrl(pdfUrl);
+
+                // 해시값 구하기
+                String grantorHash = IntegrityHashUtil.generateIntegrityHash(grantor.getUserName(), grantor.getEmail(), grantor.getWalletAddress());
+                String granteeHash = IntegrityHashUtil.generateIntegrityHash(grantee.getUserName(), grantee.getEmail(), grantee.getWalletAddress());
+
                 AppendixMetadataDTO dto = AppendixMetadataDTO.builder()
                         .tokenId(auction.getTokenId())
                         .grantorSign(auction.getSellerSign())
                         .grantorName(grantor.getUserName())
                         .grantorWalletAddress(grantor.getWalletAddress())
-                        .grantorInfoHash("")  //?
+                        .grantorInfoHash(grantorHash)
                         .granteeSign(winningBid.getBidderSign())
                         .granteeName(grantee.getUserName())
                         .granteeWalletAddress(grantee.getWalletAddress())
-                        .granteeInfoHash("")  //?
-                        .la(repaymentInfo.remainingPrincipal)   //?
+                        .granteeInfoHash(granteeHash)
+                        .la(repaymentInfo.remainingPrincipal)
                         .contractDate(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                        .originalText("")   //?
+                        .originalText(pdfUrl)
                         .build();
 
+                // 부속 nft 발행
                 PromissoryNoteAuction.AppendixMetadata metadata = AppendixMetadataMapper.toWeb3(dto);
 
                 MetamaskWallet currentBidderWallet = userService.getWalletByUserIdAndPrimaryFlagTrue(winningBid.getUserId());
+
                 promissoryNoteAuctionService.finalizeAuction(
                         auction.getTokenId(),
                         currentBidderWallet.getWalletAddress(),
@@ -400,32 +440,54 @@ public class AuctionService {
                 );
 
                 User winner = userService.findById(winningBid.getUserId());
-                mailService.sendMail(
+                extendedMailService.sendAuctionContractToAssignee(
                         winner.getEmail(),
-                        SysCommonCodes.MailTemplateType.AUCTION_SUCCESS_WINNER,
                         winner.getUserName(),
-                        auction.getTokenId()
+                        auction.getTokenId(),
+                        transferPdfBytes
                 );
-
 
                 // 양도자에게 전송 예정 알림
                 notificationService.createNotification(
                         NotificationRequestDTO.builder()
-                                .userId(auction.getUserId())
+                                .userId(auction.getAssignor().getUserId())
                                 .type(SysCommonCodes.NotificationType.AUCTION_TRANSFERRED)
                                 .relatedId(auctionId)
                                 .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
                                 .build()
                 );
 
-                User seller = userService.findById(auction.getUserId());
-                mailService.sendMail(
+                User seller = userService.findById(auction.getAssignor().getUserId());
+                extendedMailService.sendAuctionContractToAssignor(
                         seller.getEmail(),
-                        SysCommonCodes.MailTemplateType.AUCTION_SUCCESS_SELLER,
                         seller.getUserName(),
-                        auction.getTokenId()
+                        auction.getTokenId(),
+                        transferPdfBytes
                 );
+
+                // 채무자에게 알림 메일 전송
+                byte[] noticePdfBytes = auctionTransferNoticePdfService.generateTransferNoticePdf(
+                        grantor.getUserName(),               // 양도인
+                        grantor.getWalletAddress(),
+                        grantee.getUserName(),               // 양수인
+                        grantee.getWalletAddress(),
+                        debtor.getUserName(),                // 제3채무자
+                        debtorWallet.getWalletAddress(),
+                        new BigDecimal(repaymentInfo.remainingPrincipal), // 채권 금액
+                        LocalDate.now()                      // 통지일자
+                );
+
+                extendedMailService.sendAuctionTransferNoticeEmail(
+                        debtor.getEmail(),
+                        debtor.getUserName(),
+                        grantee.getUserName(),
+                        noticePdfBytes,
+                        transferPdfBytes,
+                        auction.getAuctionId()
+                );
+
             } catch (Exception e) {
+                log.error("스마트컨트랙트 finalizeAuction 실패", e);
                 throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR);
             }
         }
@@ -433,7 +495,7 @@ public class AuctionService {
         auctionRepository.save(auction);
 
         //차용증 현재 채권자 정보 변경
-        contractService.changeCreditorByTokenId(auction.getTokenId(), auction.getUserId());
+        contractService.changeCreditorByTokenId(auction.getTokenId(), auction.getAssignor().getUserId());
     }
 
     public SimilarAuctionResponseDTO getSimilarAuctions(@Valid Integer auctionId) {
@@ -442,46 +504,78 @@ public class AuctionService {
 
         // 2. 기준 값 추출
         // 남은 원금, 남은 상환일 조회 => nft에서 조회
-        Long basePrincipal = 1000000L;
-        Integer baseDays = 100;
-        // 현재 수익률 (기대가격-현재가격)/100?
-        BigDecimal currentRR = BigDecimal.valueOf(20.0);
+        try {
+            PromissoryNote.PromissoryMetadata metadata = promissoryNoteService.getPromissoryMetadata(BigInteger.valueOf(targetAuction.getAuctionId()));
+            RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(targetAuction.getTokenId());
 
-        // 3. 유사 경매 조회
-        List<Auction> similarAuctions = auctionRepository.findSimilarAuctionsByPrincipalAndDays(
-                auctionId, basePrincipal, baseDays
-        );
+            Long basePrincipal = repaymentInfo.remainingPrincipal.longValue();
+            long baseDays = ChronoUnit.DAYS.between(LocalDate.now(),  LocalDate.parse(metadata.matDt));
+            baseDays = Math.max(baseDays, 0);
 
-        // 4. percentile 계산
-        int rank = 0;
-        for (int i = 0; i < similarAuctions.size(); i++) {
-            if (currentRR.compareTo(similarAuctions.get(i).getReturnRate()) >= 0) {
-                rank = i + 1;
+            Integer baseDaysInt = (int) baseDays;
+
+            // 현재 수익률 (기대가격-현재가격)/100?
+            BigDecimal ir = new BigDecimal(metadata.ir).divide(BigDecimal.valueOf(10000));
+
+            // 만기수취액 계산
+            BigDecimal totalAmount = loanUtil.calculateTotalRepaymentAmount(
+                    new BigDecimal(repaymentInfo.remainingPrincipal),
+                    ir,
+                    repaymentInfo.remainingPayments.intValue(),
+                    SysCommonCodes.Repayment.toCalculationType(metadata.repayType),
+                    LoanUtil.RoundingStrategy.HALF_UP,
+                    LoanUtil.TruncationStrategy.WON,
+                    LoanUtil.LegalLimits.getDefaultLimits()
+            );
+
+            // 현재 가격
+            BigDecimal currentPrice = BigDecimal.valueOf(
+                    targetAuction.getPrice() != null ? targetAuction.getPrice() : targetAuction.getMinimumBid()
+            );
+
+            // (totalAmount - currentPrice) / currentPrice * 100
+            BigDecimal diff = totalAmount.subtract(currentPrice);
+            BigDecimal rate = diff.divide(currentPrice, 6, RoundingMode.HALF_UP); // 소수점 6자리까지
+            BigDecimal currentRR = rate.multiply(BigDecimal.valueOf(100)); // 퍼센트로 변환
+
+            // 3. 유사 경매 조회
+            List<Auction> similarAuctions = auctionRepository.findSimilarAuctionsByPrincipalAndDays(
+                    auctionId, basePrincipal, baseDaysInt
+            );
+
+            // 4. percentile 계산
+            int rank = 0;
+            for (int i = 0; i < similarAuctions.size(); i++) {
+                if (currentRR.compareTo(similarAuctions.get(i).getReturnRate()) >= 0) {
+                    rank = i + 1;
+                }
             }
+            int percentile = (int) Math.round((rank * 100.0) / similarAuctions.size());
+
+            TargetAuctionResponseDTO targetAuctionResponseDTO = TargetAuctionResponseDTO.builder()
+                    .auctionId(targetAuction.getAuctionId())
+                    .rp(basePrincipal)
+                    .rd(baseDaysInt)
+                    .rr(currentRR)
+                    .percentile(percentile)
+                    .build();
+
+            List<ComparisonAuctionResponseDTO> comparisonList = similarAuctions.stream()
+                    .map(a -> ComparisonAuctionResponseDTO.builder()
+                            .auctionId(a.getAuctionId())
+                            .rp(a.getRemainPrincipal())
+                            .rd(a.getRemainRepaymentDate())
+                            .rr(a.getReturnRate())
+                            .build())
+                    .toList();
+
+            return SimilarAuctionResponseDTO.builder()
+                    .targetAuction(targetAuctionResponseDTO)
+                    .comparisonAuctions(comparisonList)
+                    .build();
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR);
         }
-        int percentile = (int) Math.round((rank * 100.0) / similarAuctions.size());
-
-        TargetAuctionResponseDTO targetAuctionResponseDTO = TargetAuctionResponseDTO.builder()
-                .auctionId(targetAuction.getAuctionId())
-                .rp(basePrincipal)
-                .rd(baseDays)
-                .rr(currentRR)
-                .percentile(percentile)
-                .build();
-
-        List<ComparisonAuctionResponseDTO> comparisonList = similarAuctions.stream()
-                .map(a -> ComparisonAuctionResponseDTO.builder()
-                        .auctionId(a.getAuctionId())
-                        .rp(a.getRemainPrincipal())
-                        .rd(a.getRemainRepaymentDate())
-                        .rr(a.getReturnRate())
-                        .build())
-                .toList();
-
-        return SimilarAuctionResponseDTO.builder()
-                .targetAuction(targetAuctionResponseDTO)
-                .comparisonAuctions(comparisonList)
-                .build();
     }
 
     public List<ContractEventDTO> getAuctionEvents(@Valid Integer auctionId) {

@@ -1,5 +1,5 @@
 import SubNav from "@/features/common/ui/SubNav";
-import { NotFound } from "@/pages/common";
+import { Home, NotFound } from "@/pages/common";
 import useMediaQuery from "@/shared/hooks/useMediaQuery";
 import Header from "@/widget/common/ui/Header";
 import { Route, Routes } from "react-router";
@@ -11,9 +11,6 @@ import {
 } from "./routes";
 import HeaderMobile from "@/widget/common/ui/HeaderMobile";
 import MainNavMobile from "@/features/common/ui/MainNavMobile";
-import { withLazyComponent } from "@/widget/common/lib/withLazyComponent";
-
-const Home = withLazyComponent(() => import("@/pages/common/ui/Home"));
 
 function App() {
   const isDesktop = useMediaQuery("md");
@@ -31,7 +28,7 @@ function App() {
         <Route path="/account/*" element={<AccountRoutes />} />
       </Routes>
       {!isDesktop && (
-        <div className="fixed right-0 bottom-0 left-0">
+        <div className="fixed right-0 bottom-0 left-0 z-[9999]">
           <MainNavMobile />
         </div>
       )}

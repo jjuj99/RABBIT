@@ -6,6 +6,7 @@ import {
   LentSummaryResponse,
   LentDetailResponse,
   BorrowDetailResponse,
+  EarlypayResponse,
 } from "../types/response";
 import fetchOption from "@/shared/utils/fetchOption";
 import { PaginationRequest } from "@/shared/type/PaginationRequest";
@@ -82,6 +83,18 @@ export const getLentDetailAPI = async (
   const res = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/loans/lent/${contractId}`,
     fetchOption("GET"),
+  );
+  const data = await res.json();
+  return data;
+};
+
+export const earlypayAPI = async (
+  debtId: string,
+  prepaymentAmount: number,
+): Promise<ApiResponse<EarlypayResponse>> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/promissory-notes/debts/${debtId}/prepayment`,
+    fetchOption("POST", { prepaymentAmount }),
   );
   const data = await res.json();
   return data;

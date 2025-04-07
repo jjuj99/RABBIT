@@ -86,4 +86,16 @@ export const commonHandler = [
     };
     return HttpResponse.json(successResponse);
   }),
+
+  http.patch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/notifications/:notificationId/read`,
+    async () => {
+      const successResponse: ApiResponse<null> = {
+        status: "SUCCESS",
+        data: null,
+      };
+
+      return HttpResponse.json(successResponse);
+    },
+  ),
 ];

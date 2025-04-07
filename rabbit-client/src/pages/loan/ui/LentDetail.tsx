@@ -2,7 +2,6 @@ import { InfoRow } from "@/entities/common/ui/InfoRow";
 import LoanInfo from "@/features/loan/ui/LoanInfo";
 import { Separator } from "@/shared/ui/Separator";
 import { ContractPeriod } from "@/entities/loan/ui/ContractPeriod";
-import { Button } from "@/shared/ui/button";
 import NFTEventList from "@/entities/common/ui/NFTEventList";
 import NFTEventListMobile from "@/entities/common/ui/NFTEventListMobile";
 import useMediaQuery from "@/shared/hooks/useMediaQuery";
@@ -67,23 +66,26 @@ const LentDetail = () => {
               <div className="flex h-full w-full flex-col justify-center gap-2 rounded-sm bg-gray-800 px-4 py-3">
                 <InfoRow
                   label="기한 이익 상실"
-                  value={`${data.data.earlypayFee}%`}
+                  value={`${data.data.accel}회 연체시`}
                 />
-                {data.data.earlypayFlag ? (
-                  <Button variant="primary" size="sm" className="w-full">
-                    중도 상환
-                  </Button>
-                ) : (
-                  <div className="text-center text-sm text-gray-400">
-                    중도 상환 불가능
-                  </div>
-                )}
+                <InfoRow
+                  label="기한 이익 상실 이자율"
+                  value={`${data.data.accelDir}%`}
+                />
               </div>
             </div>
             <Separator />
           </div>
         </div>
       </div>
+      {data.data.addTerms && (
+        <div className="flex flex-col gap-2">
+          <h2 className="text-xl font-bold sm:text-2xl">특약사항</h2>
+          <div className="rounded-sm bg-gray-800 p-4">
+            <p className="text-white">{data.data.addTerms}</p>
+          </div>
+        </div>
+      )}
       <ContractPeriod
         startDate={data.data.contractDt}
         endDate={data.data.matDt}

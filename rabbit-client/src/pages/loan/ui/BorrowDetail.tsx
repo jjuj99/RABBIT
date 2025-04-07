@@ -6,21 +6,76 @@ import { Button } from "@/shared/ui/button";
 import NFTEventList from "@/entities/common/ui/NFTEventList";
 import NFTEventListMobile from "@/entities/common/ui/NFTEventListMobile";
 import useMediaQuery from "@/shared/hooks/useMediaQuery";
-import { useQuery } from "@tanstack/react-query";
-import { getBorrowDetailAPI } from "@/entities/loan/api/loanApi";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getBorrowDetailAPI, earlypayAPI } from "@/entities/loan/api/loanApi";
 import { useNavigate, useParams } from "react-router";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/ui/dialog";
+import { Input } from "@/shared/ui/input";
+import { useState } from "react";
+// import useGetBalance from "@/entities/wallet/hooks/useGetBalance";
 
 const BorrowDetail = () => {
   const isDesktop = useMediaQuery("lg");
+  const [isEarlyRepaymentOpen, setIsEarlyRepaymentOpen] = useState(false);
+  const [repaymentAmount, setRepaymentAmount] = useState<number>(0);
 
+  // const { balance } = useGetBalance();
+
+  const balance = 1000000;
   const { contractId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data } = useQuery({
     queryKey: ["borrowDetail", contractId],
     queryFn: () => getBorrowDetailAPI(contractId!),
     enabled: !!contractId,
   });
+
+  const earlyRepaymentMutation = useMutation({
+    mutationFn: (amount: number) => earlypayAPI(contractId!, amount),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["borrowDetail", contractId] });
+      setIsEarlyRepaymentOpen(false);
+      setRepaymentAmount(0);
+    },
+  });
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!data?.data) return;
+    const value = e.target.value.replace(/[^0-9]/g, "");
+    const numericValue = Number(value);
+    const maxAmount = Math.min(data.data.totalAmount, balance);
+    if (numericValue <= maxAmount) {
+      setRepaymentAmount(numericValue);
+    }
+  };
+
+  const calculateTotalAmount = () => {
+    if (!data?.data) return 0;
+    const fee = (repaymentAmount * data.data.earlypayFee) / 100;
+    return repaymentAmount + fee;
+  };
+
+  const isExceedBalance = () => {
+    return calculateTotalAmount() > balance;
+  };
+
+  const handleEarlyRepayment = () => {
+    if (!data?.data) return;
+    if (
+      !isNaN(repaymentAmount) &&
+      repaymentAmount > 0 &&
+      repaymentAmount <= data.data.totalAmount
+    ) {
+      earlyRepaymentMutation.mutate(repaymentAmount);
+    }
+  };
 
   if (!contractId) {
     navigate("/loan");
@@ -68,7 +123,12 @@ const BorrowDetail = () => {
                   value={`${data.data.earlypayFee}%`}
                 />
                 {data.data.earlypayFlag ? (
-                  <Button variant="primary" size="sm" className="w-full">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setIsEarlyRepaymentOpen(true)}
+                  >
                     중도 상환
                   </Button>
                 ) : (
@@ -81,7 +141,15 @@ const BorrowDetail = () => {
             <Separator />
           </div>
         </div>
-      </div>
+      </div>{" "}
+      {data.data.addTerms && (
+        <div className="flex flex-col gap-2">
+          <h2 className="text-xl font-bold sm:text-2xl">특약사항</h2>
+          <div className="rounded-sm bg-gray-800 p-4">
+            <p className="text-white">{data.data.addTerms}</p>
+          </div>
+        </div>
+      )}
       <ContractPeriod
         startDate={data.data.contractDt}
         endDate={data.data.matDt}
@@ -94,6 +162,72 @@ const BorrowDetail = () => {
           <NFTEventListMobile data={data.data.eventList} />
         )}
       </div>
+      <Dialog
+        open={isEarlyRepaymentOpen}
+        onOpenChange={setIsEarlyRepaymentOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>중도상환</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm text-gray-100">상환 금액</label>
+              <Input
+                value={repaymentAmount || ""}
+                onChange={handleAmountChange}
+                placeholder="상환할 금액을 입력하세요"
+                type="number"
+                min="0"
+              />
+              <p className="text-sm text-gray-100">
+                최대 상환 가능 금액: {data.data.totalAmount.toLocaleString()} 원
+              </p>
+              <p className="text-sm text-gray-100">
+                보유 금액: {balance.toLocaleString()} 원
+              </p>
+              {repaymentAmount && (
+                <>
+                  <p className="text-sm text-gray-100">
+                    중도상환 수수료:{" "}
+                    {(
+                      (repaymentAmount * data.data.earlypayFee) /
+                      100
+                    ).toLocaleString()}{" "}
+                    원
+                  </p>
+                  <p className="text-sm font-bold">
+                    실제 납부 금액: {calculateTotalAmount().toLocaleString()} 원
+                  </p>
+                  {isExceedBalance() && (
+                    <p className="text-sm text-red-500">
+                      보유 금액이 부족합니다.
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsEarlyRepaymentOpen(false)}
+              >
+                취소
+              </Button>
+              <Button
+                onClick={handleEarlyRepayment}
+                disabled={
+                  earlyRepaymentMutation.isPending ||
+                  !repaymentAmount ||
+                  isExceedBalance()
+                }
+              >
+                {earlyRepaymentMutation.isPending ? "처리중..." : "확인"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

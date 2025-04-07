@@ -100,11 +100,11 @@ public class EventService {
 
             log.info("[블록체인] RepaymentProcessed 이벤트 파싱 결과: {}건", eventList.size());
 
-            return eventList.stream().map(event -> {
+            return eventList.stream().map(e -> {
                 String date = null;
                 try {
                     EthBlock block = web3j.ethGetBlockByNumber(
-                            DefaultBlockParameter.valueOf(event.log.getBlockNumber()), false).send();
+                            DefaultBlockParameter.valueOf(e.log.getBlockNumber()), false).send();
                     BigInteger timestamp = block.getBlock().getTimestamp();
                     date = Instant.ofEpochSecond(timestamp.longValue())
                             .atZone(ZoneId.of("Asia/Seoul"))
@@ -116,10 +116,10 @@ public class EventService {
 
                 return ContractEventDTO.builder()
                         .eventType("상환")                // 상환 이벤트로 표현
-                        .from(null)                             // 이벤트에 from 주소는 없음 (필요 시 추론)
-                        .to(null)                         // 채권자 지갑 주소
-                        .intAmt(event.amount.longValue())                           // 상환 이벤트 금액
-                        .timestamp(date != null ? date : event.log.getBlockNumber().toString())
+                        .from(e.from)                             // 이벤트에 from 주소는 없음 (필요 시 추론)
+                        .to(e.to)                         // 채권자 지갑 주소
+                        .intAmt(e.amount.longValue())                           // 상환 이벤트 금액
+                        .timestamp(date != null ? date : e.log.getBlockNumber().toString())
                         .build();
             }).collect(Collectors.toList());
 
@@ -181,7 +181,7 @@ public class EventService {
 
                 return ContractEventDTO.builder()
                         .eventType("양도")                // 양도 이벤트로 표현
-                        .from(null)                             // 이벤트에 from 주소는 없음 (필요 시 추론)
+                        .from(e.from)                             // 이벤트에 from 주소는 없음 (필요 시 추론)
                         .to(e.newOwner)                         // 양수인 지갑 주소
                         .intAmt(null)                           // 상환 이벤트 아님
                         .timestamp(date != null ? date : e.log.getBlockNumber().toString())
@@ -305,9 +305,9 @@ public class EventService {
 
                 return ContractEventDTO.builder()
                         .eventType("연체 상환")                // 연체 이벤트로 표현
-                        .from(null)                             // 채무자
-                        .to(null)                         // 채권자 지갑 주소
-                        .intAmt(null)                           // 금액
+                        .from(e.from)                             // 채무자
+                        .to(e.to)                         // 채권자 지갑 주소
+                        .intAmt(e.paidOverdueAmount.longValue())                           // 금액
                         .timestamp(date != null ? date : e.log.getBlockNumber().toString())
                         .build();
             }).collect(Collectors.toList());

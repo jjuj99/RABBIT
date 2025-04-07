@@ -7,7 +7,7 @@ const MainNav = () => {
   console.log(pathname);
 
   return (
-    <nav className="flex gap-8">
+    <nav className="flex gap-8 pr-4">
       {NAV_ITEMS.map((item) => (
         <NavItem
           key={item.to}

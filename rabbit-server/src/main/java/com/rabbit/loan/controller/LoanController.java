@@ -15,23 +15,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-
-import org.springframework.web.bind.annotation.RestController;
-import org.web3j.abi.FunctionReturnDecoder;
-import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.Bool;
-import org.web3j.abi.datatypes.Type;
-import org.web3j.abi.datatypes.Utf8String;
-import org.web3j.abi.datatypes.generated.Uint256;
 
 @Tag(name = "Loan", description = "나의 채무, 채권 정보 관련 API")
 @RestController
@@ -43,59 +29,68 @@ public class LoanController {
     private final LoanService loanService;
 
     @GetMapping("/borrow/me/summary")
-    public ResponseEntity<CustomApiResponse<BorrowSummaryResponseDTO>> borrowSummary(Authentication authentication) {
-        String userId = (String) authentication.getPrincipal();
+    public ResponseEntity<CustomApiResponse<BorrowSummaryResponseDTO>> borrowSummary() { // Authentication authentication
+//        String userId = (String) authentication.getPrincipal();
+        String userId = "1";
         BorrowSummaryResponseDTO response = loanService.borrowSummary(Integer.parseInt(userId));
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }
 
     @GetMapping("/borrow/me")
-    public ResponseEntity<CustomApiResponse<List<BorrowListResponseDTO>>> borrowList(@RequestParam int pageNumber, @RequestParam int pageSize, Authentication authentication) {
-        String userId = (String) authentication.getPrincipal();
-        List<BorrowListResponseDTO> response = loanService.borrowList(Integer.parseInt(userId));
+    public ResponseEntity<CustomApiResponse<PageResponseDTO<BorrowListResponseDTO>>> borrowList(@ModelAttribute PageRequestDTO request) {
+//        String userId = (String) authentication.getPrincipal();
+        String userId = "1";
+        Pageable pageable = request.toPageable("contractId", Sort.Direction.DESC);
+        PageResponseDTO<BorrowListResponseDTO> response = loanService.borrowList(Integer.parseInt(userId), pageable);
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }
 
     @GetMapping("/borrow/{contractId}")
-    public ResponseEntity<CustomApiResponse<BorrowDetailResponseDTO>> borrowDetail(@PathVariable int contractId, Authentication authentication) {
-        String userId = (String) authentication.getPrincipal();
+    public ResponseEntity<CustomApiResponse<BorrowDetailResponseDTO>> borrowDetail(@PathVariable int contractId) {
+//        String userId = (String) authentication.getPrincipal();
+        String userId = "1";
         BorrowDetailResponseDTO response = loanService.borrowDetail(contractId, Integer.parseInt(userId));
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }
 
     @GetMapping("/lent/me/summary")
-    public ResponseEntity<CustomApiResponse<LentSummaryResponseDTO>> lentSummary(Authentication authentication) {
-        String userId = (String) authentication.getPrincipal();
+    public ResponseEntity<CustomApiResponse<LentSummaryResponseDTO>> lentSummary() {
+//        String userId = (String) authentication.getPrincipal();
+        String userId = "1";
         LentSummaryResponseDTO response = loanService.lentSummary(Integer.parseInt(userId));
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }
 
     @GetMapping("/lent/me")
-    public ResponseEntity<CustomApiResponse<List<LentListResponseDTO>>> lentList(@RequestParam int pageNumber, @RequestParam int pageSize, Authentication authentication) {
-        String userId = (String) authentication.getPrincipal();
-        List<LentListResponseDTO> response = loanService.lentList(Integer.parseInt(userId));
+    public ResponseEntity<CustomApiResponse<PageResponseDTO<LentListResponseDTO>>> lentList(@ModelAttribute PageRequestDTO request) {
+//        String userId = (String) authentication.getPrincipal();
+
+        String userId = "1";
+        Pageable pageable = request.toPageable("contractId", Sort.Direction.DESC);
+        PageResponseDTO<LentListResponseDTO> response = loanService.lentList(Integer.parseInt(userId), pageable);
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }
 
     @GetMapping("/lent/{contractId}")
-    public ResponseEntity<CustomApiResponse<LentDetailResponseDTO>> lentDetail(@PathVariable int contractId, Authentication authentication) {
-        String userId = (String) authentication.getPrincipal();
+    public ResponseEntity<CustomApiResponse<LentDetailResponseDTO>> lentDetail(@PathVariable int contractId) {
+//        String userId = (String) authentication.getPrincipal();
+        String userId = "1";
         LentDetailResponseDTO response = loanService.lentDetail(contractId, Integer.parseInt(userId));
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }
 
     @GetMapping("/lent/available-auctions")
-    public ResponseEntity<CustomApiResponse<?>> getAuctionAvailable(@Valid PageRequestDTO pageRequest, Authentication authentication) {
-        String userId = (String) authentication.getPrincipal();
+    public ResponseEntity<CustomApiResponse<?>> getAuctionAvailable(@Valid PageRequestDTO pageRequest) {
+//        String userId = (String) authentication.getPrincipal();
 
+        String userId = "1";
         Pageable pageable = pageRequest.toPageable();
-
         PageResponseDTO<LentAuctionResponseDTO> response = loanService.getAuctionAvailable(Integer.parseInt(userId), pageable);
 
         return ResponseEntity.ok(CustomApiResponse.success(response));

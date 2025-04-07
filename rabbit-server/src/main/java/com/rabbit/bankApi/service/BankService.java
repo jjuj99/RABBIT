@@ -37,7 +37,7 @@ public class BankService {
 
         // 2. email로 userKey 조회
         String userKey = ssafyAccountRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "등록된 계좌가 없습니다."))
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "등록된 계좌가 없습니다." + email))
                 .getUserKey();
 
         // 3. userKey로 신용등급 조회
@@ -56,7 +56,7 @@ public class BankService {
      * @param userId 유저 ID
      * @param balance 금액
      */
-    public void deposit(int userId, int balance) {
+    public void deposit(int userId, long balance) {
         // 1. userId로 이메일 조회
         String email = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "존재하지 않는 사용자입니다."))

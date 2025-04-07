@@ -56,7 +56,7 @@ public class BidService {
         }
 
         // 양도자가 아닌지 확인
-        if(auction.getUserId().equals(userId)){
+        if(auction.getAssignor().getUserId().equals(userId)){
             throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "양도자는 경매에 참여할 수 없습니다.");
         }
 

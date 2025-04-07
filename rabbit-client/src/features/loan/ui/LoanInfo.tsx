@@ -39,7 +39,6 @@ const LoanInfo = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const walletAddress = crWallet;
-  console.log(earlypayFlag, earlypayFee);
 
   const handleCopy = async () => {
     try {

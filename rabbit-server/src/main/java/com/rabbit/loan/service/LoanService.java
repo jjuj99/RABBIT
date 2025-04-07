@@ -10,14 +10,13 @@ import com.rabbit.blockchain.wrapper.PromissoryNote;
 import com.rabbit.blockchain.wrapper.RepaymentScheduler;
 import com.rabbit.contract.domain.entity.Contract;
 import com.rabbit.contract.repository.ContractRepository;
-import com.rabbit.contract.service.ContractService;
 import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.response.PageResponseDTO;
 import com.rabbit.global.util.DateTimeUtils;
 import com.rabbit.global.util.LoanUtil;
-import com.rabbit.loan.controller.LentAuctionResponseDTO;
+import com.rabbit.loan.domain.dto.response.LentAuctionResponseDTO;
 import com.rabbit.loan.domain.dto.response.*;
 import com.rabbit.loan.util.DataUtil;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +47,21 @@ public class LoanService {
 
     public BorrowSummaryResponseDTO borrowSummary(int userId) {
         // 1. 유저 Id로 해당 유저가 채무자인 차용증 리스트를 호출한다.
-        List<Contract> contracts = contractRepository.findByDebtorId(userId);
+//        List<Contract> contracts = contractRepository.findByDebtorId(userId);
+
+        List<Contract> contracts = new ArrayList<>();
+        contracts.add(Contract.builder()
+                .contractId(1)
+                .tokenId(BigInteger.valueOf(1))
+                .build());
+        contracts.add(Contract.builder()
+                .contractId(2)
+                .tokenId(BigInteger.valueOf(2))
+                .build());
+        contracts.add(Contract.builder()
+                .contractId(3)
+                .tokenId(BigInteger.valueOf(3))
+                .build());
 
         // 1-2. 만약 리스트가 비어있다면, 빈 값을 담아서 객체 반환
         if (contracts.isEmpty()) {
@@ -91,18 +104,37 @@ public class LoanService {
         }
     }
 
-    public List<BorrowListResponseDTO> borrowList(int userId) {
+    public PageResponseDTO<BorrowListResponseDTO> borrowList(int userId, Pageable pageable) {
         // 1. 유저 Id로 해당 유저가 채무자인 차용증 리스트를 호출한다.
-        List<Contract> contracts = contractRepository.findByDebtorId(userId);
+//        List<Contract> contracts = contractRepository.findByDebtorId(userId);
+
+        List<Contract> contracts = new ArrayList<>();
+        contracts.add(Contract.builder()
+                .contractId(1)
+                .tokenId(BigInteger.valueOf(1))
+                .build());
+        contracts.add(Contract.builder()
+                .contractId(2)
+                .tokenId(BigInteger.valueOf(2))
+                .build());
+        contracts.add(Contract.builder()
+                .contractId(3)
+                .tokenId(BigInteger.valueOf(3))
+                .build());
 
         // 1-2. 만약 리스트가 비어있다면, 빈 리스트를 반환
         if (contracts.isEmpty()) {
-            return  Collections.emptyList();
+            return PageResponseDTO.<BorrowListResponseDTO>builder()
+                    .content(Collections.emptyList())
+                    .pageNumber(pageable.getPageNumber())
+                    .pageSize(pageable.getPageSize())
+                    .totalElements(0)
+                    .build();
         }
 
-        try {
-            List<BorrowListResponseDTO> response = new ArrayList<>();
+        List<BorrowListResponseDTO> response = new ArrayList<>();
 
+        try {
             // 2. 토큰 Id를 조회하며, 각 NFT 정보를 호출
             for (Contract contract : contracts) {
                 PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(contract.getTokenId());
@@ -129,22 +161,40 @@ public class LoanService {
                         .build()
                 );
             }
-
-            return response;
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "NFT 조회 중 오류가 발생했습니다.");
         }
+
+        int offset = (int) pageable.getOffset();
+        int limit = pageable.getPageSize();
+
+        List<BorrowListResponseDTO> pagedList = response.stream()
+                .skip(offset)
+                .limit(limit)
+                .toList();
+
+        return PageResponseDTO.<BorrowListResponseDTO>builder()
+                .content(pagedList)
+                .pageNumber(pageable.getPageNumber())
+                .pageSize(pageable.getPageSize())
+                .totalElements(response.size())
+                .build();
     }
 
     public BorrowDetailResponseDTO borrowDetail(int contractId, int userId) {
         // 1. 해당 Id의 차용증 정보를 가져온다.
-        Contract contract = contractRepository.findByContractIdAndDeletedFlagFalse(contractId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 차용증의 정보가 존재하지 않습니다."));
+//        Contract contract = contractRepository.findByContractIdAndDeletedFlagFalse(contractId)
+//                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 차용증의 정보가 존재하지 않습니다."));
+//
+//        // 차용증에 채권자, 채무자에 userId가 아니라면 (당사자가 아니라면 에러처리 추가해야 함)
+//        if (contract.getCreditor().getUserId() != userId || contract.getDebtor().getUserId() != userId) {
+//            throw new BusinessException(ErrorCode.ACCESS_DENIED, "해당 정보에 접근 권한이 없습니다.");
+//        }
 
-        // 차용증에 채권자, 채무자에 userId가 아니라면 (당사자가 아니라면 에러처리 추가해야 함)
-        if (contract.getCreditor().getUserId() != userId || contract.getDebtor().getUserId() != userId) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED, "해당 정보에 접근 권한이 없습니다.");
-        }
+        Contract contract = Contract.builder()
+                .contractId(3)
+                .tokenId(BigInteger.valueOf(3))
+                .build();
 
         try {
             PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(contract.getTokenId());
@@ -188,7 +238,21 @@ public class LoanService {
 
     public LentSummaryResponseDTO lentSummary(int userId) {
         // 1. 유저 Id로 해당 유저가 채권자인 차용증 리스트를 호출한다.
-        List<Contract> contracts = contractRepository.findByCreditorId(userId);
+//        List<Contract> contracts = contractRepository.findByCreditorId(userId);
+
+        List<Contract> contracts = new ArrayList<>();
+        contracts.add(Contract.builder()
+                .contractId(1)
+                .tokenId(BigInteger.valueOf(1))
+                .build());
+        contracts.add(Contract.builder()
+                .contractId(2)
+                .tokenId(BigInteger.valueOf(2))
+                .build());
+        contracts.add(Contract.builder()
+                .contractId(3)
+                .tokenId(BigInteger.valueOf(3))
+                .build());
 
         // 1-2. 만약 리스트가 비어있다면, 빈 값을 담아서 객체 반환
         if (contracts.isEmpty()) {
@@ -231,18 +295,37 @@ public class LoanService {
         }
     }
 
-    public List<LentListResponseDTO> lentList(int userId) {
+    public PageResponseDTO<LentListResponseDTO> lentList(int userId, Pageable pageable) {
         // 1. 유저 Id로 해당 유저가 채무자인 차용증 리스트를 호출한다.
-        List<Contract> contracts = contractRepository.findByCreditorId(userId);
+//        List<Contract> contracts = contractRepository.findByCreditorId(userId);
+
+        List<Contract> contracts = new ArrayList<>();
+        contracts.add(Contract.builder()
+                .contractId(1)
+                .tokenId(BigInteger.valueOf(1))
+                .build());
+        contracts.add(Contract.builder()
+                .contractId(2)
+                .tokenId(BigInteger.valueOf(2))
+                .build());
+        contracts.add(Contract.builder()
+                .contractId(3)
+                .tokenId(BigInteger.valueOf(3))
+                .build());
 
         // 1-2. 만약 리스트가 비어있다면, 빈 리스트를 반환
         if (contracts.isEmpty()) {
-            return  Collections.emptyList();
+            return  PageResponseDTO.<LentListResponseDTO>builder()
+                    .content(Collections.emptyList())
+                    .pageNumber(pageable.getPageNumber())
+                    .pageSize(pageable.getPageSize())
+                    .totalElements(0)
+                    .build();
         }
 
-        try {
-            List<LentListResponseDTO> response = new ArrayList<>();
+        List<LentListResponseDTO> response = new ArrayList<>();
 
+        try {
             // 2. 토큰 Id를 조회하며, 각 NFT 정보를 호출
             for (Contract contract : contracts) {
                 PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(contract.getTokenId());
@@ -269,22 +352,40 @@ public class LoanService {
                         .build()
                 );
             }
-
-            return response;
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "NFT 목록 조회 중 오류가 발생했습니다.");
         }
+
+        int offset = (int) pageable.getOffset();
+        int limit = pageable.getPageSize();
+
+        List<LentListResponseDTO> pagedList = response.stream()
+                .skip(offset)
+                .limit(limit)
+                .toList();
+
+        return PageResponseDTO.<LentListResponseDTO>builder()
+                .content(pagedList)
+                .pageNumber(pageable.getPageNumber())
+                .pageSize(pageable.getPageSize())
+                .totalElements(response.size())
+                .build();
     }
 
     public LentDetailResponseDTO lentDetail(int contractId, int userId) {
         // 1. 해당 차용증 Id의 차용증 객체 호출
-        Contract contract = contractRepository.findByContractIdAndDeletedFlagFalse(contractId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 차용증의 정보가 존재하지 않습니다."));
+//        Contract contract = contractRepository.findByContractIdAndDeletedFlagFalse(contractId)
+//                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 차용증의 정보가 존재하지 않습니다."));
+//
+//        // 차용증에 채권자, 채무자에 userId가 아니라면 (당사자가 아니라면 에러처리 추가해야 함)
+//        if (contract.getCreditor().getUserId() != userId || contract.getDebtor().getUserId() != userId) {
+//            throw new BusinessException(ErrorCode.ACCESS_DENIED, "해당 정보에 접근 권한이 없습니다.");
+//        }
 
-        // 차용증에 채권자, 채무자에 userId가 아니라면 (당사자가 아니라면 에러처리 추가해야 함)
-        if (contract.getCreditor().getUserId() != userId || contract.getDebtor().getUserId() != userId) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED, "해당 정보에 접근 권한이 없습니다.");
-        }
+        Contract contract = Contract.builder()
+                .contractId(3)
+                .tokenId(BigInteger.valueOf(3))
+                .build();
 
         try {
             PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(contract.getTokenId());

@@ -4,7 +4,7 @@ import com.rabbit.auth.controller.swagger.AuthControllerSwagger;
 import com.rabbit.auth.domain.dto.request.LoginRequestDTO;
 import com.rabbit.auth.domain.dto.request.NonceRequestDTO;
 import com.rabbit.auth.domain.dto.request.SignupRequestDTO;
-import com.rabbit.auth.domain.dto.response.CheckNicknameResponseDTO;
+import com.rabbit.auth.domain.dto.response.CheckDuplicatedResponseDTO;
 import com.rabbit.auth.domain.dto.response.LoginResponseDTO;
 import com.rabbit.auth.domain.dto.response.NonceResponseDTO;
 import com.rabbit.auth.domain.dto.response.RefreshResponseDTO;
@@ -17,6 +17,7 @@ import com.rabbit.global.response.MessageResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Value;
@@ -107,13 +108,24 @@ public class AuthController {
         return ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("로그아웃에 성공했습니다.")));
     }
 
+    @AuthControllerSwagger.checkEmailApi
+    @GetMapping("/check-email")
+    public ResponseEntity<CustomApiResponse<CheckDuplicatedResponseDTO>> checkEmail(@RequestParam
+                                                                                     @NotBlank(message = "이메일을 입력하지 않았습니다.")
+                                                                                        @Email(message = "이메일 형식이 올바르지 않습니다.")
+                                                                                     String email) {
+        CheckDuplicatedResponseDTO response = authService.checkEmail(email);
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
+
     @AuthControllerSwagger.checkNicknameApi
     @GetMapping("/check-nickname")
-    public ResponseEntity<CustomApiResponse<CheckNicknameResponseDTO>> checkNickname(@RequestParam
+    public ResponseEntity<CustomApiResponse<CheckDuplicatedResponseDTO>> checkNickname(@RequestParam
                                                                                          @NotBlank(message = "닉네임을 입력하지 않았습니다.")
                                                                                          @Size(max = 12, message = "닉네임은 12자 이하로 입력해야 합니다.")
                                                                                          String nickname) {
-        CheckNicknameResponseDTO response = authService.checkNickname(nickname);
+        CheckDuplicatedResponseDTO response = authService.checkNickname(nickname);
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }

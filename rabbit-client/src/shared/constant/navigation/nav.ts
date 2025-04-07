@@ -32,8 +32,8 @@ export const SUB_NAV_ITEMS = {
     { label: "입찰 내역", to: "auction/history" },
   ],
   loan: [
-    { label: "나의 채권", to: "loan/lent" },
     { label: "나의 채무", to: "loan/borrow" },
+    { label: "나의 채권", to: "loan/lent" },
   ],
   // account: [
   //   { label: "충전", to: "account/charge" },

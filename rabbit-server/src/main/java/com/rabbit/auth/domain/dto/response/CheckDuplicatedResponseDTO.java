@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CheckNicknameResponseDTO {
+public class CheckDuplicatedResponseDTO {
 
     private boolean duplicated;
 }

@@ -114,3 +114,7 @@ export interface LentDetailResponse {
   addTerms?: string[];
   eventList: NFTEvent[];
 }
+
+export interface EarlypayResponse {
+  message: string;
+}

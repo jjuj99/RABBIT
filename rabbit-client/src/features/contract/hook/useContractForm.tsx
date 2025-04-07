@@ -1,19 +1,27 @@
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { useAuthUser } from "@/entities/auth/hooks/useAuth";
-import { useEffect, useState } from "react";
+import useContractMutate from "@/entities/contract/hooks/useContractMutate";
+import useCreateContract from "@/entities/contract/hooks/useCreateContract";
 import useGetWallet from "@/entities/wallet/hooks/useGetWallet";
 import { useWeb3 } from "@/shared/lib/web3/context/useWeb3";
-import useCreateContract from "@/entities/contract/hooks/useCreateContract";
-import dateFormat from "@/shared/utils/dateFormat";
 import { passType } from "@/shared/type/Types";
+import dateFormat from "@/shared/utils/dateFormat";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useLocation } from "react-router";
+import { z } from "zod";
 
 const useContractForm = () => {
   const { user } = useAuthUser();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
   const [isPassDialogOpen, setIsPassDialogOpen] = useState(false);
+  const [isModifyDialogOpen, setIsModifyDialogOpen] = useState(false);
+  const { state } = useLocation();
+  console.log("state", state);
+  const { cancelContract } = useContractMutate({
+    contractId: state?.contractId ?? "",
+  });
   const [passState, setPassState] = useState<passType>({
     authResultCode: "FAIL",
     passAuthToken: "",
@@ -97,22 +105,22 @@ const useContractForm = () => {
     resolver: zodResolver(contractSchema),
     defaultValues: {
       drName: user?.userName ?? "",
-      drPhone: "",
-      drWallet: "",
-      crName: "",
-      crEmail: "",
-      crWallet: "",
-      la: undefined,
-      ir: undefined,
-      lt: undefined,
-      repayType: undefined,
-      mpDt: undefined,
-      dir: undefined,
-      defCnt: 0,
-      pnTransFlag: false,
-      earlypay: false,
-      earlypayFee: 0,
-      addTerms: "",
+      drPhone: state?.drPhone ?? "",
+      drWallet: state?.drWallet ?? "",
+      crName: state?.crName ?? "",
+      crEmail: state?.crEmail ?? "",
+      crWallet: state?.crWallet ?? "",
+      la: state?.la ?? undefined,
+      ir: state?.ir ?? undefined,
+      lt: state?.lt ?? undefined,
+      repayType: state?.repayType ?? undefined,
+      mpDt: state?.mpDt ?? undefined,
+      dir: state?.dir ?? undefined,
+      defCnt: state?.defCnt ?? 0,
+      pnTransFlag: state?.pnTransFlag ?? false,
+      earlypay: state?.earlypay ?? false,
+      earlypayFee: state?.earlypayFee ?? 0,
+      addTerms: state?.addTerms ?? "",
       message: "",
       passAuthToken: "",
       txId: "",
@@ -125,6 +133,15 @@ const useContractForm = () => {
     const account = await web3?.eth.getAccounts();
     if (!account) {
       return;
+    }
+    if (state) {
+      try {
+        setIsModifyDialogOpen(true);
+        await cancelContract();
+      } catch (error) {
+        console.error(error);
+        return;
+      }
     }
     createContractMutation.mutate({
       ...data,
@@ -148,6 +165,15 @@ const useContractForm = () => {
     }
   };
 
+  const handleModifyConfirm = async () => {
+    try {
+      await cancelContract();
+      setIsModifyDialogOpen(false);
+    } catch (error) {
+      console.error("Contract cancellation failed:", error);
+    }
+  };
+
   return {
     form,
     onSubmit,
@@ -160,6 +186,11 @@ const useContractForm = () => {
     setDialogMessage,
     isPassDialogOpen,
     setIsPassDialogOpen,
+    isModify: state ?? false,
+    rejectMessage: state?.rejectMessage ?? "",
+    isModifyDialogOpen,
+    setIsModifyDialogOpen,
+    handleModifyConfirm,
   };
 };
 

@@ -48,7 +48,8 @@ public enum ErrorCode {
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "error.file.upload.failed", "파일 업로드 중 오류가 발생했습니다"),
     ACCOUNT_NUMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "error.account.number.not.found", "계좌 정보를 찾을 수 없습니다"),
     INSUFFICIENT_RAB_BALANCE(HttpStatus.BAD_REQUEST, "error.insufficient.balance", "보유한 RAB이 출금 요청액보다 부족합니다"),
-    RAB_TRANSFER_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "error.rab.transfer", "RAB 전송 중 오류가 발생했습니다");
+    RAB_TRANSFER_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "error.rab.transfer", "RAB 전송 중 오류가 발생했습니다"),
+    RAB_PERMIT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "error.rab.permit", "RAB permit 중 오류가 발생했습니다");
 
     private final HttpStatus status;
     private final String messageKey;

@@ -1,5 +1,6 @@
 package com.rabbit.coin.controller.swagger;
 
+import com.rabbit.coin.domain.dto.request.CoinWithdrawRequestDTO;
 import com.rabbit.coin.domain.dto.request.TossConfirmRequestDTO;
 import com.rabbit.global.response.CustomApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -65,4 +66,90 @@ public interface CoinControllerSwagger {
             }
     )
     @interface TossConfirmApi {}
+
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Operation(
+            summary = "코인 출금",
+            description = "사용자의 RAB 코인을 출금하여 등록된 환불 계좌로 입금합니다.",
+            requestBody = @RequestBody(
+                    required = true,
+                    description = "코인 출금 요청",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CoinWithdrawRequestDTO.class),
+                            examples = @ExampleObject(
+                                    name = "출금 요청 예시",
+                                    summary = "정상 출금 요청",
+                                    value = "{\n  \"accountNumber\": \"1234567890\",\n  \"balance\": 10000\n}"
+                            )
+                    )
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "출금 처리 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = @ExampleObject(
+                                            name = "성공 응답",
+                                            summary = "출금 성공",
+                                            value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"message\": \"출금이 완료되었습니다\"\n  },\n  \"error\": null\n}"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "출금 실패 - 잔액 부족",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "잔액 부족",
+                                                    summary = "RAB 잔액 부족",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 400,\n    \"message\": \"보유한 RAB이 출금 요청액보다 부족합니다\"\n  }\n}"
+                                            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "리소스를 찾을 수 없음 - 지갑 또는 계좌 정보 없음",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "계좌 정보 없음",
+                                                    summary = "환불 계좌 정보 조회 불가",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 404,\n    \"message\": \"환불 계좌 정보를 찾을 수 없습니다\"\n  }\n}"
+                                            ),
+                                            @ExampleObject(
+                                                    name = "지갑 정보 없음",
+                                                    summary = "메타마스크 지갑 정보 조회 불가",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 404,\n    \"message\": \"사용자의 주 지갑을 찾을 수 없습니다\"\n  }\n}"
+                                            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "블록체인 트랜잭션 실패 또는 서버 오류",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "블록체인 트랜잭션 실패",
+                                                    summary = "RAB 전송 실패",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 500,\n    \"message\": \"RAB 전송 중 오류가 발생했습니다\"\n  }\n}"
+                                            )
+                                    }
+                            )
+                    )
+            }
+    )
+    @interface WithdrawAPI {}
 }

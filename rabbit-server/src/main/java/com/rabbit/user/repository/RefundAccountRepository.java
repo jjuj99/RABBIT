@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface RefundAccountRepository extends JpaRepository<RefundAccount, Integer> {
 
     Optional<RefundAccount> findByUserIdAndPrimaryFlagTrue(Integer userId);
+
+    Optional<RefundAccount> findByUserIdAndAccountNumber(Integer userId, String accountNumber);
 }

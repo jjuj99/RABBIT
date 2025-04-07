@@ -131,6 +131,8 @@ public class AuctionService {
     }
 
     public PageResponseDTO<AuctionResponseDTO> searchAuctions(AuctionFilterRequestDTO request, Pageable pageable) {
+        log.info("[AuctionService] 가격 조건 요청: minPrice={}, maxPrice={}", request.getMinPrice(), request.getMaxPrice());
+
         Page<AuctionResponseDTO> result = auctionRepository.searchAuctions(request, pageable);
 
         //블록체인 읽어와 다른 조건 필터링 구현 필요
@@ -199,9 +201,9 @@ public class AuctionService {
 
                     // 상환 방식 여러 개 선택 가능 (IN 조건)
                     boolean repayCheck = true;
-                    if (request.getRepayTypeList() != null && !request.getRepayTypeList().isEmpty()) {
+                    if (request.getRepayType() != null && !request.getRepayType().isEmpty()) {
                         SysCommonCodes.Repayment repaymentEnum = SysCommonCodes.Repayment.fromCodeEnumName(dto.getRepayType()); // 한글 → Enum
-                        repayCheck = request.getRepayTypeList().contains(repaymentEnum.getDisplayOrder());
+                        repayCheck = request.getRepayType().contains(repaymentEnum.getDisplayOrder());
                     }
 
                     // 만기일 필터링

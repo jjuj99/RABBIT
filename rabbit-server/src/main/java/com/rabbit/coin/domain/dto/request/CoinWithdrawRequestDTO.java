@@ -17,12 +17,9 @@ public class CoinWithdrawRequestDTO {
     @Schema(description = "예금주", example = "이재용")
     private String name;
 
-    @Schema(description = "은행명", example = "신한은행")
-    private String bankName;
-
     @Schema(description = "계좌번호", example = "123-45678-9012-34")
     private String accountNumber;
 
     @Schema(description = "출금액", example = "10000")
-    private long balance;
+    private long amount;
 }

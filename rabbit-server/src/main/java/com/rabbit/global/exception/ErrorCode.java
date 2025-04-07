@@ -46,7 +46,7 @@ public enum ErrorCode {
     RAB_MINT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "error.rab.mint", "RAB 발행 중 오류가 발생했습니다"),
     WALLET_NOT_FOUND(HttpStatus.NOT_FOUND, "error.wallet.not.found", "사용자의 주 지갑을 찾을 수 없습니다"),
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "error.file.upload.failed", "파일 업로드 중 오류가 발생했습니다"),
-    ACCOUNT_NUMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "error.account.number.not.found", "환불 계좌 정보를 찾을 수 없습니다"),
+    ACCOUNT_NUMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "error.account.number.not.found", "계좌 정보를 찾을 수 없습니다"),
     INSUFFICIENT_RAB_BALANCE(HttpStatus.BAD_REQUEST, "error.insufficient.balance", "보유한 RAB이 출금 요청액보다 부족합니다"),
     RAB_TRANSFER_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "error.rab.transfer", "RAB 전송 중 오류가 발생했습니다");
 

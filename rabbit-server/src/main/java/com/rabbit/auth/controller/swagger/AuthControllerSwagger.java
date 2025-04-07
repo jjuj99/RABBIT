@@ -231,6 +231,82 @@ public interface AuthControllerSwagger {
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
     @Operation(
+            summary = "이메일 중복 확인",
+            description = "입력한 이메일이 중복되었는지 여부를 확인합니다.",
+            security = {@SecurityRequirement(name = "bearerAuth")},
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "중복 확인할 이메일",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "이메일 중복 아님",
+                                                    summary = "이메일 중복 아님",
+                                                    value = """
+                                                            {
+                                                              "status": "SUCCESS",
+                                                              "data": {
+                                                                "duplicated": false
+                                                              },
+                                                              "error": null
+                                                            }"""
+                                            ),
+                                            @ExampleObject(
+                                                    name = "이메일 중복임",
+                                                    summary = "이메일 중복임",
+                                                    value = """
+                                                            {
+                                                              "status": "SUCCESS",
+                                                              "data": {
+                                                                "duplicated": true
+                                                              },
+                                                              "error": null
+                                                            }"""
+                                            ),
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "잘못된 요청 - 유효하지 않은 데이터",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "이메일 미입력",
+                                                    value = "{\n" +
+                                                            "  \"status\": \"ERROR\",\n" +
+                                                            "  \"data\": null,\n" +
+                                                            "  \"error\": {\n" +
+                                                            "    \"statusCode\": 400,\n" +
+                                                            "    \"message\": \"이메일을 입력하지 않았습니다.\"\n" +
+                                                            "  }\n}"
+                                            ),
+                                            @ExampleObject(
+                                                    name = "이메일 형식 오류",
+                                                    value = "{\n" +
+                                                            "  \"status\": \"ERROR\",\n" +
+                                                            "  \"data\": null,\n" +
+                                                            "  \"error\": {\n" +
+                                                            "    \"statusCode\": 400,\n" +
+                                                            "    \"message\": \"이메일 형식이 올바르지 않습니다.\"\n" +
+                                                            "  }\n}"
+                                            )
+                                    }
+                            )
+                    )
+            }
+    )
+    @interface checkEmailApi {
+    }
+
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Operation(
             summary = "닉네임 중복 확인",
             description = "입력한 닉네임이 중복되었는지 여부를 확인합니다.",
             security = {@SecurityRequirement(name = "bearerAuth")},

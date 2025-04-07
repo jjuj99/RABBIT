@@ -3,7 +3,7 @@ package com.rabbit.auth.service;
 import com.rabbit.auth.domain.dto.request.LoginRequestDTO;
 import com.rabbit.auth.domain.dto.request.NonceRequestDTO;
 import com.rabbit.auth.domain.dto.request.SignupRequestDTO;
-import com.rabbit.auth.domain.dto.response.CheckNicknameResponseDTO;
+import com.rabbit.auth.domain.dto.response.CheckDuplicatedResponseDTO;
 import com.rabbit.auth.domain.dto.response.NonceResponseDTO;
 import com.rabbit.auth.domain.dto.response.RefreshResponseDTO;
 import com.rabbit.auth.domain.entity.SsafyAccount;
@@ -172,10 +172,19 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public CheckNicknameResponseDTO checkNickname(String nickname) {
+    public CheckDuplicatedResponseDTO checkEmail(String email) {
+        boolean duplicated = userRepository.existsByEmail(email);
+
+        return CheckDuplicatedResponseDTO.builder()
+                .duplicated(duplicated)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public CheckDuplicatedResponseDTO checkNickname(String nickname) {
         boolean duplicated = userRepository.existsByNickname(nickname);
 
-        return CheckNicknameResponseDTO.builder()
+        return CheckDuplicatedResponseDTO.builder()
                 .duplicated(duplicated)
                 .build();
     }

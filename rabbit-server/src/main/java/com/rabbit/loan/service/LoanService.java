@@ -22,6 +22,7 @@ import com.rabbit.loan.domain.dto.response.*;
 import com.rabbit.loan.util.DataUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -91,18 +92,23 @@ public class LoanService {
         }
     }
 
-    public List<BorrowListResponseDTO> borrowList(int userId) {
+    public PageResponseDTO<BorrowListResponseDTO> borrowList(int userId, Pageable pageable) {
         // 1. 유저 Id로 해당 유저가 채무자인 차용증 리스트를 호출한다.
         List<Contract> contracts = contractRepository.findByDebtorId(userId);
 
         // 1-2. 만약 리스트가 비어있다면, 빈 리스트를 반환
         if (contracts.isEmpty()) {
-            return  Collections.emptyList();
+            return PageResponseDTO.<BorrowListResponseDTO>builder()
+                    .content(Collections.emptyList())
+                    .pageNumber(pageable.getPageNumber())
+                    .pageSize(pageable.getPageSize())
+                    .totalElements(0)
+                    .build();
         }
 
-        try {
-            List<BorrowListResponseDTO> response = new ArrayList<>();
+        List<BorrowListResponseDTO> response = new ArrayList<>();
 
+        try {
             // 2. 토큰 Id를 조회하며, 각 NFT 정보를 호출
             for (Contract contract : contracts) {
                 PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(contract.getTokenId());
@@ -129,11 +135,24 @@ public class LoanService {
                         .build()
                 );
             }
-
-            return response;
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "NFT 조회 중 오류가 발생했습니다.");
         }
+
+        int offset = (int) pageable.getOffset();
+        int limit = pageable.getPageSize();
+
+        List<BorrowListResponseDTO> pagedList = response.stream()
+                .skip(offset)
+                .limit(limit)
+                .toList();
+
+        return PageResponseDTO.<BorrowListResponseDTO>builder()
+                .content(pagedList)
+                .pageNumber(pageable.getPageNumber())
+                .pageSize(pageable.getPageSize())
+                .totalElements(response.size())
+                .build();
     }
 
     public BorrowDetailResponseDTO borrowDetail(int contractId, int userId) {
@@ -231,18 +250,23 @@ public class LoanService {
         }
     }
 
-    public List<LentListResponseDTO> lentList(int userId) {
+    public PageResponseDTO<LentListResponseDTO> lentList(int userId, Pageable pageable) {
         // 1. 유저 Id로 해당 유저가 채무자인 차용증 리스트를 호출한다.
         List<Contract> contracts = contractRepository.findByCreditorId(userId);
 
         // 1-2. 만약 리스트가 비어있다면, 빈 리스트를 반환
         if (contracts.isEmpty()) {
-            return  Collections.emptyList();
+            return  PageResponseDTO.<LentListResponseDTO>builder()
+                    .content(Collections.emptyList())
+                    .pageNumber(pageable.getPageNumber())
+                    .pageSize(pageable.getPageSize())
+                    .totalElements(0)
+                    .build();
         }
 
-        try {
-            List<LentListResponseDTO> response = new ArrayList<>();
+        List<LentListResponseDTO> response = new ArrayList<>();
 
+        try {
             // 2. 토큰 Id를 조회하며, 각 NFT 정보를 호출
             for (Contract contract : contracts) {
                 PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(contract.getTokenId());
@@ -269,11 +293,24 @@ public class LoanService {
                         .build()
                 );
             }
-
-            return response;
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "NFT 목록 조회 중 오류가 발생했습니다.");
         }
+
+        int offset = (int) pageable.getOffset();
+        int limit = pageable.getPageSize();
+
+        List<LentListResponseDTO> pagedList = response.stream()
+                .skip(offset)
+                .limit(limit)
+                .toList();
+
+        return PageResponseDTO.<LentListResponseDTO>builder()
+                .content(pagedList)
+                .pageNumber(pageable.getPageNumber())
+                .pageSize(pageable.getPageSize())
+                .totalElements(response.size())
+                .build();
     }
 
     public LentDetailResponseDTO lentDetail(int contractId, int userId) {

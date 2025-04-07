@@ -1,4 +1,4 @@
-package com.rabbit.loan.controller;
+package com.rabbit.loan.domain.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -37,7 +37,7 @@ public class BankService {
 
         // 2. email로 userKey 조회
         String userKey = ssafyAccountRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "등록된 계좌가 없습니다."))
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "등록된 계좌가 없습니다." + email))
                 .getUserKey();
 
         // 3. userKey로 신용등급 조회

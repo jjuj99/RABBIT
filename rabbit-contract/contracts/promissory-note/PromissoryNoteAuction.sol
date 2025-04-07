@@ -30,6 +30,18 @@ contract PromissoryNoteAuction is IPromissoryNoteAuction, ERC721, Ownable {
         promissoryNoteAddress = _promissoryNoteAddress;
     }
 
+    // RabbitCoin 주소 업데이트 함수 (관리자 전용)
+    function updateRabbitCoinAddress(address _rabbitCoinAddress) external onlyOwner {
+        require(_rabbitCoinAddress != address(0), "Invalid address");
+        rabbitCoinAddress = _rabbitCoinAddress;
+    }
+
+    // PromissoryNote 주소 업데이트 함수 (관리자 전용)
+    function updatePromissoryNoteAddress(address _promissoryNoteAddress) external onlyOwner {
+        require(_promissoryNoteAddress != address(0), "Invalid address");
+        promissoryNoteAddress = _promissoryNoteAddress;
+    }
+
     // ========== NFT 예치 ==========
 
     // 예치된 NFT의 소유자 확인

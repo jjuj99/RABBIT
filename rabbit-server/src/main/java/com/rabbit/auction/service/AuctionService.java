@@ -14,6 +14,7 @@ import com.rabbit.blockchain.mapper.AppendixMetadataMapper;
 import com.rabbit.blockchain.service.*;
 import com.rabbit.blockchain.wrapper.PromissoryNote;
 import com.rabbit.blockchain.wrapper.PromissoryNoteAuction;
+import com.rabbit.blockchain.wrapper.RepaymentScheduler;
 import com.rabbit.contract.domain.entity.Contract;
 import com.rabbit.contract.repository.ContractRepository;
 import com.rabbit.contract.service.ContractService;
@@ -134,16 +135,19 @@ public class AuctionService {
 
         //블록체인 읽어와 다른 조건 필터링 구현 필요
         List<AuctionResponseDTO> fullList = result.getContent().stream()
+                .filter(dto -> !dto.getTokenId().equals(BigInteger.valueOf(9))) // tokenId가 9인 항목 제외
                 .map(dto -> {
                     try {
+                        log.info("[Auction] 경매 목록을 위한 정보 호출 auctionId={}, tokenId={}", dto.getAuctionId(), dto.getTokenId());
+
                         // 블록체인 메타데이터 조회
-                        PromissoryNote.PromissoryMetadata metadata = promissoryNoteService.getPromissoryMetadata(BigInteger.valueOf(dto.getAuctionId()));
+                        PromissoryNote.PromissoryMetadata metadata = promissoryNoteService.getPromissoryMetadata(dto.getTokenId());
 
                         // 상환 정보 조회 (연체 횟수, 남은 원금)
-                        RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(dto.getTokenId());
+                        RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(dto.getTokenId());
 
                         // 채무자 조회 및 신용 점수 조회
-                        User debtor = contractService.getDebtorByTokenId(BigInteger.valueOf(dto.getAuctionId()));
+                        User debtor = contractService.getDebtorByTokenId(dto.getTokenId());
                         String creditScore = bankService.getCreditScore(debtor.getUserId());
 
                         ZonedDateTime matDt = DateTimeUtils.toZonedDateTimeAtEndOfDay(metadata.matDt);
@@ -178,8 +182,8 @@ public class AuctionService {
                                 .la(repaymentInfo.remainingPrincipal.longValue())
                                 .earlypayFlag(metadata.earlyPayFlag)
                                 .earlypayFee(new BigDecimal(metadata.earlyPayFee))
-                                .creditScore(Integer.parseInt(creditScore))  // String → Integer 변환
-                                .defCnt(repaymentInfo.defCnt.intValue())
+                                .creditScore(creditScore)
+                                .defCnt(repaymentInfo.overdueInfo.defCnt.intValue())
                                 .build();
 
                     } catch (Exception e) {

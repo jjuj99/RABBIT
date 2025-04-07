@@ -326,9 +326,9 @@ public class SysCommonCodes {
     @Getter
     @RequiredArgsConstructor
     public enum Repayment implements SysCommonCodeEnum {
-        EPIP("원리금균등상환", "원금과 이자를 매월 동일한 금액으로 상환", 1),
-        EPP("원금균등상환", "원금을 매월 동일한 금액으로 상환하고 이자는 잔액에 따라 계산", 2),
-        BP("만기일시상환", "만기일에 원금을 일시 상환하고 이자는 정기적으로 납부", 3);
+        EPIP("원리금 균등 상환", "원금과 이자를 매월 동일한 금액으로 상환", 1),
+        EPP("원금 균등 상환", "원금을 매월 동일한 금액으로 상환하고 이자는 잔액에 따라 계산", 2),
+        BP("만기 일시 상환", "만기일에 원금을 일시 상환하고 이자는 정기적으로 납부", 3);
 
         private final String codeName;
         private final String description;

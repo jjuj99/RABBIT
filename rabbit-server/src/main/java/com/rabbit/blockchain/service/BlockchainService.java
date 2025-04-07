@@ -53,44 +53,98 @@ public class BlockchainService {
      * @return 생성된 토큰 ID
      */
     @Transactional
-    public BigInteger mintPromissoryNoteNFT(Contract contract, String nftImageUri) {
-        log.info("[블록체인] 차용증 NFT 발행 시작 - 계약 ID: {}", contract.getContractId());
+    public BigInteger mintPromissoryNoteNFT(Contract contract, String nftPdFUri, String nftImageUri) {
+        log.info("[블록체인][시작] 차용증 NFT 발행 시작 - 계약 ID: {}, 채권자 ID: {}, 채무자 ID: {}",
+                contract.getContractId(), contract.getCreditor().getUserId(), contract.getDebtor().getUserId());
 
         try {
             // 1. NFT 메타데이터 생성
-            PromissoryNote.PromissoryMetadata metadata = createPromissoryMetadata(contract, nftImageUri);
+            log.info("[블록체인][1/7] NFT 메타데이터 생성 시작 - 계약 ID: {}", contract.getContractId());
+            PromissoryNote.PromissoryMetadata metadata = createPromissoryMetadata(contract, nftPdFUri, nftImageUri);
+            log.info("[블록체인][1/7] NFT 메타데이터 생성 완료 - 계약 ID: {}", contract.getContractId());
 
             // 2. 채권자 지갑 주소 확인
+            log.info("[블록체인][2/7] 채권자 지갑 주소 확인 시작 - 계약 ID: {}, 채권자 ID: {}",
+                    contract.getContractId(), contract.getCreditor().getUserId());
             String creditorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getCreditor().getUserId());
+            log.info("[블록체인][2/7] 채권자 지갑 주소 확인 결과 - 계약 ID: {}, 주소: {}",
+                    contract.getContractId(), creditorWalletAddress);
+
             if (creditorWalletAddress == null || creditorWalletAddress.isBlank()) {
+                log.error("[블록체인][실패] 채권자 지갑 주소가 없음 - 계약 ID: {}, 채권자 ID: {}",
+                        contract.getContractId(), contract.getCreditor().getUserId());
                 throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "채권자 지갑 주소가 유효하지 않습니다.");
             }
 
             // 3. NFT 발행 트랜잭션 전송
+            log.info("[블록체인][3/7] NFT 발행 트랜잭션 전송 시작 - 계약 ID: {}", contract.getContractId());
+            log.info("[블록체인][3/7] 블록체인 호출 파라미터 - 채권자 주소: {}", creditorWalletAddress);
+
+            // send() 호출 직전 로그
+            log.info("[블록체인][3/7] promissoryNote.mint().send() 호출 직전 - 계약 ID: {}, 시간: {}",
+                    contract.getContractId(), System.currentTimeMillis());
+
             TransactionReceipt receipt = promissoryNote.mint(metadata, creditorWalletAddress).send();
+
+            // send() 호출 직후 로그
+            log.info("[블록체인][3/7] promissoryNote.mint().send() 호출 완료 - 계약 ID: {}, 시간: {}",
+                    contract.getContractId(), System.currentTimeMillis());
+
             if (!receipt.isStatusOK()) {
+                log.error("[블록체인][실패] NFT 발행 트랜잭션 실패 - 계약 ID: {}, 상태: {}",
+                        contract.getContractId(), receipt.getStatus());
                 throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "NFT 발행 트랜잭션이 실패했습니다.");
             }
+            log.info("[블록체인][3/7] NFT 발행 트랜잭션 전송 완료 - 계약 ID: {}, 트랜잭션 해시: {}",
+                    contract.getContractId(), receipt.getTransactionHash());
 
             // 4. 트랜잭션 로그에서 토큰 ID 추출
+            log.info("[블록체인][4/7] 토큰 ID 추출 시작 - 계약 ID: {}", contract.getContractId());
             BigInteger tokenId = extractTokenIdFromMintReceipt(receipt);
-            log.info("[블록체인] 차용증 NFT 발행 성공 - 토큰 ID: {}, 트랜잭션: {}",
-                    tokenId, receipt.getTransactionHash());
+            log.info("[블록체인][4/7] 토큰 ID 추출 완료 - 계약 ID: {}, 토큰 ID: {}",
+                    contract.getContractId(), tokenId);
 
             // 5. 데이터베이스에 NFT 정보 저장
-            savePromissoryNoteToDatabase(tokenId, contract, nftImageUri);
+            log.info("[블록체인][5/7] DB에 NFT 정보 저장 시작 - 계약 ID: {}, 토큰 ID: {}",
+                    contract.getContractId(), tokenId);
+            savePromissoryNoteToDatabase(tokenId, contract, nftPdFUri, nftImageUri);
+            log.info("[블록체인][5/7] DB에 NFT 정보 저장 완료 - 계약 ID: {}", contract.getContractId());
 
-            // 6. 상환 일정 등록 -> 상환 이벤트 리스너로 받을 예정
-//            registerRepaymentSchedule(tokenId, contract);
+            // 6. 상환 일정 등록 -> 주석 처리됨
+            log.info("[블록체인][6/7] 상환 일정 등록 단계 - 현재 비활성화됨 - 계약 ID: {}", contract.getContractId());
 
             // 7. 계약 정보 업데이트
+            log.info("[블록체인][7/7] 계약 정보 업데이트 시작 - 계약 ID: {}", contract.getContractId());
             contract.setNftInfo(tokenId, nftImageUri);
+            log.info("[블록체인][7/7] 계약 정보 업데이트 완료 - 계약 ID: {}, 토큰 ID: {}",
+                    contract.getContractId(), tokenId);
 
+            log.info("[블록체인][완료] 차용증 NFT 발행 성공 - 계약 ID: {}, 토큰 ID: {}",
+                    contract.getContractId(), tokenId);
             return tokenId;
         } catch (Exception e) {
-            log.error("[블록체인] 차용증 NFT 발행 실패 - 계약 ID: {}, 오류: {}",
-                    contract.getContractId(), e.getMessage(), e);
-            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "NFT 발행 중 오류가 발생했습니다: " + e.getMessage());
+            log.error("[블록체인][예외] 차용증 NFT 발행 중 예외 발생 - 계약 ID: {}", contract.getContractId(), e);
+            log.error("[블록체인][예외] 예외 유형: {}, 메시지: {}", e.getClass().getName(), e.getMessage());
+
+            // 예외의 스택 트레이스 자세히 로깅
+            StackTraceElement[] stackTrace = e.getStackTrace();
+            if (stackTrace.length > 0) {
+                log.error("[블록체인][예외] 스택 트레이스 최상위: {}.{} ({}:{})",
+                        stackTrace[0].getClassName(),
+                        stackTrace[0].getMethodName(),
+                        stackTrace[0].getFileName(),
+                        stackTrace[0].getLineNumber());
+            }
+
+            // 원인 예외가 있으면 함께 로깅
+            if (e.getCause() != null) {
+                log.error("[블록체인][예외] 원인 예외: {}, 메시지: {}",
+                        e.getCause().getClass().getName(),
+                        e.getCause().getMessage());
+            }
+
+            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR,
+                    "NFT 발행 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 
@@ -141,7 +195,7 @@ public class BlockchainService {
      * @param nftImageUri NFT 이미지 URI
      * @return 메타데이터 객체
      */
-    private PromissoryNote.PromissoryMetadata createPromissoryMetadata(Contract contract, String nftImageUri) {
+    private PromissoryNote.PromissoryMetadata createPromissoryMetadata(Contract contract, String nftPdFUri, String nftImageUri) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         // 채권자/채무자 정보 준비
@@ -175,15 +229,18 @@ public class BlockchainService {
         );
 
         // 추가 조항 해시 생성
-        String contractTermsHash = null;
-        if (contract.getContractTerms() != null && !contract.getContractTerms().isEmpty()) {
-            contractTermsHash = hashingService.hashText(contract.getContractTerms());
-        }
+//        String contractTermsHash = null;
+//        if (contract.getContractTerms() != null && !contract.getContractTerms().isEmpty()) {
+//            contractTermsHash = hashingService.hashText(contract.getContractTerms());
+//        }
+
+        // 추가 조항 해시 생성 부분 수정 => nftPdFUri 기입으로 대체
+        String contractTermsHash = nftPdFUri; // PDF URL을 contractTermsHash에 설정
 
         // AddTerms (추가 조항) 생성
         PromissoryNote.AddTerms addTerms = new PromissoryNote.AddTerms(
                 contract.getContractTerms() != null ? contract.getContractTerms() : "",
-                contractTermsHash != null ? contractTermsHash : ""
+                contractTermsHash // PDF URL을 addTermsHash에 설정
         );
 
         // 메타데이터 생성
@@ -215,7 +272,7 @@ public class BlockchainService {
      * @param contract 계약 정보
      * @param nftImageUri NFT 이미지 URI
      */
-    private void savePromissoryNoteToDatabase(BigInteger tokenId, Contract contract, String nftImageUri) {
+    private void savePromissoryNoteToDatabase(BigInteger tokenId, Contract contract, String nftPdFUri, String nftImageUri) {
         // 채권자/채무자 정보
         User creditor = contract.getCreditor();
         User debtor = contract.getDebtor();
@@ -231,10 +288,13 @@ public class BlockchainService {
         String debtorInfoHash = hashingService.hashUserInfo(debtor);
 
         // 추가 조항 해시 생성
-        String contractTermsHash = null;
-        if (contract.getContractTerms() != null && !contract.getContractTerms().isEmpty()) {
-            contractTermsHash = hashingService.hashText(contract.getContractTerms());
-        }
+//        String contractTermsHash = null;
+//        if (contract.getContractTerms() != null && !contract.getContractTerms().isEmpty()) {
+//            contractTermsHash = hashingService.hashText(contract.getContractTerms());
+//        }
+
+        // 추가 조항 해시 생성 부분 수정 => nftPdFUri 기입으로 대체
+        String contractTermsHash = nftPdFUri; // PDF URL을 contractTermsHash에 설정
 
         // LocalDate로 변환
         LocalDate maturityDate = contract.getMaturityDate().toLocalDate();

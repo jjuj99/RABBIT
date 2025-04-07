@@ -4,10 +4,7 @@ import java.time.LocalDate;
 import java.time.Instant;
 
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -37,7 +34,7 @@ public class PromissoryNoteEntity {
     @Column(name = "creditor_sign", nullable = false, columnDefinition = "TEXT")
     private String creditorSign;
 
-    @Column(name = "creditor_info_hash", nullable = false, length = 66)
+    @Column(name = "creditor_info_hash", nullable = false, length = 128)
     private String creditorInfoHash;
 
     @Column(name = "debtor_name", nullable = false)
@@ -49,7 +46,7 @@ public class PromissoryNoteEntity {
     @Column(name = "debtor_sign", nullable = false, columnDefinition = "TEXT")
     private String debtorSign;
 
-    @Column(name = "debtor_info_hash", nullable = false, length = 66)
+    @Column(name = "debtor_info_hash", nullable = false, length = 128)
     private String debtorInfoHash;
 
     // 계산이 많은 컬럼은 원시 타입으로
@@ -89,7 +86,7 @@ public class PromissoryNoteEntity {
     @Column(name = "add_terms", columnDefinition = "TEXT")
     private String addTerms;
 
-    @Column(name = "add_terms_hash", length = 66)
+    @Column(name = "add_terms_hash", length = 128)
     private String addTermsHash;
 
     @Column(name = "nft_image", columnDefinition = "TEXT")
@@ -101,6 +98,11 @@ public class PromissoryNoteEntity {
     @Column(name = "created_at", nullable = false, updatable = false,
             columnDefinition = "TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP")
     private Instant createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = Instant.now();
+    }
 
     /**
      * NFT 삭제 여부 설정

@@ -198,7 +198,7 @@ public class CoinService {
                 .collect(Collectors.toList());
     }
 
-    public void permit(@Valid CoinPermitRequestDTO requestDTO) {
+    public void permit(CoinPermitRequestDTO requestDTO) {
         try {
             // String을 byte[] 형태로 변환
             byte[] signature = Numeric.hexStringToByteArray(requestDTO.getSignature());
@@ -207,8 +207,8 @@ public class CoinService {
             TransactionReceipt receipt = rabbitCoinService.permit(
                     requestDTO.getOwner(),
                     requestDTO.getSpender(),
-                    BigInteger.valueOf(requestDTO.getValue()),
-                    BigInteger.valueOf(requestDTO.getDeadline()),
+                    requestDTO.getValue(),
+                    requestDTO.getDeadline(),
                     signature
             );
 
@@ -218,10 +218,11 @@ public class CoinService {
                 log.info("RAB permit 성공: {} -> {}, {}", requestDTO.getOwner(), requestDTO.getSpender(), requestDTO.getValue());
             } else {
                 log.error("RAB permit 실패. 트랜잭션 상태: {}", receipt.getStatus());
+                throw new BusinessException(ErrorCode.RAB_PERMIT_FAIL, "RAB permit을 실패하였습니다");
             }
         } catch (Exception e) {
             log.error("RAB permit 오류: {}", e.getMessage(), e);
-            throw new BusinessException(ErrorCode.RAB_PERMIT_FAIL, "RAB permit 중 오류가 발생했습니다");
+            throw new BusinessException(ErrorCode.RAB_PERMIT_ERROR, "RAB permit 중 오류가 발생했습니다");
         }
     }
 }

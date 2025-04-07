@@ -1,6 +1,7 @@
 package com.rabbit.auction.domain.entity;
 
 import com.rabbit.global.code.domain.enums.SysCommonCodes;
+import com.rabbit.user.domain.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,10 +26,9 @@ public class Auction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer auctionId;
 
-    @Column(nullable = false)
-//    @JoinColumn(name="user_id")
-//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private Integer userId;
+    @JoinColumn(name="user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private User assignor;
 
     @Column(nullable = false)
     private Long minimumBid;
@@ -58,6 +58,8 @@ public class Auction {
     private Integer remainRepaymentDate;
 
     private BigDecimal returnRate;
+
+    private String contractIpfsUrl;
 
     public void updatePriceAndBidder(Long price, Integer bidderId) {
         this.price = price;

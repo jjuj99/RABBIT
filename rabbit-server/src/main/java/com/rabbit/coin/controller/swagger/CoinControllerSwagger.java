@@ -81,7 +81,7 @@ public interface CoinControllerSwagger {
                             examples = @ExampleObject(
                                     name = "출금 요청 예시",
                                     summary = "정상 출금 요청",
-                                    value = "{\n  \"accountNumber\": \"1234567890\",\n  \"balance\": 10000\n}"
+                                    value = "{\n  \"name\": \"밀키스\", \n  \"accountNumber\": \"1234567890\",\n  \"amount\": 10000\n}"
                             )
                     )
             ),
@@ -152,4 +152,40 @@ public interface CoinControllerSwagger {
             }
     )
     @interface WithdrawAPI {}
+
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Operation(
+            summary = "코인 거래 내역 조회",
+            description = "사용자의 RAB 코인 입출금 거래 내역을 조회합니다.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "거래 내역 조회 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = @ExampleObject(
+                                            name = "성공 응답",
+                                            summary = "거래 내역 목록",
+                                            value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": [\n    {\n      \"type\": \"DEPOSIT\",\n      \"amount\": 10000,\n      \"createdAt\": \"2025-04-07T14:30:00+09:00\"\n    },\n    {\n      \"type\": \"WITHDRAW\",\n      \"amount\": 5000,\n      \"createdAt\": \"2025-04-06T09:15:00+09:00\"\n    }\n  ],\n  \"error\": null\n}"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "거래 내역이 없음",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = @ExampleObject(
+                                            name = "빈 응답",
+                                            summary = "거래 내역 없음",
+                                            value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": null,\n  \"error\": null\n}"
+                                    )
+                            )
+                    )
+            }
+    )
+    @interface GetTransactionsAPI {}
 }

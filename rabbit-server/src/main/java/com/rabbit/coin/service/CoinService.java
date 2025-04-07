@@ -6,6 +6,7 @@ import com.rabbit.blockchain.service.RabbitCoinService;
 import com.rabbit.coin.domain.dto.request.CoinWithdrawRequestDTO;
 import com.rabbit.coin.domain.dto.request.TossConfirmRequestDTO;
 import com.rabbit.coin.domain.dto.request.TossWebhookDataDTO;
+import com.rabbit.coin.domain.dto.response.CoinLogListResponseDTO;
 import com.rabbit.coin.domain.entity.CoinLog;
 import com.rabbit.coin.domain.enums.CoinLogStatus;
 import com.rabbit.coin.domain.enums.CoinLogType;
@@ -24,7 +25,9 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.math.BigInteger;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -173,5 +176,22 @@ public class CoinService {
             log.error("RAB 전송 오류: {}", e.getMessage(), e);
             throw new BusinessException(ErrorCode.RAB_TRANSFER_FAIL, "RAB 전송 중 오류가 발생했습니다");
         }
+    }
+
+    public List<CoinLogListResponseDTO> getTransactions(Integer userId){
+        List<CoinLog> coinLogs = coinLogRepository.findByUserId(userId);
+
+        // 조회된 로그가 없는 경우 null 반환
+        if (coinLogs == null || coinLogs.isEmpty()) {
+            return null;
+        }
+
+        return coinLogs.stream()
+                .map(coinLog -> CoinLogListResponseDTO.builder()
+                        .type(coinLog.getType())
+                        .amount(coinLog.getAmount())
+                        .createdAt(coinLog.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

@@ -22,7 +22,7 @@ const Header = () => {
           />
         </Link>
         <div className="flex items-center">
-          <MainNav />
+          <MainNav /> <AlarmButton />
           {isAuthenticated ? (
             <div className="flex gap-4 px-4 pb-1.5">
               <AlarmButton />

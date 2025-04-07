@@ -6,6 +6,8 @@ import useMediaQuery from "@/shared/hooks/useMediaQuery";
 import { useQuery } from "@tanstack/react-query";
 import { getLentListAPI, getLentSummaryAPI } from "@/entities/loan/api/loanApi";
 import { useState, useEffect } from "react";
+import { Button } from "@/shared/ui/button";
+import { useNavigate } from "react-router";
 
 const LentList = () => {
   const isDesktop = useMediaQuery("lg");
@@ -14,6 +16,7 @@ const LentList = () => {
     return Number(params.get("page")) || 0;
   });
 
+  const navigate = useNavigate();
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     params.set("page", page.toString());
@@ -53,7 +56,19 @@ const LentList = () => {
           <LoanSummaryCarousel summary={LentSummary?.data} />
         )}
       </div>
-      <h2 className="text-xl font-semibold">빌려준 내역</h2>
+      <div className="flex flex-row items-center justify-between">
+        <h2 className="text-xl font-semibold">빌려준 내역</h2>
+        <Button
+          variant="glass"
+          className="w-fit"
+          size="sm"
+          onClick={() => {
+            navigate("/auction/new");
+          }}
+        >
+          <span>판매하기</span>
+        </Button>
+      </div>
       <div className="w-full overflow-hidden rounded-lg bg-gray-900">
         {isDesktop ? (
           <LentInfo data={LentList.data} onPageChange={setPage} />

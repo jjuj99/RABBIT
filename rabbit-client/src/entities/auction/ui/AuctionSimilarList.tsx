@@ -1,5 +1,4 @@
 import { AuctionSimilarListResponse } from "@/features/auction/types/response";
-import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,7 +8,6 @@ import {
   Title,
   Tooltip,
   Legend,
-  TooltipItem,
 } from "chart.js";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { formatNumber } from "@/utils/format";
@@ -39,90 +37,6 @@ const AuctionSimilarList = ({ data }: AuctionSimilarListProps) => {
     (auction) => auction.auctionId === targetAuction.auctionId,
   );
   const percentile = ((targetIndex + 1) / sortedAuctions.length) * 100;
-
-  // 차트 데이터 준비
-  const chartData = {
-    labels: sortedAuctions.map((_, index) => `경매 ${index + 1}`),
-    datasets: [
-      {
-        label: "수익률 (%)",
-        data: sortedAuctions.map((auction) => auction.rr),
-        borderColor: "rgba(136, 132, 216, 1)",
-        backgroundColor: "rgba(136, 132, 216, 0.5)",
-        tension: 0.4,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      },
-      {
-        label: "내 경매",
-        data: Array(sortedAuctions.length)
-          .fill(null)
-          .map((_, i) => (i === targetIndex ? sortedAuctions[i].rr : null)),
-        borderColor: "rgba(255, 0, 0, 1)",
-        backgroundColor: "rgba(255, 0, 0, 0.5)",
-        borderWidth: 2,
-        borderDash: [5, 5],
-        pointRadius: 6,
-        pointHoverRadius: 8,
-        pointBackgroundColor: "rgba(255, 0, 0, 1)",
-        pointBorderColor: "white",
-        pointBorderWidth: 2,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "top" as const,
-        labels: {
-          color: "white",
-        },
-      },
-      title: {
-        display: true,
-        text: "유사 경매 수익률 비교",
-        color: "white",
-      },
-      tooltip: {
-        callbacks: {
-          label: function (context: TooltipItem<"line">) {
-            const label = context.dataset.label || "";
-            const value = context.parsed.y;
-            if (label === "내 경매") {
-              return `${label}: ${value}% (내 위치)`;
-            }
-            return `${label}: ${value}%`;
-          },
-        },
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: "수익률 (%)",
-          color: "white",
-        },
-        grid: {
-          color: "rgba(255, 255, 255, 0.1)",
-        },
-        ticks: {
-          color: "white",
-        },
-      },
-      x: {
-        grid: {
-          color: "rgba(255, 255, 255, 0.1)",
-        },
-        ticks: {
-          color: "white",
-        },
-      },
-    },
-  };
 
   return (
     <div className="w-full">
@@ -161,17 +75,6 @@ const AuctionSimilarList = ({ data }: AuctionSimilarListProps) => {
             </div>
           </div>
         </div>
-
-        {/* 차트 */}
-        <div className="flex h-fit w-full flex-col gap-4 rounded-lg bg-gray-900 p-4">
-          <h3 className="text-lg font-semibold text-white">
-            유사 경매 수익률 비교
-          </h3>
-          <div className="h-80 w-full rounded-sm bg-gray-800 p-4">
-            <Line options={options} data={chartData} />
-          </div>
-        </div>
-
         {/* 리스트 */}
         <div className="flex h-fit w-full flex-col gap-4 rounded-lg bg-gray-900 p-4">
           <h3 className="text-lg font-semibold text-white">유사 경매 리스트</h3>

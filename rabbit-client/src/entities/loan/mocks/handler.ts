@@ -7,6 +7,7 @@ import {
   LentSummaryResponse,
   BorrowDetailResponse,
   LentDetailResponse,
+  EarlypayResponse,
 } from "../types/response";
 import { generateMockLentList } from "./mockLentList";
 import { generateMockBorrowList } from "./mockBorrowList";
@@ -115,4 +116,15 @@ export const handlers = [
   //     return HttpResponse.json(response);
   //   },
   // ),
+  http.post(
+    `${VITE_API_URL}/${VITE_API_VERSION}/promissory-notes/debts/:debtId/prepayment`,
+    () => {
+      return HttpResponse.json<ApiResponse<EarlypayResponse>>({
+        status: "SUCCESS",
+        data: {
+          message: "중도상환이 완료되었습니다.",
+        },
+      });
+    },
+  ),
 ];

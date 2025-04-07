@@ -118,7 +118,7 @@ public class CoinService {
 
         // 환불 계좌가 로그인 유저에게 등록되어 있는지 확인
         RefundAccount refundAccount = refundAccountRepository.findByUserIdAndAccountNumber(userId, coinWithdrawRequestDTO.getAccountNumber())
-                .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NUMBER_NOT_FOUND, "환불 계좌 정보를 찾을 수 없습니다"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NUMBER_NOT_FOUND, "계좌 정보를 찾을 수 없습니다"));
         log.debug("해당 유저의 환불 계좌 = {}", refundAccount);
 
         // 출금할 메타마스크 계좌 확인
@@ -129,24 +129,24 @@ public class CoinService {
 
         // RabbitCoin 컨트랙트의 balanceOf 함수 호출 - 잔액 확인
         BigInteger balanceRAB = rabbitCoinService.balanceOf(account);
-        if(balanceRAB.compareTo(BigInteger.valueOf(coinWithdrawRequestDTO.getBalance())) < 0){
-            log.error("RAB 부족으로 출금 실패 RAB = {}, 출금액 = {}", balanceRAB, coinWithdrawRequestDTO.getBalance());
+        if(balanceRAB.compareTo(BigInteger.valueOf(coinWithdrawRequestDTO.getAmount())) < 0){
+            log.error("RAB 부족으로 출금 실패 RAB = {}, 출금액 = {}", balanceRAB, coinWithdrawRequestDTO.getAmount());
             throw new BusinessException(ErrorCode.INSUFFICIENT_RAB_BALANCE, "보유한 RAB이 출금 요청액보다 부족합니다");
         }
-        log.debug("보유 RAB = {}, 출금액 = {}", balanceRAB, coinWithdrawRequestDTO.getBalance());
+        log.debug("보유 RAB = {}, 출금액 = {}", balanceRAB, coinWithdrawRequestDTO.getAmount());
 
         // 출금 금액만큼 RAB 소각
-        burnRabbitCoin(account, BigInteger.valueOf(coinWithdrawRequestDTO.getBalance()));
+        burnRabbitCoin(account, BigInteger.valueOf(coinWithdrawRequestDTO.getAmount()));
         log.debug("사용자의 RAB 코인 소각 완료");
 
         // 싸피은행 입금 처리
-        bankService.deposit(userId, coinWithdrawRequestDTO.getBalance());
+        bankService.deposit(userId, coinWithdrawRequestDTO.getAmount());
         log.debug("환불 계좌에 입금 완료");
 
         // 코인 출금 로그 저장
         coinLogRepository.save(CoinLog.builder()
                 .userId(userId)
-                .amount(coinWithdrawRequestDTO.getBalance())
+                .amount(coinWithdrawRequestDTO.getAmount())
                 .type(CoinLogType.WITHDRAWAL)
                 .orderId(null)
                 .account(account)

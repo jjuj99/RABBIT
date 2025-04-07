@@ -245,7 +245,7 @@ public class EventService {
                         .eventType("연체")                // 연체 이벤트로 표현
                         .from(null)                             // 채무자
                         .to(null)                         // 채권자 지갑 주소
-                        .intAmt(e.aoi.longValue())                           // 금액
+                        .intAmt(null)                           // 금액
                         .timestamp(date != null ? date : e.log.getBlockNumber().toString())
                         .build();
             }).collect(Collectors.toList());

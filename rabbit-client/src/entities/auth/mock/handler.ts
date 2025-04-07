@@ -18,15 +18,47 @@ const setIsLoggedIn = (value: boolean) =>
 
 export const authHandlers = [
   // 난수생성 mock api
-  http.post(`${VITE_API_URL}/${VITE_API_VERSION}/auth/nonce`, async () => {
-    const response: ApiResponse<RequestNonceResponse> = {
-      status: "SUCCESS",
-      data: {
-        nonce: "1234567890",
-      },
-    };
-    return HttpResponse.json(response);
-  }),
+  http.post(
+    `${VITE_API_URL}/${VITE_API_VERSION}/auth/nonce`,
+    async ({ request }) => {
+      const body = (await request.json()) as ApiResponse<{
+        walletAddress: string;
+      }>;
+      if (!body.data) {
+        return HttpResponse.json({
+          status: "ERROR",
+          error: {
+            statusCode: 400,
+            message: "난수 생성 실패",
+          },
+        });
+      }
+      if (
+        body.data.walletAddress ==
+          "0x35107a4c13d49bae2850c76d259e52808df0fa3c" ||
+        // body.data.walletAddress ==
+        //   "0xe7aca373766503357a1a8e84b1c3f71706e4d4f6" ||
+        body.data.walletAddress == "0x8c30721af30c6f7508303055c20afe73fca5dd26"
+      ) {
+        const response: ApiResponse<RequestNonceResponse> = {
+          status: "SUCCESS",
+          data: {
+            nonce: "1234567890",
+          },
+        };
+        return HttpResponse.json(response);
+      } else {
+        const response: ApiResponse<RequestNonceResponse> = {
+          status: "SUCCESS",
+          data: {
+            nonce: "",
+          },
+        };
+        return HttpResponse.json(response);
+      }
+    },
+  ),
+
   // 로그인 mock api
   http.post(
     `${VITE_API_URL}/${VITE_API_VERSION}/auth/login`,
@@ -34,8 +66,8 @@ export const authHandlers = [
       const body = (await request.json()) as LoginRequest;
       if (
         body.walletAddress == "0x35107a4c13d49bae2850c76d259e52808df0fa3c" ||
-        body.walletAddress == "0x8c30721af30c6f7508303055c20afe73fca5dd26" ||
-        body.walletAddress == "0xe7aca373766503357a1a8e84b1c3f71706e4d4f6"
+        // body.walletAddress == "0xe7aca373766503357a1a8e84b1c3f71706e4d4f6" ||
+        body.walletAddress == "0x8c30721af30c6f7508303055c20afe73fca5dd26"
       ) {
         const response: ApiResponse<LoginResponse> = {
           status: "SUCCESS",

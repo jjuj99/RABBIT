@@ -3,15 +3,6 @@ export interface LoginRequest {
   signature: string;
   nonce: string;
 }
-export interface SignUpRequest {
-  email: string;
-  name: string;
-  nickname: string;
-  bankId: number;
-  refundAccount: string;
-  metamaskWallet: string;
-  isPassVerified: boolean;
-}
 export interface CreatePassRequest {
   name: string;
   phoneNumber: string;

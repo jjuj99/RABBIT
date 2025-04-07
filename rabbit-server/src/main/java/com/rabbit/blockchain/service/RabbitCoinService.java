@@ -26,10 +26,6 @@ public class RabbitCoinService {
         return rabbitCoin.approve(spender, amount).send();
     }
 
-    public TransactionReceipt approveInfiniteForSystem(String account) throws Exception {
-        return rabbitCoin.approveInfiniteForSystem(account).send();
-    }
-
     public BigInteger balanceOf(String address) {
         try {
             return rabbitCoin.balanceOf(address).send();
@@ -46,12 +42,16 @@ public class RabbitCoinService {
         return rabbitCoin.burn(amount).send();
     }
 
-    public TransactionReceipt charge(String account, BigInteger amount) throws Exception {
-        return rabbitCoin.charge(account, amount).send();
+    public TransactionReceipt permit(String owner, String spender, BigInteger value, BigInteger deadline, byte[] signature) throws Exception {
+        return rabbitCoin.permit(owner, spender, value, deadline, signature).send();
     }
 
-    public TransactionReceipt refund(String account, BigInteger amount) throws Exception {
-        return rabbitCoin.refund(account, amount).send();
+    public BigInteger getNonce(String owner) {
+        try {
+            return rabbitCoin.nonces(owner).send();
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "nonce 조회 중 오류가 발생했습니다.", e);
+        }
     }
 
     public BigInteger totalSupply() throws Exception {

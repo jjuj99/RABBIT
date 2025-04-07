@@ -3,6 +3,7 @@ package com.rabbit.coin.service;
 
 import com.rabbit.bankApi.service.BankService;
 import com.rabbit.blockchain.service.RabbitCoinService;
+import com.rabbit.coin.domain.dto.request.CoinPermitRequestDTO;
 import com.rabbit.coin.domain.dto.request.CoinWithdrawRequestDTO;
 import com.rabbit.coin.domain.dto.request.TossConfirmRequestDTO;
 import com.rabbit.coin.domain.dto.request.TossWebhookDataDTO;
@@ -17,11 +18,13 @@ import com.rabbit.user.domain.entity.MetamaskWallet;
 import com.rabbit.user.domain.entity.RefundAccount;
 import com.rabbit.user.repository.MetamaskWalletRepository;
 import com.rabbit.user.repository.RefundAccountRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
 import java.time.ZonedDateTime;
@@ -193,5 +196,32 @@ public class CoinService {
                         .createdAt(coinLog.getCreatedAt())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    public void permit(@Valid CoinPermitRequestDTO requestDTO) {
+        try {
+            // String을 byte[] 형태로 변환
+            byte[] signature = Numeric.hexStringToByteArray(requestDTO.getSignature());
+
+            // RabbitCoin 컨트랙트의 permit을 통해 승인
+            TransactionReceipt receipt = rabbitCoinService.permit(
+                    requestDTO.getOwner(),
+                    requestDTO.getSpender(),
+                    BigInteger.valueOf(requestDTO.getValue()),
+                    BigInteger.valueOf(requestDTO.getDeadline()),
+                    signature
+            );
+
+            // 트랜잭션 성공 여부 확인
+            boolean isSuccess = "0x1".equals(receipt.getStatus());
+            if (isSuccess) {
+                log.info("RAB permit 성공: {} -> {}, {}", requestDTO.getOwner(), requestDTO.getSpender(), requestDTO.getValue());
+            } else {
+                log.error("RAB permit 실패. 트랜잭션 상태: {}", receipt.getStatus());
+            }
+        } catch (Exception e) {
+            log.error("RAB permit 오류: {}", e.getMessage(), e);
+            throw new BusinessException(ErrorCode.RAB_PERMIT_FAIL, "RAB permit 중 오류가 발생했습니다");
+        }
     }
 }

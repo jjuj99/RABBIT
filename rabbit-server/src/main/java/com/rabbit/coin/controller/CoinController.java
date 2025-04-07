@@ -1,9 +1,6 @@
 package com.rabbit.coin.controller;
 
-import com.rabbit.coin.domain.dto.request.CoinWithdrawRequestDTO;
-import com.rabbit.coin.domain.dto.request.TossConfirmRequestDTO;
-import com.rabbit.coin.domain.dto.request.TossWebhookDTO;
-import com.rabbit.coin.domain.dto.request.TossWebhookDataDTO;
+import com.rabbit.coin.domain.dto.request.*;
 import com.rabbit.coin.controller.swagger.CoinControllerSwagger;
 import com.rabbit.coin.domain.dto.response.CoinLogListResponseDTO;
 import com.rabbit.coin.service.CoinService;
@@ -111,5 +108,14 @@ public class CoinController {
         List<CoinLogListResponseDTO> response = coinService.getTransactions(Integer.parseInt(userId));
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
+
+    @PostMapping("/permit")
+    public ResponseEntity<CustomApiResponse<MessageResponse>> permit(@Valid @RequestBody CoinPermitRequestDTO coinPermitRequestDTO){
+        coinService.permit(coinPermitRequestDTO);
+
+        return ResponseEntity.ok(CustomApiResponse.success(
+                MessageResponse.of("permit이 완료되었습니다")
+        ));
     }
 }

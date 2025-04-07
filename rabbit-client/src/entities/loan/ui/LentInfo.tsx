@@ -49,19 +49,19 @@ const LentInfo = ({ data, onPageChange }: LentInfoProps) => {
             <th className="w-[120px] px-4 py-3 text-center text-base font-medium text-gray-200">
               NFT
             </th>
-            <th className="w-[70px] px-4 py-3 text-center text-base font-medium text-gray-200">
+            <th className="w-[60px] px-4 py-3 text-center text-base font-medium text-gray-200">
               채무자
             </th>
-            <th className="w-[180px] px-4 py-3 text-center text-base font-medium text-gray-200">
+            <th className="w-[80px] px-4 py-3 text-center text-base font-medium text-gray-200">
               지갑 주소
             </th>
             <th className="w-[120px] px-4 py-3 text-center text-base font-medium text-gray-200">
               금액
             </th>
-            <th className="w-[70px] px-4 py-3 text-center text-base font-medium text-gray-200">
+            <th className="w-[60px] px-4 py-3 text-center text-base font-medium text-gray-200">
               이자율
             </th>
-            <th className="w-[120px] px-4 py-3 text-center text-base font-medium text-gray-200">
+            <th className="w-[90px] px-4 py-3 text-center text-base font-medium text-gray-200">
               만기일
             </th>
             <th className="w-[120px] px-4 py-3 text-center text-base font-medium text-gray-200">

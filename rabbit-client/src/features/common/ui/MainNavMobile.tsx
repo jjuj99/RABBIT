@@ -9,7 +9,7 @@ const MainNavMobile = () => {
   console.log("here", pathname);
 
   return (
-    <nav className="flex w-full items-center justify-between">
+    <nav className="flex w-full items-center">
       {MobileNAV_ITEMS.map((item) => (
         <div key={item.to} className="w-full">
           <NavItemMobile

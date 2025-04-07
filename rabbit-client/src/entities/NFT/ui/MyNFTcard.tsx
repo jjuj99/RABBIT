@@ -2,24 +2,33 @@ import { AvailableAuctionsResponse } from "@/features/auction/types/response";
 import { cn } from "@/shared/lib/utils";
 import { Separator } from "@/shared/ui/Separator";
 import dateFormat from "@/shared/utils/dateFormat";
+import { useState } from "react";
 
 type NFTCardProps = {
   item: AvailableAuctionsResponse;
 };
 
 export const MyNFTcard = ({ item }: NFTCardProps) => {
+  const [isTouched, setIsTouched] = useState(false);
+
   return (
-    <div className="group bg-black-glass border-white-glass shadow-glow w- fit flex h-fit w-[300px] flex-col items-center gap-4 rounded-lg border px-3 pt-4 pb-7">
+    <div
+      className="bg-black-glass border-white-glass shadow-glow w- fit flex h-fit w-[300px] flex-col items-center gap-4 rounded-lg border px-3 pt-4 pb-7"
+      onClick={() => setIsTouched(!isTouched)}
+    >
       <div className="text-brand-primary font-bit flex w-full items-center justify-center text-base">
         <span>RABBIT#{item.tokenId}</span>
       </div>
       <div className="relative h-[192px] w-full">
-        <MyNFTCardInfo item={item} />
+        <MyNFTCardInfo item={item} isTouched={isTouched} />
         <div className="flex justify-center">
           <img
             src="/images/NFT.png"
             alt="NTF"
-            className="h-[192px] w-[192px] opacity-100 transition-opacity duration-300 ease-in-out group-hover:opacity-0"
+            className={cn(
+              "h-[192px] w-[192px] transition-opacity duration-300 ease-in-out",
+              isTouched ? "opacity-0" : "opacity-100",
+            )}
           />
         </div>
       </div>
@@ -54,13 +63,19 @@ export const MyNFTcard = ({ item }: NFTCardProps) => {
 interface NFTcardInfoProps {
   className?: string;
   item: AvailableAuctionsResponse;
+  isTouched: boolean;
 }
 
-export const MyNFTCardInfo = ({ className, item }: NFTcardInfoProps) => {
+export const MyNFTCardInfo = ({
+  className,
+  item,
+  isTouched,
+}: NFTcardInfoProps) => {
   return (
     <div
       className={cn(
-        "absolute flex h-full w-full flex-col justify-between px-6 py-4 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100",
+        "absolute flex h-full w-full flex-col justify-between px-6 py-4 transition-opacity duration-300 ease-in-out",
+        isTouched ? "opacity-100" : "opacity-0",
         className,
       )}
     >

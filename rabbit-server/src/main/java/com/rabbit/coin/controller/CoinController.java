@@ -1,5 +1,6 @@
 package com.rabbit.coin.controller;
 
+import com.rabbit.coin.domain.dto.request.CoinWithdrawRequestDTO;
 import com.rabbit.coin.domain.dto.request.TossConfirmRequestDTO;
 import com.rabbit.coin.domain.dto.request.TossWebhookDTO;
 import com.rabbit.coin.domain.dto.request.TossWebhookDataDTO;
@@ -7,6 +8,7 @@ import com.rabbit.coin.controller.swagger.CoinControllerSwagger;
 import com.rabbit.coin.service.CoinService;
 import com.rabbit.global.response.CustomApiResponse;
 import com.rabbit.global.response.MessageResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -85,5 +87,17 @@ public class CoinController {
         }
 
         return ResponseEntity.ok().build();
+    }
+
+    @CoinControllerSwagger.WithdrawAPI
+    @PostMapping("/withdraw")
+    public ResponseEntity<CustomApiResponse<MessageResponse>> withdraw(@Valid @RequestBody CoinWithdrawRequestDTO coinWithdrawRequestDTO, Authentication authentication){
+        String userId = (String) authentication.getPrincipal();
+
+        coinService.withdrawCoin(Integer.parseInt(userId), coinWithdrawRequestDTO);
+
+        return ResponseEntity.ok(CustomApiResponse.success(
+                MessageResponse.of("출금이 완료되었습니다")
+        ));
     }
 }

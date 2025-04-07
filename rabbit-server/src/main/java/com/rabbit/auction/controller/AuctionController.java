@@ -138,4 +138,10 @@ public class AuctionController {
 
         return ResponseEntity.ok(CustomApiResponse.success(events));
     }
+
+    @PostMapping("/{auctionId}/force-end")
+    public ResponseEntity<CustomApiResponse<?>> forceEndAuction(@PathVariable Integer auctionId) {
+        auctionService.processAuctionEnd(auctionId);
+        return ResponseEntity.ok(CustomApiResponse.success("경매 종료 처리 완료"));
+    }
 }

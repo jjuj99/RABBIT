@@ -37,3 +37,11 @@ export interface User {
   nickname: string;
   userName: string;
 }
+
+export interface SignupResponse {
+  message: string;
+}
+
+export interface CheckNicknameResponse {
+  duplicated: boolean;
+}

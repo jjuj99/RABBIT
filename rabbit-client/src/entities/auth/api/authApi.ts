@@ -2,11 +2,11 @@ import fetchOption from "@/shared/utils/fetchOption";
 import {
   CreatePassRequest,
   LoginRequest,
-  SignUpRequest,
   VerifyAccountRequest,
   VerifyPassRequest,
 } from "../types/request";
 import {
+  CheckNicknameResponse,
   CreatePassResponse,
   LoginResponse,
   LogoutResponse,
@@ -18,6 +18,7 @@ import {
   VerifyPassResponse,
 } from "../types/response";
 import { ApiResponse } from "@/shared/type/ApiResponse";
+import { SignUpRequest } from "../types/schema";
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 const VITE_API_VERSION = import.meta.env.VITE_API_VERSION;
@@ -62,13 +63,16 @@ export const LogoutAPI = async (): Promise<ApiResponse<LogoutResponse>> => {
   return data;
 };
 
-export const SignUpAPI = async (
+export const SignupAPI = async (
   userData: SignUpRequest,
 ): Promise<ApiResponse<SignUpResponse>> => {
   const res = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/auth/sign-up`,
-    fetchOption<SignUpRequest>("POST", userData),
+    fetchOption("POST", userData),
   );
+  if (!res.ok) {
+    throw new Error("회원가입에 실패했습니다");
+  }
   const data = await res.json();
   return data;
 };
@@ -113,6 +117,20 @@ export const RefreshTokenAPI = async (): Promise<
     `${VITE_API_URL}/${VITE_API_VERSION}/auth/refresh`,
     fetchOption("POST", undefined, "refresh"),
   );
+  const data = await res.json();
+  return data;
+};
+
+export const CheckNicknameAPI = async (
+  nickname: string,
+): Promise<ApiResponse<CheckNicknameResponse>> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/auth/check-nickname?nickname=${nickname}`,
+    fetchOption("GET", undefined, "access"),
+  );
+  if (!res.ok) {
+    throw new Error("닉네임 중복 확인에 실패했습니다");
+  }
   const data = await res.json();
   return data;
 };

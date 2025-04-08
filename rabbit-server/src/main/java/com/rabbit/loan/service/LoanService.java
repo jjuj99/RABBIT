@@ -187,13 +187,13 @@ public class LoanService {
 //                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 차용증의 정보가 존재하지 않습니다."));
 //
 //        // 차용증에 채권자, 채무자에 userId가 아니라면 (당사자가 아니라면 에러처리 추가해야 함)
-//        if (contract.getCreditor().getUserId() != userId || contract.getDebtor().getUserId() != userId) {
+//        if (contract.getCreditor().getUserId() != userId && contract.getDebtor().getUserId() != userId) {
 //            throw new BusinessException(ErrorCode.ACCESS_DENIED, "해당 정보에 접근 권한이 없습니다.");
 //        }
 
         Contract contract = Contract.builder()
-                .contractId(3)
-                .tokenId(BigInteger.valueOf(3))
+                .contractId(20)
+                .tokenId(BigInteger.valueOf(13))
                 .build();
 
         try {
@@ -228,6 +228,7 @@ public class LoanService {
                     .accel(repaymentInfo.overdueInfo.accel.intValue())
                     .accelDir(20) // 기한 이익 상실 연체 이자율을 없는 거 같은데
                     .addTerms(promissoryMetadata.addTerms.addTerms)
+                    .addTermsHash(promissoryMetadata.addTerms.addTermsHash)
                      .eventList(events) // 이벤트 내역 불러오기도 있는가
                     .build();
         } catch (Exception e) {
@@ -378,7 +379,7 @@ public class LoanService {
 //                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 차용증의 정보가 존재하지 않습니다."));
 //
 //        // 차용증에 채권자, 채무자에 userId가 아니라면 (당사자가 아니라면 에러처리 추가해야 함)
-//        if (contract.getCreditor().getUserId() != userId || contract.getDebtor().getUserId() != userId) {
+//        if (contract.getCreditor().getUserId() != userId && contract.getDebtor().getUserId() != userId) {
 //            throw new BusinessException(ErrorCode.ACCESS_DENIED, "해당 정보에 접근 권한이 없습니다.");
 //        }
 
@@ -419,6 +420,7 @@ public class LoanService {
                     .accel(repaymentInfo.overdueInfo.accel.intValue())
                     .accelDir(20) // 기한 이익 상실 연체 이자율을 없는 거 같은데
                     .addTerms(promissoryMetadata.addTerms.addTerms)
+                    .addTermsHash(promissoryMetadata.addTerms.addTermsHash)
                     .eventList(events) // 이벤트 내역 불러오기도 있는가
                     .build();
         } catch (Exception e) {

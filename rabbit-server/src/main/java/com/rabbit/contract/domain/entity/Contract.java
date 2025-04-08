@@ -97,7 +97,7 @@ public class Contract {
     /**
      * NFT 토큰 ID
      */
-    @Column(nullable = true)
+    @Column(nullable = true, columnDefinition = "BIGINT")
     private BigInteger tokenId;
 
     /**

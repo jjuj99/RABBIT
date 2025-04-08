@@ -42,7 +42,7 @@ public interface AuctionControllerSwagger {
                                     @ExampleObject(
                                             name = "경매 등록 요청 예시",
                                             summary = "정상 요청 예시",
-                                            value = "{\n  \"minimumBid\": 1000,\n  \"endDate\": \"2025-03-30T23:59:59\",\n  \"tokenId\": \"NFT_TOKEN_001\",\n  \"sellerSign\": \"SIGNATURE_ABC\"\n}"
+                                            value = "{\n  \"minimumBid\": 1000,\n  \"endDate\": \"2025-04-15 23:59:59\",\n  \"tokenId\": \"1\"\n}"
                                     )
                             }
                     )

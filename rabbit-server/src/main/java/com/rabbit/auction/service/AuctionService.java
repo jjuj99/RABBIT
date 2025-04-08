@@ -34,9 +34,12 @@ import com.rabbit.mail.service.MailService;
 import com.rabbit.global.util.SignatureUtil;
 import com.rabbit.notification.domain.dto.request.NotificationRequestDTO;
 import com.rabbit.notification.service.NotificationService;
+import com.rabbit.promissorynote.domain.entity.PromissoryNoteEntity;
+import com.rabbit.promissorynote.repository.PromissoryNoteRepository;
 import com.rabbit.sse.service.SseEventPublisher;
 import com.rabbit.user.domain.dto.response.ProfileInfoResponseDTO;
 import com.rabbit.user.domain.entity.User;
+import com.rabbit.user.repository.MetamaskWalletRepository;
 import com.rabbit.user.service.UserService;
 import com.rabbit.user.domain.entity.MetamaskWallet;
 import jakarta.validation.Valid;
@@ -57,6 +60,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -81,6 +85,8 @@ public class AuctionService {
     private final IntegrityHashUtil integrityHashUtil;
     private final AuctionTransferNoticePdfService auctionTransferNoticePdfService;
     private final ExtendedMailService extendedMailService;
+    private final PromissoryNoteRepository promissoryNoteRepository;
+    private final MetamaskWalletRepository metamaskWalletRepository;
 
     private final SysCommonCodeService sysCommonCodeService;
     private final RepaymentSchedulerService repaymentSchedulerService;
@@ -90,11 +96,15 @@ public class AuctionService {
     private static final String BID_STATUS = SysCommonCodes.Bid.values()[0].getCodeType();
 
     public void addAuction(@Valid AuctionRequestDTO auctionRequest, Integer userId) {
-        //NFT의 소유자가 맞는지 확인
-        Contract contract = contractRepository.findByTokenId(auctionRequest.getTokenId())
+        String tokenId = auctionRequest.getTokenId().toString();
+        PromissoryNoteEntity promissoryNote = promissoryNoteRepository.findById(Long.parseLong(tokenId))
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 tokenId의 계약이 없습니다."));
 
-        if(!contract.getCreditor().getUserId().equals(userId)) {
+        String account = metamaskWalletRepository.findByUser_UserIdAndPrimaryFlagTrue(userId)
+                .map(MetamaskWallet::getWalletAddress)
+                .orElseThrow(() -> new BusinessException(ErrorCode.WALLET_NOT_FOUND, "사용자의 주 지갑을 찾을 수 없습니다"));
+
+        if(!promissoryNote.getCreditorWalletAddress().equals(account)){
            throw new BusinessException(ErrorCode.UNAUTHORIZED, "해당 NFT 경매의 권한이 없습니다.");
         }
 
@@ -112,20 +122,11 @@ public class AuctionService {
                 .endDate(auctionRequest.getEndDate())
                 .tokenId(auctionRequest.getTokenId())
                 .auctionStatus(SysCommonCodes.Auction.ING)
-                .sellerSign(auctionRequest.getSellerSign())
+                .sellerSign(null)
                 .createdAt(ZonedDateTime.now())
                 .build();
 
-        try {
-            BigInteger deadline = BigInteger.valueOf(Instant.now().getEpochSecond() + 3600); // 1시간 후
-            MetamaskWallet wallet = userService.getWalletByUserIdAndPrimaryFlagTrue(userId);
-            byte[] sign = SignatureUtil.convertSignToByte(auctionRequest.getSellerSign());
-
-            promissoryNoteAuctionService.depositNFTWithPermit(auction.getTokenId(), wallet.getWalletAddress(), deadline, sign);
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "NFT 예치 중 오류가 발생했습니다.");
-        }
-        Auction savedAuction=auctionRepository.save(auction);
+        Auction savedAuction = auctionRepository.save(auction);
 
         auctionScheduler.scheduleAuctionEnd(savedAuction.getAuctionId(), savedAuction.getEndDate());
     }

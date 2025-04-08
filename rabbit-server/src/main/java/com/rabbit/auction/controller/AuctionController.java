@@ -50,7 +50,7 @@ public class AuctionController {
         }
 
         //파라미터 누락
-        if(auctionRequest.getTokenId() == null || auctionRequest.getSellerSign() == null){
+        if(auctionRequest.getTokenId() == null){
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "필수 파라미터가 누락되었습니다.");
         }
 

@@ -62,5 +62,5 @@ ignition/deployments/chain-31337
 deployment-addresses.json
 
 # 결과 파일들
-tools/results/*
-!tools/results/.gitkeep
+tools/*
+!tools/.gitkeep

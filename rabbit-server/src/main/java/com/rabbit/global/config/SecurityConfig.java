@@ -40,7 +40,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/v1/auth/**").permitAll()
                                 .requestMatchers("/api/v1/bank/**").permitAll()
                                 .requestMatchers("/api/v1/auctions/**").permitAll()
-                                .requestMatchers("/api/v1/sse/auction").permitAll()
+                                .requestMatchers("/api/v1/sse/**").permitAll()
                                 .requestMatchers("/api/v1/coins/**").permitAll()
                                 .requestMatchers("/api/v1/ipfs/**").permitAll()
                                 .requestMatchers("/api/v1/loans/**").permitAll()

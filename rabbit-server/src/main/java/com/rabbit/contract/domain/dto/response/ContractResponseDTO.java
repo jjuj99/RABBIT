@@ -38,6 +38,9 @@ public class ContractResponseDTO {
     @Schema(description = "채무자 이름", example = "김철수")
     private String drName;
 
+    @Schema(description = "채무자 지갑 주소", example = "0x456...")
+    private String drWallet;
+
     @Schema(description = "대출 금액", example = "1000000")
     private BigDecimal la;
 
@@ -123,6 +126,50 @@ public class ContractResponseDTO {
                 .crName(contract.getCreditor().getNickname())
                 .drId(contract.getDebtor().getUserId())
                 .drName(contract.getDebtor().getNickname())
+                .la(contract.getLoanAmount())
+                .ir(contract.getInterestRate())
+                .contractDt(contract.getContractDate())
+                .matDt(contract.getMaturityDate())
+                .lt(contract.getLoanTerm())
+                .earlypayFee(contract.getPrepaymentInterestRate())
+                .repayType(contract.getRepaymentType())
+                .repayTypeName(contract.getRepaymentType().getCodeName())
+                .mpDt(contract.getMonthlyPaymentDate())
+                .dir(contract.getDefaultInterestRate())
+                .defCnt(contract.getDefaultCount())
+                .earlypay(contract.getEarlyPayment())
+                .pnTransFlag(contract.getPromissoryNoteTransferabilityFlag())
+                .addTerms(contract.getContractTerms())
+                .tokenId(contract.getTokenId())
+                .nftImageUrl(contract.getNftImageUrl())
+                .contractStatus(contract.getContractStatus())
+                .contractStatusName(contract.getContractStatus().getCodeName())
+                .message(contract.getMessage())
+                .rejectMessage(contract.getRejectMessage())
+                .rejectedAt(contract.getRejectedAt())
+                .createdAt(contract.getCreatedAt())
+                .updatedAt(contract.getUpdatedAt())
+                .build();
+    }
+
+
+    /**
+     * [체결 시] Contract 엔티티를 ContractResponseDTO로 변환
+     * @param contract 계약 엔티티
+     * @return 계약 응답 DTO - 체결 시
+     */
+    public static ContractResponseDTO successFrom(Contract contract, String drWallet) {
+        if (contract == null) {
+            return null;
+        }
+
+        return ContractResponseDTO.builder()
+                .contractId(contract.getContractId())
+                .crId(contract.getCreditor().getUserId())
+                .crName(contract.getCreditor().getNickname())
+                .drId(contract.getDebtor().getUserId())
+                .drName(contract.getDebtor().getNickname())
+                .drWallet(drWallet)
                 .la(contract.getLoanAmount())
                 .ir(contract.getInterestRate())
                 .contractDt(contract.getContractDate())

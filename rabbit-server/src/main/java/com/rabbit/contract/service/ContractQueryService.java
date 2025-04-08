@@ -86,11 +86,9 @@ public class ContractQueryService {
         long totalCount;
 
         if ("sent".equals(type)) {
-            // 사용자가 채권자(대출해주는 사람)인 계약 조회
-            contracts = contractRepository.findByCreditor(user);
-        } else if ("received".equals(type)) {
-            // 사용자가 채무자(대출받는 사람)인 계약 조회
             contracts = contractRepository.findByDebtor(user);
+        } else if ("received".equals(type)) {
+            contracts = contractRepository.findByCreditor(user);
         } else {
             log.warn("유효하지 않은 계약 유형: {}", type);
             // 유효하지 않은 타입인 경우 빈 결과 반환

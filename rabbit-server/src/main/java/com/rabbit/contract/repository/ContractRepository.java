@@ -54,11 +54,11 @@ public interface ContractRepository extends JpaRepository<Contract, Long>, Contr
     // 사용자가 채무자인 계약 페이지네이션 조회
     Page<Contract> findByDebtorAndDeletedFlagFalse(User debtor, Pageable pageable);
 
-    // 사용자가 채권자인 계약 목록 조회
+    // 사용자가 채무자인 계약 목록 조회
     @Query("SELECT c FROM Contract c WHERE c.creditor = :user AND c.deletedFlag = false ORDER BY c.createdAt DESC")
     List<Contract> findByCreditor(@Param("user") User user);
 
-    // 사용자가 채무자인 계약 목록 조회
+    // 사용자가 채권자인 계약 목록 조회
     @Query("SELECT c FROM Contract c WHERE c.debtor = :user AND c.deletedFlag = false ORDER BY c.createdAt DESC")
     List<Contract> findByDebtor(@Param("user") User user);
 

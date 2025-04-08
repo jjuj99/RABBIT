@@ -19,6 +19,7 @@ import EmailSearchDialog from "@/widget/common/ui/EmailSearchDialog";
 import PASSDialog from "@/widget/common/ui/PASSDialog";
 import { useState } from "react";
 import { InfoIcon } from "lucide-react";
+import LoadingOverlay from "@/widget/common/ui/LoadingOverray";
 
 const ContractCreate = () => {
   const {
@@ -40,6 +41,7 @@ const ContractCreate = () => {
 
   return (
     <>
+      <LoadingOverlay isLoading={isLoading} />
       <main className="mt-9 md:text-xl">
         <Form {...form}>
           <form
@@ -349,7 +351,7 @@ const ContractCreate = () => {
                             mode="single"
                             {...field}
                             initialFocus
-                            disabled={(date) => date < new Date()}
+                            disabled={(date) => date <= new Date()}
                             selected={field.value}
                             onSelect={(e: Date | undefined) => {
                               if (e) {

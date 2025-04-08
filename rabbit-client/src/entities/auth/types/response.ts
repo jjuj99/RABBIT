@@ -5,6 +5,10 @@ export interface LoginResponse {
   accessToken: string;
   nickname: string;
   userName: string;
+  email: string;
+  bankId: number;
+  bankName: string;
+  refundAccount: string;
 }
 
 export interface LogoutResponse {
@@ -32,6 +36,10 @@ export interface RefreshTokenResponse {
   accessToken: string;
   nickname: string;
   userName: string;
+  email: string;
+  bankId: number;
+  bankName: string;
+  refundAccount: string;
 }
 export interface User {
   nickname: string;

@@ -87,10 +87,10 @@ const SignupFormDialog = ({
   const [showVerificationCode, setShowVerificationCode] = useState(false);
   const [banks, setBanks] = useState<BankList[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [contractStatus, setContractStatus] = useState<
-    "loading" | "ready" | "error"
-  >("loading");
-  const [contractError, setContractError] = useState<string | null>(null);
+  // const [contractStatus, setContractStatus] = useState<
+  //   "loading" | "ready" | "error"
+  // >("loading");
+  // const [contractError, setContractError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),

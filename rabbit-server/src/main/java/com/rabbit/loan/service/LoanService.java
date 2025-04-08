@@ -111,6 +111,8 @@ public class LoanService {
         try {
             // 2. 토큰 Id를 조회하며, 각 NFT 정보를 호출
             for (Contract contract : contracts) {
+                log.info("[블록체인 리스트 조회] 채무 목록 : tokenId {}", contract.getTokenId());
+
                 PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(contract.getTokenId());
                 RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(contract.getTokenId());
 

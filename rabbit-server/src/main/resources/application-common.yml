@@ -36,15 +36,15 @@ spring:
   application:
     name: ${APPLICATION_NAME:rabbit}
   datasource:
-    hikari:
-      auto-commit: true
-#      connection-init-sql: SELECT 1
-      connection-timeout: 5000
-      idle-timeout: 600000
-      max-lifetime: 1200000
-      maximum-pool-size: 50
-      minimum-idle: 50
-      validation-timeout: 5000
+#    hikari:
+#      auto-commit: true
+##      connection-init-sql: SELECT 1
+#      connection-timeout: 5000
+#      idle-timeout: 600000
+#      max-lifetime: 1200000
+#      maximum-pool-size: 50
+#      minimum-idle: 50
+#      validation-timeout: 5000
     mvc:
 #      static-path-pattern: /file/**
       path-match:

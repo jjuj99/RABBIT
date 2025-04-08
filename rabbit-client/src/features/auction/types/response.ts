@@ -32,10 +32,17 @@ export interface BidListResponse {
   createdAt: string;
 }
 
+export interface AuctionDetailResponse {
+  auctionId: number;
+  auctionStatus: auctionStatus;
+  message: string;
+}
+
 export interface SubmitAuctionBidResponse {
   message: string;
 }
 export interface CreateAuctionResponse {
+  auctionId: number;
   message: string;
 }
 

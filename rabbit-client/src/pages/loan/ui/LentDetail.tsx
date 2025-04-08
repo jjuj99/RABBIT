@@ -5,7 +5,7 @@ import { ContractPeriod } from "@/entities/loan/ui/ContractPeriod";
 import NFTEventList from "@/entities/common/ui/NFTEventList";
 import NFTEventListMobile from "@/entities/common/ui/NFTEventListMobile";
 import useMediaQuery from "@/shared/hooks/useMediaQuery";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { getLentDetailAPI } from "@/entities/loan/api/loanApi";
 import { useNavigate, useParams } from "react-router";
 
@@ -15,10 +15,9 @@ const LentDetail = () => {
   const { contractId } = useParams();
   const navigate = useNavigate();
 
-  const { data } = useQuery({
+  const { data } = useSuspenseQuery({
     queryKey: ["lentDetail", contractId],
     queryFn: () => getLentDetailAPI(contractId!),
-    enabled: !!contractId,
   });
 
   if (!contractId) {

@@ -7,7 +7,7 @@ import BorrowInfoMobile from "@/entities/loan/ui/BorrowInfoMobile";
 import BorrowSummaryCarousel from "@/features/loan/ui/BorrowSummaryCarousel";
 import BorrowSummaryList from "@/features/loan/ui/BorrowSummaryList";
 import useMediaQuery from "@/shared/hooks/useMediaQuery";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 
 const BorrowList = () => {
@@ -28,7 +28,7 @@ const BorrowList = () => {
     queryFn: () => getBorrowSummaryAPI(),
   });
 
-  const { data: BorrowList, isLoading: BorrowListLoading } = useQuery({
+  const { data: BorrowList, isLoading: BorrowListLoading } = useSuspenseQuery({
     queryKey: ["BorrowList", page],
     queryFn: () => getBorrowListAPI({ pageNumber: page, pageSize: 10 }),
   });
@@ -57,7 +57,7 @@ const BorrowList = () => {
         )}
       </div>
       <h2 className="text-xl font-semibold">빌린 내역</h2>
-      <div className="w-full overflow-hidden rounded-lg bg-gray-900">
+      <div className="w-full overflow-hidden rounded-lg">
         {isDesktop ? (
           <BorrowInfo data={BorrowList.data} onPageChange={setPage} />
         ) : (

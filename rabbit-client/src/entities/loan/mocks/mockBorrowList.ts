@@ -12,8 +12,8 @@ const generateMockBorrowListData = (): BorrowInfoResponse[] => {
       contractId: id,
       tokenId: id,
       nftImage: "/images/NFT.png", // Lent와 구분되는 이미지 경로
-      drName: `차입자${id}`, // 차입자 이름으로 설정
-      drWallet: `0x${(5000 + i).toString()}...${(6000 + i).toString()}`, // 차입자 지갑 주소
+      crName: `차입자${id}`, // 차입자 이름으로 설정
+      crWallet: `0x${(5000 + i).toString()}...${(6000 + i).toString()}`, // 차입자 지갑 주소
       la: 500000 + i * 50000, // 빌린 금액
       ir: 3 + (i % 4), // 이자율 (Lent보다 낮은 이자율)
       matDt: "2025-06-30", // 만기일

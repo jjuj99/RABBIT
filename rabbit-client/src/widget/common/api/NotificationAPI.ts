@@ -1,4 +1,5 @@
 import { ApiResponse } from "@/shared/type/ApiResponse";
+import { NotificationResponse } from "@/shared/lib/notification/NotificationContext";
 import fetchOption from "@/shared/utils/fetchOption";
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
@@ -17,6 +18,17 @@ export const ReadNotificationAPI = async (
     `${VITE_API_URL}/${VITE_API_VERSION}/notifications/${notificationId}/read
 `,
     fetchOption("PATCH"),
+  );
+  const data = await res.json();
+  return data;
+};
+
+export const GetNotificationAPI = async (): Promise<
+  ApiResponse<NotificationResponse[]>
+> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/notifications`,
+    fetchOption("GET"),
   );
   const data = await res.json();
   return data;

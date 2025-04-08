@@ -3,8 +3,8 @@ import { useState, useEffect, ReactNode } from "react";
 import {
   NotificationContext,
   NotificationResponse,
+  NotificationEvent,
 } from "./NotificationContext";
-import { ApiResponse } from "@/shared/type/ApiResponse";
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState<NotificationResponse[]>(
@@ -12,15 +12,13 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   );
 
   useEffect(() => {
-    const eventSource = new EventSource("/api/v1/sse/notifications");
+    const eventSource = new EventSource("/subscribe?type=user");
 
     eventSource.onmessage = (event) => {
       try {
-        const { status, data } = JSON.parse(
-          event.data,
-        ) as ApiResponse<NotificationResponse>;
-        if (status === "SUCCESS" && data) {
-          setNotifications((prev) => [...prev, data]);
+        const notificationEvent = JSON.parse(event.data) as NotificationEvent;
+        if (notificationEvent.data) {
+          setNotifications((prev) => [...prev, notificationEvent.data]);
         }
       } catch (error) {
         console.error("SSE 데이터 파싱 오류:", error);

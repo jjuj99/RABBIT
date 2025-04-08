@@ -96,18 +96,18 @@ const BorrowInfoMobile = ({ data, onPageChange }: BorrowInfoMobileProps) => {
                   </span>
                   <div className="flex flex-col items-end">
                     <span className="text-xs font-medium text-white sm:text-base">
-                      {item.drName}
+                      {item.crName}
                     </span>
                     <span
                       className="hover:text-brand-primary cursor-pointer text-xs font-light text-gray-200 sm:text-sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedWallet(item.drWallet);
+                        setSelectedWallet(item.crWallet);
                         setIsOpen(true);
                       }}
                     >
-                      {item.drWallet
-                        ? `${item.drWallet.slice(0, 6)}...${item.drWallet.slice(-4)}`
+                      {item.crWallet
+                        ? `${item.crWallet.slice(0, 6)}...${item.crWallet.slice(-4)}`
                         : "-"}
                     </span>
                   </div>

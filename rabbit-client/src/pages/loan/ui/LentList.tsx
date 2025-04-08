@@ -3,7 +3,7 @@ import LentInfoMobile from "@/entities/loan/ui/LentInfoMobile";
 import LoanSummaryCarousel from "@/features/loan/ui/LentSummaryCarousel";
 import LoanSummaryList from "@/features/loan/ui/LentSummaryList";
 import useMediaQuery from "@/shared/hooks/useMediaQuery";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { getLentListAPI, getLentSummaryAPI } from "@/entities/loan/api/loanApi";
 import { useState, useEffect } from "react";
 import { Button } from "@/shared/ui/button";
@@ -28,7 +28,7 @@ const LentList = () => {
     queryFn: () => getLentSummaryAPI(),
   });
 
-  const { data: LentList, isLoading: LentListLoading } = useQuery({
+  const { data: LentList, isLoading: LentListLoading } = useSuspenseQuery({
     queryKey: ["LentList", page],
     queryFn: () => getLentListAPI({ pageNumber: page, pageSize: 10 }),
   });

@@ -29,9 +29,8 @@ public class LoanController {
     private final LoanService loanService;
 
     @GetMapping("/borrow/me/summary")
-    public ResponseEntity<CustomApiResponse<BorrowSummaryResponseDTO>> borrowSummary() { // Authentication authentication
-//        String userId = (String) authentication.getPrincipal();
-        String userId = "1";
+    public ResponseEntity<CustomApiResponse<BorrowSummaryResponseDTO>> borrowSummary(Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
         BorrowSummaryResponseDTO response = loanService.borrowSummary(Integer.parseInt(userId));
 
         return ResponseEntity.ok(CustomApiResponse.success(response));

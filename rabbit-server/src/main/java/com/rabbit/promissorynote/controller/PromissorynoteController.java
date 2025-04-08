@@ -7,6 +7,7 @@ import com.rabbit.promissorynote.service.PNService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,9 +22,9 @@ public class PromissorynoteController {
 
     @PostMapping("/debts/{contractId}/prepayment")
     public ResponseEntity<CustomApiResponse<MessageResponse>> prepayment(@RequestBody PrepaymentRequestDTO request,
-                                                                         @PathVariable Integer contractId) {
-//        String userId = (String) authentication.getPrincipal();
-        String userId = "1";
+                                                                         @PathVariable Integer contractId,
+                                                                         Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
         pnService.prepayment(request, contractId, Integer.parseInt(userId));
 
         return ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("중도상환이 되었습니다.")));

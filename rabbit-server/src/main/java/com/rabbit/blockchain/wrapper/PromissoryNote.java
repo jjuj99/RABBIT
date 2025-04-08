@@ -58,6 +58,8 @@ public class PromissoryNote extends Contract {
 
     public static final String FUNC_BURNAUTHORIZEDADDRESSES = "burnAuthorizedAddresses";
 
+    public static final String FUNC_DEPOSITTOAUCTION = "depositToAuction";
+
     public static final String FUNC_EIP712DOMAIN = "eip712Domain";
 
     public static final String FUNC_GETAPPENDIXMETADATA = "getAppendixMetadata";
@@ -90,6 +92,8 @@ public class PromissoryNote extends Contract {
 
     public static final String FUNC_PERMIT = "permit";
 
+    public static final String FUNC_PROMISSORYNOTEAUCTION = "promissoryNoteAuction";
+
     public static final String FUNC_REMOVEBURNAUTHORIZATION = "removeBurnAuthorization";
 
     public static final String FUNC_RENOUNCEOWNERSHIP = "renounceOwnership";
@@ -99,6 +103,8 @@ public class PromissoryNote extends Contract {
     public static final String FUNC_SCHEDULERADDRESS = "schedulerAddress";
 
     public static final String FUNC_SETAPPROVALFORALL = "setApprovalForAll";
+
+    public static final String FUNC_SETPROMISSORYNOTEAUCTIONADDRESS = "setPromissoryNoteAuctionAddress";
 
     public static final String FUNC_SETSCHEDULERADDRESS = "setSchedulerAddress";
 
@@ -497,6 +503,14 @@ public class PromissoryNote extends Contract {
         return executeRemoteCallSingleValueReturn(function, Boolean.class);
     }
 
+    public RemoteFunctionCall<TransactionReceipt> depositToAuction(BigInteger tokenId) {
+        final Function function = new Function(
+                FUNC_DEPOSITTOAUCTION, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(tokenId)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
     public RemoteFunctionCall<Tuple7<byte[], String, String, BigInteger, String, byte[], List<BigInteger>>> eip712Domain(
             ) {
         final Function function = new Function(FUNC_EIP712DOMAIN, 
@@ -651,6 +665,13 @@ public class PromissoryNote extends Contract {
         return executeRemoteCallTransaction(function);
     }
 
+    public RemoteFunctionCall<String> promissoryNoteAuction() {
+        final Function function = new Function(FUNC_PROMISSORYNOTEAUCTION, 
+                Arrays.<Type>asList(), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}));
+        return executeRemoteCallSingleValueReturn(function, String.class);
+    }
+
     public RemoteFunctionCall<TransactionReceipt> removeBurnAuthorization(String authorized) {
         final Function function = new Function(
                 FUNC_REMOVEBURNAUTHORIZATION, 
@@ -703,6 +724,15 @@ public class PromissoryNote extends Contract {
                 FUNC_SETAPPROVALFORALL, 
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, operator), 
                 new org.web3j.abi.datatypes.Bool(approved)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> setPromissoryNoteAuctionAddress(
+            String _promissoryNoteAuction) {
+        final Function function = new Function(
+                FUNC_SETPROMISSORYNOTEAUCTIONADDRESS, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, _promissoryNoteAuction)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }

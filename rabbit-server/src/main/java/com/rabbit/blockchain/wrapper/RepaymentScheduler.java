@@ -79,6 +79,10 @@ public class RepaymentScheduler extends Contract {
 
     public static final String FUNC_REPAYMENTSCHEDULES = "repaymentSchedules";
 
+    public static final String FUNC_SETPROMISSORYNOTEAUCTIONADDRESS = "setPromissoryNoteAuctionAddress";
+
+    public static final String FUNC_SETRABBITCOINADDRESS = "setRabbitCoinAddress";
+
     public static final String FUNC_TRANSFEROWNERSHIP = "transferOwnership";
 
     public static final String FUNC_UPDATECONTRACTADDRESSES = "updateContractAddresses";
@@ -766,6 +770,23 @@ public class RepaymentScheduler extends Contract {
                                 (OverdueInfo) results.get(13));
                     }
                 });
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> setPromissoryNoteAuctionAddress(
+            String _promissoryNoteAddress) {
+        final Function function = new Function(
+                FUNC_SETPROMISSORYNOTEAUCTIONADDRESS, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, _promissoryNoteAddress)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> setRabbitCoinAddress(String _rabbitCoinAddress) {
+        final Function function = new Function(
+                FUNC_SETRABBITCOINADDRESS, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, _rabbitCoinAddress)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
     }
 
     public RemoteFunctionCall<TransactionReceipt> transferOwnership(String newOwner) {

@@ -1,10 +1,10 @@
 package com.rabbit.blockchain.mapper;
 
 import com.rabbit.blockchain.domain.dto.response.AppendixMetadataDTO;
+import com.rabbit.blockchain.wrapper.PromissoryNoteAuction;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.abi.datatypes.generated.Uint256;
-import com.rabbit.blockchain.wrapper.PromissoryNoteAuction;
 
 public class AppendixMetadataMapper {
     public static PromissoryNoteAuction.AppendixMetadata toWeb3(AppendixMetadataDTO dto) {

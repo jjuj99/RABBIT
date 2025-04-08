@@ -281,7 +281,8 @@ const SignupFormDialog = ({
       const contractOwnerAddress = import.meta.env
         .VITE_RABBIT_CONTRACT_OWNER_ADDRESS;
       const repaymentAddress = import.meta.env.VITE_RABBIT_REPAYMENT_ADDRESS;
-      const auctionAddress = import.meta.env.VITE_RABBIT_AUCTION_ADDRESS;
+      const auctionAddress = import.meta.env
+        .VITE_RABBIT_PROMISSORYNOTE_AUCTION_ADDRESS;
       await tokenApprove(contractOwnerAddress, "1000000000000000000");
       await tokenApprove(repaymentAddress, "1000000000000000000");
       await tokenApprove(auctionAddress, "1000000000000000000");

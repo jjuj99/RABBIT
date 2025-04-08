@@ -9,7 +9,7 @@ export const InfoRow = ({ label, value }: InfoRowProps) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <div className="flex flex-row justify-between">
+    <div className="flex flex-row items-center justify-between">
       <span className="text-sm font-light text-gray-100 sm:text-base">
         {label}
       </span>

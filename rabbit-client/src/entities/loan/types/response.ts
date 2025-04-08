@@ -80,6 +80,7 @@ export interface BorrowDetailResponse {
   earlypayFee: number;
   accel: number;
   accelDir: number;
+  addTermsHash: string;
   addTerms?: string[];
   eventList: NFTEvent[];
 }
@@ -109,6 +110,7 @@ export interface LentDetailResponse {
   earlypayFee: number;
   accel: number;
   accelDir: number;
+  addTermsHash: string;
   addTerms?: string[];
   eventList: NFTEvent[];
 }

@@ -10,9 +10,13 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState<NotificationResponse[]>(
     [],
   );
+  const VITE_API_URL = import.meta.env.VITE_API_URL;
+  const VITE_API_VERSION = import.meta.env.VITE_API_VERSION;
 
   useEffect(() => {
-    const eventSource = new EventSource("/subscribe?type=user");
+    const eventSource = new EventSource(
+      `${VITE_API_URL}/${VITE_API_VERSION}/sse/subscribe?type=user`,
+    );
 
     eventSource.onmessage = (event) => {
       try {

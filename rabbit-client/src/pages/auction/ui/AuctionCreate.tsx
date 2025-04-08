@@ -1,20 +1,25 @@
-import { UnitInput } from "@/entities/common";
-import { MyNFTcard } from "@/entities/NFT/ui/MyNFTcard";
-import {
-  createAuctionAPI,
-  // getAvailableAuctionsAPI,
-} from "@/features/auction/api/auctionApi";
-import { AvailableAuctionsResponse } from "@/features/auction/types/response";
+import { useState } from "react";
+import { ethers } from "ethers";
 import { Button } from "@/shared/ui/button";
 import { Sheet, SheetContent, SheetOverlay } from "@/shared/ui/CustomSheet";
 import { Separator } from "@/shared/ui/Separator";
-import generateSignature from "@/entities/wallet/utils/generateSignature";
 import { getMetaMaskProvider } from "@/entities/wallet/utils/getMetaMaskProvider";
 import getWalletAddress from "@/entities/wallet/utils/getWalletAddress";
-import { useState } from "react";
-// import { useQuery } from "@tanstack/react-query";
+import { createAuctionAPI } from "@/features/auction/api/auctionApi";
+import { AvailableAuctionsResponse } from "@/features/auction/types/response";
+import { MyNFTcard } from "@/entities/NFT/ui/MyNFTcard";
 import { availableAuctionsMock } from "@/features/auction/mocks/data";
-// import { availableAuctionsMock } from "@/features/auction/mocks/data";
+import { UnitInput } from "@/entities/common";
+import promissoryNoteAbi from "@/shared/lib/web3/ABI/PromissoryNoteABI.json";
+import { deleteAuctionAPI } from "@/features/auction/api/auctionApi";
+
+// NFT 및 경매 컨트랙트 주소는 환경변수나 상수로 설정
+const PROMISSORYNOTE_AUCTION_ADDRESS = import.meta.env
+  .VITE_RABBIT_PROMISSORYNOTE_AUCTION_ADDRESS;
+
+const PROMISSORY_NOTE_ADDRESS = import.meta.env
+  .VITE_RABBIT_PROMISSORYNOTE_ADDRESS;
+// ABI는 별도 모듈에서 import하거나, 아래처럼 직접 포함할 수 있습니다.
 
 const AuctionCreate = () => {
   const [selectedItem, setSelectedItem] =
@@ -22,14 +27,12 @@ const AuctionCreate = () => {
   const [startPrice, setStartPrice] = useState<number>(0);
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
-  const [endDateday, setendDateday] = useState(0);
-  const [endDatehour, setendDatehour] = useState(0);
+  const [endDateday, setEndDateday] = useState(0);
+  const [endDatehour, setEndDatehour] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // const { data: availableAuctions } = useQuery({
-  //   queryKey: ["availableAuctions"],
-  //   queryFn: () => getAvailableAuctionsAPI(),
-  // });
+  // 모의 데이터 사용 (실제 서비스에서는 API 호출로 대체)
   const availableAuctions = availableAuctionsMock;
 
   const handleDayChange = (value: number) => {
@@ -43,7 +46,7 @@ const AuctionCreate = () => {
       return;
     }
     setError(null);
-    setendDateday(value);
+    setEndDateday(value);
   };
 
   const handleHourChange = (value: number) => {
@@ -53,15 +56,15 @@ const AuctionCreate = () => {
         setError("7일을 초과할 수 없습니다.");
         return;
       }
-      setendDateday(newDays);
-      setendDatehour(value % 24);
+      setEndDateday(newDays);
+      setEndDatehour(value % 24);
     } else {
       const totalDays = endDateday + Math.floor(value / 24);
       if (totalDays >= 7) {
         setError("7일을 초과할 수 없습니다.");
         return;
       }
-      setendDatehour(value);
+      setEndDatehour(value);
     }
     setError(null);
   };
@@ -102,47 +105,83 @@ const AuctionCreate = () => {
   const handleClose = () => {
     setIsOpen(false);
     setStep(1);
-    setendDateday(0);
-    setendDatehour(0);
+    setEndDateday(0);
+    setEndDatehour(0);
     setError(null);
   };
 
   const handleSubmit = async () => {
-    if (!selectedItem) return;
+    // if (!selectedItem) return;
+    setIsLoading(true);
     try {
+      if (!window.ethereum) {
+        throw new Error("메타마스크가 필요합니다");
+      }
+      const signerprovider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await signerprovider.getSigner();
+
       const provider = await getMetaMaskProvider();
+
       if (!provider) {
         setError("메타마스크를 찾을 수 없습니다.");
         return;
       }
 
-      const walletAddress = await getWalletAddress({ provider });
-      if (!walletAddress || !walletAddress.address) {
+      // 2. 현재 사용자의 지갑 주소 확인
+      const walletInfo = await getWalletAddress({ provider });
+      if (!walletInfo || !walletInfo.address) {
         setError("지갑 주소를 가져올 수 없습니다.");
         return;
       }
 
-      const message = `경매 생성: ${selectedItem.tokenId} - ${startPrice} RAB`;
-      const { signature, error: signError } = await generateSignature(
-        walletAddress.address,
-        message,
+      console.log(PROMISSORYNOTE_AUCTION_ADDRESS, signer);
+
+      // 3. PromissoryNote 컨트랙트 인스턴스 생성
+      const promissoryNoteContract = new ethers.Contract(
+        PROMISSORY_NOTE_ADDRESS,
+        promissoryNoteAbi,
+        signer,
       );
 
-      if (signError || !signature) {
-        setError("서명에 실패했습니다.");
-        return;
+      const response = await createAuctionAPI({
+        minimumBid: 20,
+        endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+        tokenId: "24",
+      });
+
+      if (!response.data) {
+        console.log("경매 생성에 실패했습니다. api단계에서.");
+        throw new Error("경매 생성에 실패했습니다.");
       }
 
-      await createAuctionAPI({
-        minimumBid: startPrice,
-        endDate: calculateEndDate().toISOString(),
-        tokenId: selectedItem.tokenId,
-        sellerSign: signature,
-      });
-      handleClose();
+      console.log("db에 저장 성공 경매 ID:", response.data.auctionId);
+
+      try {
+        // 4. transferFrom 호출: 현재 소유자(walletInfo.address) → 경매 컨트랙트 주소
+        const transferTx = await promissoryNoteContract.transferFrom(
+          walletInfo.address,
+          PROMISSORYNOTE_AUCTION_ADDRESS,
+          24,
+        );
+
+        console.log("TransferFrom 트랜잭션 전송됨:", transferTx.hash);
+        await transferTx.wait();
+        console.log("TransferFrom 트랜잭션 확정됨.");
+
+        handleClose();
+      } catch (error) {
+        console.error("Transfer 실패:", error);
+        // transfer 실패 시 생성된 경매 삭제
+        if (response.data?.auctionId) {
+          await deleteAuctionAPI(response.data.auctionId);
+        }
+        setError("NFT 전송에 실패했습니다. 경매가 취소되었습니다.");
+      }
     } catch (error) {
       console.error("경매 생성 실패:", error);
       setError("경매 생성에 실패했습니다.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -192,11 +231,10 @@ const AuctionCreate = () => {
                 <span className="text-brand-primary text-xl font-bold">
                   경매 기간
                 </span>
-                <span className="text-xl">을 입력하세요</span>{" "}
+                <span className="text-xl">을 입력하세요</span>
               </div>
               {error && <div className="text-fail">{error}</div>}
             </div>
-
             <div className="flex w-[300px] gap-5">
               <UnitInput
                 type="number"
@@ -257,7 +295,6 @@ const AuctionCreate = () => {
                   </span>
                 </div>
               </div>
-
               {selectedItem && <MyNFTcard item={selectedItem} />}
               <div className="flex w-full flex-col items-start gap-3 rounded-sm bg-gray-900 px-5 py-3 sm:px-0 sm:py-4">
                 <div className="flex w-full flex-col gap-0">
@@ -288,8 +325,9 @@ const AuctionCreate = () => {
                   onClick={handleSubmit}
                   variant="primary"
                   className="w-[140px]"
+                  disabled={isLoading}
                 >
-                  확인
+                  {isLoading ? "진행중..." : "확인"}
                 </Button>
                 <Button
                   onClick={handlePrev}
@@ -309,6 +347,14 @@ const AuctionCreate = () => {
 
   return (
     <section className="flex flex-col items-center justify-center gap-9 px-2 pt-9 sm:px-6">
+      <Button
+        onClick={handleSubmit}
+        variant="primary"
+        className="w-[140px]"
+        disabled={isLoading}
+      >
+        {isLoading ? "진행중..." : "확인"}
+      </Button>
       <div className="flex flex-col items-center gap-4">
         <h2 className="text-xl font-semibold whitespace-nowrap sm:text-3xl">
           경매 생성
@@ -321,7 +367,6 @@ const AuctionCreate = () => {
       <div className="flex w-full flex-col items-start gap-4 sm:px-7">
         <h3 className="text-lg">보유중인 차용증</h3>
         <ul className="flex flex-wrap justify-center gap-6">
-          {/* {availableAuctions?.data?.map((item) => ( */}
           {availableAuctions?.map((item: AvailableAuctionsResponse) => (
             <div
               key={item.tokenId}

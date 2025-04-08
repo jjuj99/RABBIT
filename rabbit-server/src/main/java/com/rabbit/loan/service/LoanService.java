@@ -182,7 +182,7 @@ public class LoanService {
                     .crName(promissoryMetadata.crInfo.crName)
                     .crWallet(promissoryMetadata.crInfo.crWalletAddress)
                     .la(promissoryMetadata.la.longValue())
-                    .totalAmount(DataUtil.calculateTotalAmount(repaymentInfo))
+                    .remainingPrincipal(repaymentInfo.remainingPrincipal.longValue())
                     .repayType(DataUtil.getRepayTypeString(repaymentInfo.repayType))
                     .ir(DataUtil.getRateAsDouble(promissoryMetadata.ir))
                     .dir(DataUtil.getRateAsDouble(promissoryMetadata.dir))

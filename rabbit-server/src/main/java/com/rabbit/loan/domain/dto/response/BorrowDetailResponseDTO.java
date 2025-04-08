@@ -22,7 +22,7 @@ public class BorrowDetailResponseDTO {
     private String crName; // 채권자 이름
     private String crWallet; // 채권자 지갑
     private Long la; // 총 대출 금액
-    private Long totalAmount; // 만기수취액
+    private Long remainingPrincipal; // 남은 원굼
     private String repayType; // 상환 방식
     private double ir; // 이자율
     private double dir; // 연체 이자율

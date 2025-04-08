@@ -23,9 +23,19 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "존재하지 않는 회원입니다"));
 
+        RefundAccount refundAccount = refundAccountRepository.findByUserIdAndPrimaryFlagTrue(user.getUserId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "등록된 환불 계좌 정보가 없습니다."));
+
+        Bank bank = bankRepository.findById(refundAccount.getBankId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "등록되지 않은 은행 정보입니다."));
+
         return LoginInfoResponseDTO.builder()
                 .userName(user.getUserName())
                 .nickname(user.getNickname())
+                .email(user.getEmail())
+                .bankId(bank.getBankId())
+                .bankName(bank.getBankName())
+                .refundAccount(refundAccount.getAccountNumber())
                 .build();
     }
 

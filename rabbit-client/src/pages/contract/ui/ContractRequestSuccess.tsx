@@ -40,7 +40,7 @@ const ContractRequestSuccess = () => {
             <span className="flex">
               <span>{contractData.data.drName}</span>(
               <span className="max-w-[100px]">
-                {/* {truncateAddress(contractData.data.drWallet)} */}
+                {truncateAddress(contractData.data.drWallet)}
               </span>
             </span>
             )
@@ -67,7 +67,7 @@ const ContractRequestSuccess = () => {
             <span className="text-text-secondary">채권자 : </span>
             <span className="flex">
               <span>{contractData.data.crName}</span>(
-              <span className="max-w-[100px] truncate">{`010-1234-5678`}</span>)
+              {truncateAddress(contractData.data.crWallet)})
             </span>
           </div>
           <div className="flex w-[220px] justify-between">

@@ -47,12 +47,23 @@ export const useContractMutate = ({ contractId }: UseContractMutateProps) => {
       }
       return Promise.reject(new Error("Contract ID is required"));
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contract", contractId] });
+    onSuccess: async () => {
+      console.log("onSuccess 시작");
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["contract", "sent"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["contract", contractId],
+        }),
+      ]);
+      console.log("onSuccess 완료");
     },
     onError: (error) => {
       toast.error(error.message);
-      queryClient.invalidateQueries({ queryKey: ["contract", contractId] });
+      queryClient.invalidateQueries({
+        queryKey: ["contract", "sent"],
+      });
       console.error(error);
     },
   });
@@ -69,8 +80,15 @@ export const useContractMutate = ({ contractId }: UseContractMutateProps) => {
       }
       return Promise.reject(new Error("Contract ID is required"));
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contract", contractId] });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["contract", "received"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["contract", contractId],
+        }),
+      ]);
     },
     onError: (error) => {
       toast.error(error.message);

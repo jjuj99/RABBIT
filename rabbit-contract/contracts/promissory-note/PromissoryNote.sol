@@ -8,11 +8,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "./interfaces/IPromissoryNote.sol";
+import "./interfaces/IPromissoryNoteAuction.sol";
 import "./interfaces/IRepaymentScheduler.sol";
 
 contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
     uint256 public tokenIdCounter;
     address public schedulerAddress;
+    address public promissoryNoteAuction;
 
     // tokenId, metadata
     mapping(uint256 => PromissoryMetadata) private tokenMetadata;
@@ -31,6 +33,10 @@ contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
 
     function setSchedulerAddress(address _schedulerAddress) external onlyOwner {
         schedulerAddress = _schedulerAddress;
+    }
+
+    function setPromissoryNoteAuctionAddress(address _promissoryNoteAuction) external onlyOwner {
+        promissoryNoteAuction = _promissoryNoteAuction;
     }
 
     function addBurnAuthorization(address authorized) external onlyOwner {
@@ -143,6 +149,19 @@ contract PromissoryNote is ERC721, Ownable, IPromissoryNote, EIP712 {
         delete tokenIdToAppendixIds[tokenId];
         
         emit PromissoryNoteBurned(tokenId);
+    }
+
+    // PromissoryNote 컨트랙트 내부에 추가
+    function depositToAuction(uint256 tokenId) external {
+        // 함수 호출자가 토큰 소유자인지 확인
+        require(ownerOf(tokenId) == msg.sender, "Not the token owner");
+        
+        // 경매 컨트랙트로 NFT 전송
+        _transfer(msg.sender, promissoryNoteAuction, tokenId);
+        
+        // 경매 컨트랙트에 예치자 정보 저장 (인터페이스를 통해)
+        IPromissoryNoteAuction auction = IPromissoryNoteAuction(promissoryNoteAuction);
+        auction.recordDepositor(tokenId, msg.sender);
     }
 
     // 차용증 메타데이터 원본 구조체 반환 - 프로그래밍 방식 처리용

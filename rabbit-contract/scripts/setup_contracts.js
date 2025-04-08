@@ -63,6 +63,16 @@ async function main() {
     }
   }
 
+  // 4. PromissoryNote에 PromissoryNoteAuction 주소 설정
+  console.log("\nSetting PromissoryNoteAuction address in PromissoryNote...");
+  try {
+    const tx = await promissoryNote.setPromissoryNoteAuctionAddress(promissoryNoteAuctionAddress);
+    await tx.wait();
+    console.log("✅ PromissoryNoteAuction address set successfully in PromissoryNote!");
+  } catch (error) {
+    console.error("Failed to set PromissoryNoteAuction address:", error.message);
+  }
+
   console.log("\n✅ Setup completed!");
 }
 

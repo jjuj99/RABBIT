@@ -32,4 +32,6 @@ public class LentAuctionResponseDTO {
 
     private Integer defCnt;
     private String creditScore;
+
+    private String nftImageUrl;
 }

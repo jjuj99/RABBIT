@@ -66,4 +66,10 @@ public interface PromissoryNoteRepository extends JpaRepository<PromissoryNoteEn
      */
     @Query("SELECT p.addTermsHash FROM PromissoryNoteEntity p WHERE p.tokenId = :tokenId AND p.deletedFlag = false")
     Optional<String> findAddTermsHashByTokenId(@Param("tokenId") BigInteger tokenId);
+
+
+    // 토큰 ID로 NFTimage 찾기
+    @Query("SELECT p.nftImage FROM PromissoryNoteEntity p WHERE p.tokenId = :tokenId")
+    Optional<String> findNftImageByTokenId(@Param("tokenId") BigInteger tokenId);
+
 }

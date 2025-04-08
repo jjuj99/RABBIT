@@ -29,5 +29,6 @@ public class AuctionResponseDTO {
     private BigDecimal earlypayFee;  // 중도 상환 수수료
     private String creditScore;     // 신용점수
     private Integer defCnt;          // 연체 횟수
+    private String nftImageUrl;
 }
 

@@ -28,23 +28,23 @@ async function enableMocking() {
 }
 
 // MSW 초기화 후 앱 렌더링
-enableMocking().then(() => {
-  ReactDOM.createRoot(document.getElementById("root")!).render(
-    // <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <NotificationProvider>
-        <Web3Provider>
-          <AuthProvider>
-            <BrowserRouter>
-              <App />
-              <Toaster />
-            </BrowserRouter>
-          </AuthProvider>
-        </Web3Provider>
-        {/* 개발 환경에서만 DevTools 표시 */}
-        {import.meta.env.DEV && <ReactQueryDevtools />}
-      </NotificationProvider>
-    </QueryClientProvider>,
-    // </React.StrictMode>
-  );
-});
+// enableMocking().then(() => {
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  // <React.StrictMode>
+  <QueryClientProvider client={queryClient}>
+    <NotificationProvider>
+      <Web3Provider>
+        <AuthProvider>
+          <BrowserRouter>
+            <App />
+            <Toaster />
+          </BrowserRouter>
+        </AuthProvider>
+      </Web3Provider>
+      {/* 개발 환경에서만 DevTools 표시 */}
+      {import.meta.env.DEV && <ReactQueryDevtools />}
+    </NotificationProvider>
+  </QueryClientProvider>,
+  // </React.StrictMode>
+);
+// });

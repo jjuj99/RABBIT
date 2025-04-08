@@ -30,3 +30,13 @@ export const columns: ColumnDef<NFTEventType>[] = [
     header: "일시",
   },
 ];
+
+export interface BidUpdateEvent {
+  id: string;
+  event: string;
+  data: {
+    bidId: number;
+    bidAmount: number;
+    createdAt: string;
+  };
+}

@@ -95,7 +95,7 @@ const Home = () => {
                   whileHover={{ scale: 1.02, y: -5 }}
                   className="group relative flex h-32 items-center gap-4 rounded-lg bg-white/5 p-4 backdrop-blur-sm sm:h-40 sm:gap-6 sm:p-6"
                 >
-                  <div className="bg-brand-primary/20 flex h-10 w-10 items-center justify-center rounded-full text-xl sm:h-12 sm:w-12 sm:text-2xl">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-xl sm:h-12 sm:w-12 sm:text-2xl">
                     {item.icon}
                   </div>
                   <div className="flex flex-col gap-1">
@@ -120,7 +120,7 @@ const Home = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, margin: "-100px" }}
               transition={{ duration: 0.8 }}
-              className="from-brand-primary/10 to-brand-primary/5 relative overflow-hidden rounded-2xl bg-gradient-to-br p-8 backdrop-blur-xl sm:p-12"
+              className="from-brand-primary/10 to-brand-primary/5 relative overflow-hidden rounded-2xl bg-gray-900 p-8 backdrop-blur-xl sm:p-12"
             >
               <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
               <div className="relative z-10">
@@ -305,7 +305,7 @@ const Home = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, margin: "-100px" }}
               transition={{ duration: 0.8 }}
-              className="from-brand-primary/10 to-brand-primary/5 relative overflow-hidden rounded-2xl bg-gradient-to-br p-4 backdrop-blur-xl sm:p-6 md:p-8"
+              className="from-brand-primary/10 to-brand-primary/5 relative overflow-hidden rounded-2xl bg-gray-900 p-4 backdrop-blur-xl sm:p-6 md:p-8"
             >
               <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
               <div className="relative z-10">

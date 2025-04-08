@@ -34,6 +34,14 @@ contract RepaymentScheduler is IRepaymentScheduler, Ownable, AutomationCompatibl
         rabbitCoinAddress = _rabbitCoinAddress;
     }
 
+    function setRabbitCoinAddress(address _rabbitCoinAddress) external onlyOwner {
+        rabbitCoinAddress = _rabbitCoinAddress;
+    }
+
+    function setPromissoryNoteAuctionAddress(address _promissoryNoteAddress) external onlyOwner {
+        promissoryNoteAddress = _promissoryNoteAddress;
+    }
+
     // 차용증 NFT 생성 후 상환 일정 등록
     function registerRepaymentSchedule(uint256 tokenId) external {
         // 차용증 NFT 컨트랙트에서 메타데이터 조회

@@ -36,19 +36,11 @@ interface IPromissoryNoteAuction {
     // ========== NFT 예치 ==========
 
     /**
-    * @dev 예치된 NFT의 소유자 확인
+    * @dev NFT 예치 기록
     * @param tokenId 차용증 NFT 토큰 ID
-    * @return 예치전 소유자 주소
+    * @param depositor 예치한 사용자 주소
     */
-    function getDepositor(uint256 tokenId) external view returns (address);
-
-    // 차용증 NFT 예치 함수
-    function depositNFTWithPermit(
-        uint256 tokenId,
-        address owner,
-        uint256 deadline,
-        bytes memory signature
-    ) external;
+    function recordDepositor(uint256 tokenId, address depositor) external;
 
     // ========== RAB 예치 ==========
     

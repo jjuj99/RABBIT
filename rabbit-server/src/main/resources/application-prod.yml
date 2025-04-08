@@ -37,6 +37,7 @@ cors:
     - "http://localhost:5173" # 추후 삭제 예정
     - "http://127.0.0.1:5500" # 추후 삭제 예정
     - "https://duypim9pw3dt4.cloudfront.net"
+    - "https://nft-rabbit.site"
     - "https://j12a604.p.ssafy.io"
 
 # 쿠키 설정

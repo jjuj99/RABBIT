@@ -5,6 +5,8 @@ import com.rabbit.blockchain.wrapper.RepaymentScheduler;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.loan.domain.dto.response.ContractEventDTO;
+import io.reactivex.Single;
+import io.reactivex.schedulers.Schedulers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -42,28 +45,96 @@ public class EventService {
 
     public List<ContractEventDTO> getEventList(BigInteger tokenId) {
         try {
-            List<ContractEventDTO> allEvents = new ArrayList<>();
+            // 각 이벤트 조회를 비동기 싱글로 감쌈
+            // subscribeOn(Schedulers.io()) → IO 작업용 비동기 스레드에서 실행됨
 
-            allEvents.addAll(getRepaymentEvents(tokenId));
-            allEvents.addAll(getAssignmentEvents(tokenId));
-            allEvents.addAll(getOverdueEvents(tokenId));
-            allEvents.addAll(getOverdueResolvedEvents(tokenId));
+            Single<List<ContractEventDTO>> repaymentSingle = Single.fromCallable(() -> getRepaymentEvents(tokenId))
+                    .subscribeOn(Schedulers.io())
+                    .timeout(5, TimeUnit.SECONDS) // 각 호출에 개별 타임아웃 적용
+                    .onErrorReturnItem(Collections.emptyList());
 
-            // 최신순 정렬 (timestamp는 yyyy-MM-ddTHH:mm:ss 형식이므로 앞부분만 잘라서 정렬)
-            return allEvents.stream()
-                    .sorted((e1, e2) -> e2.getTimestamp().compareTo(e1.getTimestamp()))
+            Single<List<ContractEventDTO>> earlyRepaymentSingle = Single.fromCallable(() -> getEarlyRepaymentPrincipalEvents(tokenId))
+                    .subscribeOn(Schedulers.io())
+                    .timeout(5, TimeUnit.SECONDS)
+                    .onErrorReturnItem(Collections.emptyList());
+
+            Single<List<ContractEventDTO>> assignmentSingle = Single.fromCallable(() -> getAssignmentEvents(tokenId))
+                    .subscribeOn(Schedulers.io())
+                    .timeout(5, TimeUnit.SECONDS)
+                    .onErrorReturnItem(Collections.emptyList());
+
+            Single<List<ContractEventDTO>> overdueSingle = Single.fromCallable(() -> getOverdueEvents(tokenId))
+                    .subscribeOn(Schedulers.io())
+                    .timeout(5, TimeUnit.SECONDS)
+                    .onErrorReturnItem(Collections.emptyList());
+
+            Single<List<ContractEventDTO>> overdueResolvedSingle = Single.fromCallable(() -> getOverdueResolvedEvents(tokenId))
+                    .subscribeOn(Schedulers.io())
+                    .timeout(5, TimeUnit.SECONDS)
+                    .onErrorReturnItem(Collections.emptyList());
+
+            // zip 연산자로 병렬 실행된 결과를 취합
+            return Single.zip(
+                            repaymentSingle,
+                            earlyRepaymentSingle,
+                            assignmentSingle,
+                            overdueSingle,
+                            overdueResolvedSingle,
+
+                            // 결과 병합 함수 (각 이벤트 결과를 하나의 리스트로 합침)
+                            (repayment, early, assign, overdue, resolved) -> {
+                                List<ContractEventDTO> merged = new ArrayList<>();
+                                merged.addAll(repayment);
+                                merged.addAll(early);
+                                merged.addAll(assign);
+                                merged.addAll(overdue);
+                                merged.addAll(resolved);
+                                return merged;
+                            })
+                    .timeout(5, TimeUnit.SECONDS) // zip 전체에도 타임아웃을 걸어 안정성 확보
+                    .blockingGet() // 최종 결과를 동기적으로 기다림 (단, 병렬 실행됨)
+                    .stream()
+                    // timestamp 기준 최신순 정렬
+                    .sorted(Comparator.comparing(ContractEventDTO::getTimestamp).reversed())
+                    // timestamp 날짜 자르기 (yyyy-MM-ddTHH:mm:ss → yyyy-MM-dd)
                     .peek(event -> {
-                        // 날짜 문자열을 yyyy-MM-dd 형식으로 자르기
                         String timestamp = event.getTimestamp();
                         if (timestamp != null && timestamp.length() >= 10) {
                             event.setTimestamp(timestamp.substring(0, 10));
                         }
                     })
                     .collect(Collectors.toList());
+
         } catch (Exception e) {
-            log.error("[EventService] getEventList error", e);
-            throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "NFT 이벤트 목록 조회 중 오류가 발생했습니다.");
+            log.error("[EventService] getEventList (병렬 처리) error", e);
+            throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "NFT 이벤트 목록 병렬 조회 중 오류가 발생했습니다.");
         }
+
+
+//        try {
+//            List<ContractEventDTO> allEvents = new ArrayList<>();
+//
+//            allEvents.addAll(getRepaymentEvents(tokenId));
+//            allEvents.addAll(getEarlyRepaymentPrincipalEvents(tokenId));
+//            allEvents.addAll(getAssignmentEvents(tokenId));
+//            allEvents.addAll(getOverdueEvents(tokenId));
+//            allEvents.addAll(getOverdueResolvedEvents(tokenId));
+//
+//            // 최신순 정렬 (timestamp는 yyyy-MM-ddTHH:mm:ss 형식이므로 앞부분만 잘라서 정렬)
+//            return allEvents.stream()
+//                    .sorted((e1, e2) -> e2.getTimestamp().compareTo(e1.getTimestamp()))
+//                    .peek(event -> {
+//                        // 날짜 문자열을 yyyy-MM-dd 형식으로 자르기
+//                        String timestamp = event.getTimestamp();
+//                        if (timestamp != null && timestamp.length() >= 10) {
+//                            event.setTimestamp(timestamp.substring(0, 10));
+//                        }
+//                    })
+//                    .collect(Collectors.toList());
+//        } catch (Exception e) {
+//            log.error("[EventService] getEventList error", e);
+//            throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "NFT 이벤트 목록 조회 중 오류가 발생했습니다.");
+//        }
     }
 
     // NFT에서 발생한 상환 (RepaymentProcessed) 이벤트 조회
@@ -124,6 +195,68 @@ public class EventService {
 
         } catch (Exception e) {
             log.error("[EventService] getRepaymentEvents error", e);
+            throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "NFT의 이벤트 내역 조회 중 오류가 발생했습니다.");
+        }
+    }
+
+    // NFT에서 발생한 중도 상환 (EarlyRepaymentPrincipal) 이벤트 조회
+    public List<ContractEventDTO> getEarlyRepaymentPrincipalEvents(BigInteger tokenId) {
+        try {
+            log.info("[블록체인] 중도 상환 이벤트 조회 시작 - 토큰 ID: {}", tokenId);
+
+            EthFilter filter = new EthFilter(startBlock, endBlock, repaymentScheduler.getContractAddress());
+
+            // 이벤트 시그니처 토픽
+            filter.addSingleTopic(EventEncoder.encode(RepaymentScheduler.EARLYREPAYMENTPRINCIPAL_EVENT));
+
+            // 첫 번째 인덱스 토픽(originalTokenId)으로 필터링
+            filter.addSingleTopic("0x" + TypeEncoder.encode(new Uint256(tokenId)));
+
+            // 발견한 이벤트 내역을 남을 리스트
+            List<RepaymentScheduler.EarlyRepaymentPrincipalEventResponse> eventList = new ArrayList<>();
+
+            List<RepaymentScheduler.EarlyRepaymentPrincipalEventResponse> eventResponses =
+                    repaymentScheduler.earlyRepaymentPrincipalEventFlowable(filter)
+                            .map(event -> {
+                                log.info("[블록체인] 이벤트 발견: tokenId={}, principalAmount={}, remainingPrincipal={}, isFullRepayment={}",
+                                        event.tokenId, event.principalAmount, event.remainingPrincipal, event.isFullRepayment);
+
+                                eventList.add(event);
+
+                                return event;
+                            })
+                            .toList()
+                            .timeout(3, TimeUnit.SECONDS)
+                            .onErrorReturnItem(Collections.emptyList())
+                            .blockingGet();
+
+            log.info("[블록체인] EarlyRepaymentPrincipal 이벤트 파싱 결과: {}건", eventList.size());
+
+            return eventList.stream().map(e -> {
+                String date = null;
+                try {
+                    EthBlock block = web3j.ethGetBlockByNumber(
+                            DefaultBlockParameter.valueOf(e.log.getBlockNumber()), false).send();
+                    BigInteger timestamp = block.getBlock().getTimestamp();
+                    date = Instant.ofEpochSecond(timestamp.longValue())
+                            .atZone(ZoneId.of("Asia/Seoul"))
+                            .toLocalDateTime()
+                            .toString();
+                } catch (Exception ex) {
+                    log.warn("블록 시간 조회 실패", ex);
+                }
+
+                return ContractEventDTO.builder()
+                        .eventType("중도 상환")                // 중도 상환 이벤트로 표현
+                        .from(null)                             // 이벤트에 from 주소는 없음 (필요 시 추론)
+                        .to(null)                         // 채권자 지갑 주소
+                        .intAmt(e.principalAmount.longValue())                           // 상환 이벤트 금액
+                        .timestamp(date != null ? date : e.log.getBlockNumber().toString())
+                        .build();
+            }).collect(Collectors.toList());
+
+        } catch (Exception e) {
+            log.error("[EventService] getEarlyRepaymentPrincipalEvents error", e);
             throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "NFT의 이벤트 내역 조회 중 오류가 발생했습니다.");
         }
     }

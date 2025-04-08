@@ -1,11 +1,11 @@
+import { AccountHistoryResponse } from "@/entities/coin/api/coinApi";
 import { cn } from "@/shared/lib/utils";
 import currencyFormat from "@/shared/utils/currencyFormat";
 import dateFormat from "@/shared/utils/dateFormat";
 import timeFormat from "@/shared/utils/timeFormat";
-import { AccountHistoryType } from "../types/response";
 
 interface AccountHistoryCardProps {
-  data: AccountHistoryType;
+  data: AccountHistoryResponse;
 }
 
 const AccountHistoryCard = ({ data }: AccountHistoryCardProps) => {
@@ -15,17 +15,17 @@ const AccountHistoryCard = ({ data }: AccountHistoryCardProps) => {
         <span
           className={cn(
             "text-base font-medium md:text-lg",
-            data.type === "deposit" ? "text-fail" : "text-positive",
+            data.type === "DEPOSIT" ? "text-fail" : "text-positive",
           )}
         >
-          {data.type === "deposit" ? "입금" : "출금"}
+          {data.type === "DEPOSIT" ? "입금" : "출금"}
         </span>
         <div className="flex flex-col gap-1 md:flex-row md:items-center">
           <span className="text-base font-medium md:text-lg">
-            {dateFormat(data.date)}
+            {dateFormat(data.createdAt)}
           </span>
           <span className="text-xs font-light md:text-sm">
-            {timeFormat(data.date)}
+            {timeFormat(data.createdAt)}
           </span>
         </div>
       </div>

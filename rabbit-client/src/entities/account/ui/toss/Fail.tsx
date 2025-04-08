@@ -5,6 +5,8 @@ import { useSearchParams } from "react-router";
 
 const FailPage = () => {
   const [searchParams] = useSearchParams();
+  console.log(searchParams.get("message"));
+
   const navigate = useNavigate();
 
   return (
@@ -42,12 +44,6 @@ const FailPage = () => {
 
         <CardContent className="space-y-6">
           <div className="space-y-3 rounded-lg bg-gray-800/50 p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">에러 코드</span>
-              <span className="font-mono text-sm text-gray-300">
-                {searchParams.get("code")}
-              </span>
-            </div>
             <div className="flex flex-col gap-2">
               <span className="text-gray-400">실패 사유</span>
               <span className="text-destructive text-sm break-all">

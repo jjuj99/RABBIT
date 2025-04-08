@@ -10,7 +10,7 @@ import {
   Legend,
 } from "chart.js";
 import { ScrollArea } from "@/shared/ui/scroll-area";
-import { formatNumber } from "@/utils/format";
+import { formatNumber } from "@/shared/utils/formatNumber";
 
 ChartJS.register(
   CategoryScale,

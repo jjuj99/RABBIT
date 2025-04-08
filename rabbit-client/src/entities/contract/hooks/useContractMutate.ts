@@ -21,7 +21,7 @@ export const useContractMutate = ({ contractId }: UseContractMutateProps) => {
   const queryClient = useQueryClient();
 
   // 계약 승인
-  const { mutate: completeContract } = useMutation({
+  const { mutate: completeContract, isPending: isCompleting } = useMutation({
     mutationFn: (pass: passType) => {
       if (contractId) {
         return completeContractAPI(contractId, pass);
@@ -31,7 +31,6 @@ export const useContractMutate = ({ contractId }: UseContractMutateProps) => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["contract", contractId] });
       navigate(`/contract/received/complete`, { state: data.data });
-      console.log(data);
     },
     onError: (error) => {
       toast.error(error.message);
@@ -39,8 +38,9 @@ export const useContractMutate = ({ contractId }: UseContractMutateProps) => {
       console.error(error);
     },
   });
+
   // 계약 취소
-  const { mutateAsync: cancelContract } = useMutation({
+  const { mutateAsync: cancelContract, isPending: isCanceling } = useMutation({
     mutationFn: () => {
       if (contractId) {
         return cancelContractAPI(contractId);
@@ -48,7 +48,6 @@ export const useContractMutate = ({ contractId }: UseContractMutateProps) => {
       return Promise.reject(new Error("Contract ID is required"));
     },
     onSuccess: async () => {
-      console.log("onSuccess 시작");
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["contract", "sent"],
@@ -57,7 +56,6 @@ export const useContractMutate = ({ contractId }: UseContractMutateProps) => {
           queryKey: ["contract", contractId],
         }),
       ]);
-      console.log("onSuccess 완료");
     },
     onError: (error) => {
       toast.error(error.message);
@@ -69,7 +67,7 @@ export const useContractMutate = ({ contractId }: UseContractMutateProps) => {
   });
 
   // 계약 거절
-  const { mutate: rejectContract } = useMutation({
+  const { mutate: rejectContract, isPending: isRejecting } = useMutation({
     mutationFn: ({ rejectMessage }: RejectContractParams) => {
       if (contractId) {
         return rejectContractAPI({
@@ -98,32 +96,37 @@ export const useContractMutate = ({ contractId }: UseContractMutateProps) => {
   });
 
   // 계약 수정 요청
-  const { mutate: requestModifyContract } = useMutation({
-    mutationFn: ({ rejectMessage }: RejectContractParams) => {
-      if (contractId) {
-        return rejectContractAPI({
-          contractId,
-          rejectMessage,
-          isCanceled: false,
-        });
-      }
-      return Promise.reject(new Error("Contract ID is required"));
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contract", contractId] });
-    },
-    onError: (error) => {
-      toast.error(error.message);
-      queryClient.invalidateQueries({ queryKey: ["contract", contractId] });
-      console.error(error);
-    },
-  });
+  const { mutate: requestModifyContract, isPending: isRequestingModify } =
+    useMutation({
+      mutationFn: ({ rejectMessage }: RejectContractParams) => {
+        if (contractId) {
+          return rejectContractAPI({
+            contractId,
+            rejectMessage,
+            isCanceled: false,
+          });
+        }
+        return Promise.reject(new Error("Contract ID is required"));
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["contract", contractId] });
+      },
+      onError: (error) => {
+        toast.error(error.message);
+        queryClient.invalidateQueries({ queryKey: ["contract", contractId] });
+        console.error(error);
+      },
+    });
 
   return {
     completeContract,
     rejectContract,
     requestModifyContract,
     cancelContract,
+    isCompleting,
+    isCanceling,
+    isRejecting,
+    isRequestingModify,
   };
 };
 

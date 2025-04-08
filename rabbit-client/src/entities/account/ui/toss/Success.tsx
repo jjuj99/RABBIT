@@ -2,8 +2,6 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { ConfirmAPI } from "../../api/accountApi";
 
-import { toast } from "sonner";
-import mintRabbitToken from "@/entities/wallet/utils/mintRabbitToken";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 
@@ -19,25 +17,27 @@ const SuccessPage = () => {
       amount: searchParams.get("amount"),
       paymentKey: searchParams.get("paymentKey"),
     };
+    console.log(requestData);
 
     async function confirm() {
-      const response = await ConfirmAPI(requestData);
-
-      if (response.status !== "SUCCESS") {
-        // 결제 실패 비즈니스 로직을 구현하세요.
-        navigate(`/fail?message=${response.error?.message}`);
-        return;
+      try {
+        const response = await ConfirmAPI(requestData);
+        console.log(response);
+      } catch (error) {
+        if (error instanceof Error) {
+          navigate(`account/fail?message=${error?.message}`);
+        }
       }
 
       // 결제 성공 비즈니스 로직을 구현하세요.
-      try {
-        const amount = Number(searchParams.get("amount"));
-        await mintRabbitToken(amount);
-        toast.success(`${amount} RAB가 지갑에 추가되었습니다.`);
-      } catch (error) {
-        toast.error("토큰 민팅에 실패했습니다.");
-        console.error("민팅 에러:", error);
-      }
+      // try {
+      //   const amount = Number(searchParams.get("amount"));
+      //   await mintRabbitToken(amount);
+      //   toast.success(`${amount} RAB가 지갑에 추가되었습니다.`);
+      // } catch (error) {
+      //   toast.error("토큰 민팅에 실패했습니다.");
+      //   console.error("민팅 에러:", error);
+      // }
     }
     confirm();
   }, []);

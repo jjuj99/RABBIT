@@ -20,8 +20,11 @@ export const ConfirmAPI = async (
 ): Promise<ApiResponse<ResponseConfirm>> => {
   const res = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/coins/confirm`,
-    fetchOption("POST", confirmData, "access"),
+    fetchOption("POST", confirmData),
   );
+  if (!res.ok) {
+    throw new Error("충전 확인에 실패했습니다");
+  }
   const data = await res.json();
   return data;
 };

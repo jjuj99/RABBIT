@@ -15,6 +15,10 @@ type UserState = {
   user: {
     nickname: string;
     userName: string;
+    bankId: number;
+    bankName: string;
+    refundAccount: string;
+    email: string;
   } | null;
 };
 

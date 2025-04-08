@@ -90,10 +90,10 @@ const ContractDetail = () => {
 
   const handleCancel = async () => {
     try {
+      setIsCancelDialogOpen(false);
       await cancelContract();
       console.log("계약 취소 성공");
       toast.success("계약이 취소되었습니다.");
-      setIsCancelDialogOpen(false);
       navigate("/contract/sent");
     } catch (error) {
       if (error instanceof Error && error.message) {
@@ -106,8 +106,8 @@ const ContractDetail = () => {
 
   const handleReject = async (rejectMessage: string) => {
     try {
-      rejectContract({ rejectMessage });
       setIsRejectDialogOpen(false);
+      rejectContract({ rejectMessage });
       toast.success("거절 완료");
       navigate("/contract/received"); // 목록 페이지로 이동
     } catch (error) {
@@ -121,8 +121,8 @@ const ContractDetail = () => {
 
   const handleModifyRequest = async (rejectMessage: string) => {
     try {
-      requestModifyContract({ rejectMessage });
       setIsRejectDialogOpen(false);
+      requestModifyContract({ rejectMessage });
       toast.success("수정 요청 완료");
       navigate("/contract/received"); // 목록 페이지로 이동
     } catch (error) {

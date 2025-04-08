@@ -7,7 +7,7 @@ import { useState } from "react";
 
 const CoinCharge = () => {
   const amountState = useState(0);
-  const { data, isLoading } = useGetTrasitionHistory();
+  const { data } = useGetTrasitionHistory();
 
   return (
     <main className="grid grid-cols-1 gap-6 md:grid-cols-2">

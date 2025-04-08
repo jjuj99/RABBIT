@@ -11,3 +11,9 @@ export interface Verify1wonRequest {
   email: string;
   authCode: string;
 }
+
+export interface WithdrawRequest {
+  name: string;
+  accountNumber: string;
+  amount: number;
+}

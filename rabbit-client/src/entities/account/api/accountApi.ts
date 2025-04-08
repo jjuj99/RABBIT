@@ -4,12 +4,15 @@ import {
   RequestConfirm,
   Send1wonRequest,
   Verify1wonRequest,
+  WithdrawRequest,
 } from "../types/request";
 import {
+  AccountHistoryResponse,
   BankList,
   ResponseConfirm,
   Send1wonResponse,
   Verify1wonResponse,
+  WithdrawResponse,
 } from "../types/response";
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
@@ -66,6 +69,34 @@ export const Verify1wonAPI = async ({
   );
   if (!res.ok) {
     throw new Error("1원 인증에 실패했습니다");
+  }
+  const data = await res.json();
+  return data;
+};
+
+export const WithdrawAPI = async (
+  req: WithdrawRequest,
+): Promise<ApiResponse<WithdrawResponse>> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/coins/withdraw`,
+    fetchOption("POST", req, "access"),
+  );
+  if (!res.ok) {
+    throw new Error("출금에 실패했습니다");
+  }
+  const data = await res.json();
+  return data;
+};
+
+export const getAccountTransferHistoryAPI = async (): Promise<
+  ApiResponse<AccountHistoryResponse[]>
+> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/coins/transactions`,
+    fetchOption("GET"),
+  );
+  if (!res.ok) {
+    throw new Error("코인 이체 내역 조회 실패");
   }
   const data = await res.json();
   return data;

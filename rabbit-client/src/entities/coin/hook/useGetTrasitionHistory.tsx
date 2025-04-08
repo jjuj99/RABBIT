@@ -1,10 +1,10 @@
+import { getAccountTransferHistoryAPI } from "@/entities/account/api/accountApi";
 import { useQuery } from "@tanstack/react-query";
-import { getCoinTransferHistoryAPI } from "../api/coinApi";
 
 const useGetTrasitionHistory = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ["coinTransferHistory"],
-    queryFn: getCoinTransferHistoryAPI,
+    queryFn: getAccountTransferHistoryAPI,
   });
 
   return { data, isLoading, error };

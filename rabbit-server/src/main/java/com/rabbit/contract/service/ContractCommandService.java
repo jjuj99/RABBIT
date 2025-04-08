@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
+import com.rabbit.user.service.WalletService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -38,6 +39,7 @@ public class ContractCommandService {
     private final SysCommonCodeService sysCommonCodeService;
     private final UserService userService;
     private final ContractQueryService contractQueryService;
+    private final WalletService walletService;
     private final ContractProcessingService contractProcessingService;
     private final ContractNotificationHelper notificationHelper;
     private final MailService mailService;
@@ -197,6 +199,13 @@ public class ContractCommandService {
         contractProcessingService.completeContractProcessing(contract);
 
         Contract updatedContract = contractRepository.save(contract);
+
+        // 2. 채권자 지갑 주소 확인
+        String creditorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getDebtor().getUserId());
+        if (creditorWalletAddress == null || creditorWalletAddress.isBlank()) {
+            creditorWalletAddress = "";
+        }
+
         log.info("[계약 완료 처리] 계약 ID: {}, 채권자: {}, 채무자: {}",
                 contractId, contract.getCreditor().getUserId(), contract.getDebtor().getUserId());
 
@@ -208,7 +217,7 @@ public class ContractCommandService {
         long elapsedTime = endTime - startTime;
         log.info("[성능 측정] 계약 ID: {}, NFT 생성 총 소요 시간: {}ms", contract.getContractId(), elapsedTime);
 
-        return ContractResponseDTO.from(updatedContract);
+        return ContractResponseDTO.successFrom(updatedContract, creditorWalletAddress);
     }
 
     /**

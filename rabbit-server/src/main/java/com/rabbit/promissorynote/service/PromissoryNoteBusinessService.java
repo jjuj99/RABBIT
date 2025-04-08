@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 import com.rabbit.blockchain.service.PromissoryNoteService;
 import org.springframework.stereotype.Service;
@@ -167,13 +168,13 @@ public class PromissoryNoteBusinessService {
         );
 
         // 추가 조항 해시 생성
-        String contractTermsHash = null;
-        if (contract.getContractTerms() != null && !contract.getContractTerms().isEmpty()) {
-            contractTermsHash = hashingService.hashText(contract.getContractTerms());
-        }
+//        String contractTermsHash = null;
+//        if (contract.getContractTerms() != null && !contract.getContractTerms().isEmpty()) {
+//            contractTermsHash = hashingService.hashText(contract.getContractTerms());
+//        }
 
         // 추가 조항 해시 생성 부분 수정 => nftPdFUri 기입으로 대체
-//        String contractTermsHash = nftPdFUri; // PDF URL을 contractTermsHash에 설정
+        String contractTermsHash = nftPdFUri; // PDF URL을 contractTermsHash에 설정
 
         // AddTerms (추가 조항) 생성
         PromissoryNote.AddTerms addTerms = new PromissoryNote.AddTerms(
@@ -312,5 +313,28 @@ public class PromissoryNoteBusinessService {
 
         repaymentScheduleRepository.save(entity);
         log.info("[데이터베이스] 상환 일정 정보 저장 완료 - 토큰 ID: {}", tokenId);
+    }
+
+    /**
+     * 토큰 ID로 차용증 PDF URI(addTermsHash) 조회
+     *
+     * @param tokenId 토큰 ID
+     * @return PDF URI(addTermsHash) 값
+     * @throws BusinessException 차용증이 존재하지 않을 경우 예외 발생
+     */
+    @Transactional(readOnly = true)
+    public String getPromissoryNotePdfUriByTokenId(BigInteger tokenId) {
+        log.info("[서비스] 토큰 ID로 차용증 PDF URI 조회 시작 - 토큰 ID: {}", tokenId);
+
+        Optional<String> pdfUri = promissoryNoteRepository.findAddTermsHashByTokenId(tokenId);
+
+        if (pdfUri.isEmpty()) {
+            log.error("[서비스] 토큰 ID에 해당하는 차용증을 찾을 수 없음 - 토큰 ID: {}", tokenId);
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
+                    String.format("토큰 ID %s에 해당하는 차용증을 찾을 수 없습니다.", tokenId));
+        }
+
+        log.info("[서비스] 토큰 ID로 차용증 PDF URI 조회 성공 - 토큰 ID: {}", tokenId);
+        return pdfUri.get();
     }
 }

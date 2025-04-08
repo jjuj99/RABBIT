@@ -247,9 +247,9 @@ public class ContractCommandService {
         // 상태 전이 규칙 검증과 채무자 권한 검증
         validateRejectContractAccess(contract, userId);
 
-        // 계약 상태 결정 (취소 또는 수정 요청)
+        // 계약 상태 결정 (거절 또는 수정 요청)
         SysCommonCodes.Contract newStatus = requestDTO.isCanceled() ?
-                SysCommonCodes.Contract.CANCELED :
+                SysCommonCodes.Contract.MODIFICATION_REQUESTED :
                 SysCommonCodes.Contract.REJECTED;
 
         // 상태 업데이트

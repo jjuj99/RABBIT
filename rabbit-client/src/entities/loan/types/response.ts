@@ -10,8 +10,8 @@ export interface BorrowInfoResponse {
   contractId: string;
   tokenId: string;
   nftImage: string;
-  drName: string;
-  drWallet: string;
+  crName: string;
+  crWallet: string;
   la: number;
   ir: number;
   matDt: string;
@@ -57,7 +57,6 @@ export interface BorrowSummaryResponse {
 
 //채무 상세
 export interface BorrowDetailResponse {
-  contractId: number; //추후 삭제
   tokenId: string;
   nftImage: string;
   crName: string;
@@ -87,7 +86,6 @@ export interface BorrowDetailResponse {
 
 //채권 상세
 export interface LentDetailResponse {
-  contractId: number; //추후 삭제
   tokenId: string;
   nftImage: string;
   drName: string;

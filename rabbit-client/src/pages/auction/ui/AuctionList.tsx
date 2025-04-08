@@ -3,6 +3,7 @@ import AuctionFilter from "@/features/auction/ui/AuctionFilter";
 import { Sheet, SheetContent, SheetTrigger } from "@/shared/ui/sheet";
 import { useAuctionFilterStore } from "@/shared/lib/store/auctionFilterStore";
 import { getAuctionListAPI } from "@/features/auction/api/auctionApi";
+import { AuctionListRequest } from "@/features/auction/types/request";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/shared/ui/button";
 import { useNavigate } from "react-router";
@@ -36,18 +37,21 @@ const AuctionList = () => {
         matEnd,
       },
     ],
-    queryFn: () =>
-      getAuctionListAPI({
-        minPrice: Number(minPrice),
-        maxPrice: Number(maxPrice),
-        maxIr: Number(maxIr),
-        minIr: Number(minIr),
-        maxRate: Number(maxRate),
-        repayType,
-        matTerm: Number(matTerm),
-        matStart,
-        matEnd,
-      }),
+    queryFn: () => {
+      const params: AuctionListRequest = {};
+
+      if (minPrice) params.minPrice = Number(minPrice);
+      if (maxPrice) params.maxPrice = Number(maxPrice);
+      if (maxIr) params.maxIr = Number(maxIr);
+      if (minIr) params.minIr = Number(minIr);
+      if (maxRate) params.maxRate = Number(maxRate);
+      if (repayType && repayType.length > 0) params.repayType = repayType;
+      if (matTerm) params.matTerm = Number(matTerm);
+      if (matStart) params.matStart = matStart;
+      if (matEnd) params.matEnd = matEnd;
+
+      return getAuctionListAPI(params);
+    },
   });
 
   const handleFilterChange = () => {

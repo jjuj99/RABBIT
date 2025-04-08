@@ -33,7 +33,7 @@ export const getAuctionListAPI = async (
 
   const queryString = queryParams.toString();
   const url = `${VITE_API_URL}/${VITE_API_VERSION}/auctions${queryString ? `?${queryString}` : ""}`;
-  const res = await fetch(url, fetchOption("GET", {}, "access"));
+  const res = await fetch(url, fetchOption("GET"));
   const data = await res.json();
   return data;
 };

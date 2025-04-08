@@ -29,8 +29,7 @@ function Button({
     >
       {isLoading ? (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          로딩중...
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-label="로딩중" />
         </>
       ) : (
         children

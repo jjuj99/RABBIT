@@ -190,6 +190,23 @@
     @apply border-border outline-ring/50;
   }
 
+  @keyframes sprite-spin {
+    from {
+      background-position: 0 0;
+    }
+    to {
+      background-position: -375px 0;
+    } /* 프레임 수 × 프레임 너비 */
+  }
+
+  .loader-sprite {
+    width: 75px; /* 프레임 너비 */
+    height: 75px; /* 프레임 높이 */
+    background-image: url("/images/loader-sprite.png");
+    background-repeat: no-repeat;
+    animation: sprite-spin 0.3s steps(5) infinite;
+  }
+
   :root {
     /* 브레이크포인트 */
     --breakpoint-mobile: 480px;

@@ -5,12 +5,12 @@ import java.math.BigInteger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.rabbit.promissorynote.service.PromissoryNoteBusinessService;
 import com.rabbit.contract.domain.entity.Contract;
 import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.ipfs.PinataUploader;
-import com.rabbit.user.service.WalletService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +25,8 @@ public class ContractProcessingService {
 
     private final ContractPdfService contractPdfService;
     private final PinataUploader pinataUploader;
-    private final WalletService walletService;
-    // private final BlockchainService blockchainService; // 실제 구현 시 필요
+    private final ContractImageService contractImageService;
+    private final PromissoryNoteBusinessService promissoryNoteBusinessService; // 추가된 의존성
 
     /**
      * 계약 완료 처리 (NFT 생성, 자금 전송 등)
@@ -34,6 +34,8 @@ public class ContractProcessingService {
      */
     @Transactional
     public void completeContractProcessing(Contract contract) {
+        // 시작 시간 측정
+        long startTime = System.currentTimeMillis();
         try {
             // 1. NFT 생성
             BigInteger tokenId = generateNFT(contract);
@@ -51,6 +53,11 @@ public class ContractProcessingService {
                     contract.getContractId(), e.getMessage(), e);
             throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR,
                     "계약 완료 처리 중 오류가 발생했습니다: " + e.getMessage());
+        } finally {
+            // 종료 시간 측정 및 소요 시간 로깅
+            long endTime = System.currentTimeMillis();
+            long elapsedTime = endTime - startTime;
+            log.info("[성능 측정] 계약 ID: {}, NFT 생성 총 소요 시간: {}ms", contract.getContractId(), elapsedTime);
         }
     }
 
@@ -69,82 +76,25 @@ public class ContractProcessingService {
             String pdfUrl = pinataUploader.uploadContent(encryptedPdfBytes, pdfFileName, "application/pdf");
             log.info("[IPFS 업로드 완료] 계약 ID: {}, URL: {}", contract.getContractId(), pdfUrl);
 
-            // 아직 미구현
-            BigInteger tokenId = new BigInteger("1"); // 실제로는 블록체인 트랜잭션 결과에서 추출
-//            // 3. 스마트 컨트랙트 상호작용을 위한 PromissoryMetadata 객체 생성
-//            PromissoryNote.PromissoryMetadata metadata = createPromissoryMetadata(contract, pdfUrl);
-//
-//            // 4. 블록체인에 트랜잭션 전송하여 NFT 발행
-//            BigInteger tokenId = blockchainService.mintPromissoryNoteNFT(
-//                    metadata,
-//                    walletService.getUserPrimaryWalletAddress(contract.getCreditor())
-//            );
+            // 3. NFT 이미지 생성 및 IPFS 업로드 추가
+            byte[] nftImageBytes = contractImageService.generateContractImage(contract);
+            String imageFileName = "contract_image_" + contract.getContractId() + ".png";
+            String imgUrl = pinataUploader.uploadContent(nftImageBytes, imageFileName, "image/png");
+            log.info("[이미지 IPFS 업로드 완료] 계약 ID: {}, 이미지 URL: {}", contract.getContractId(), imgUrl);
 
-            // 5. 생성된 NFT 정보 설정
-            contract.setNftInfo(tokenId, pdfUrl);
+            // 4. 블록체인에 트랜잭션 전송하여 NFT 발행
+            // PDF URL은 contractTermsHash로 사용, imgUrl은 이미지 URL로 사용
+            BigInteger tokenId = promissoryNoteBusinessService.mintPromissoryNoteNFT(contract, pdfUrl, imgUrl);
+            log.info("[NFT 발행 완료] 계약 ID: {}, 토큰 ID: {}", contract.getContractId(), tokenId);
+
+            // 5. 생성된 NFT 정보 설정 - nftImageUrl에 이미지 URL 설정
+            contract.setNftInfo(tokenId, imgUrl);
 
             return tokenId;
         } catch (Exception e) {
             log.error("[NFT 생성 실패] 계약 ID: {}, 오류: {}", contract.getContractId(), e.getMessage(), e);
             throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "NFT 생성 중 오류가 발생했습니다");
         }
-    }
-
-    /**
-     * NFT 메타데이터 JSON 생성 (개인정보 암호화 적용)
-     * @deprecated 차용증 NFT 가 존재함으로 사용하지 않음
-     * @param contract 계약 엔티티
-     * @param pdfUrl PDF 파일의 IPFS URL
-     * @return NFT 메타데이터 JSON 문자열
-     */
-    private String createNftMetadata(Contract contract, String pdfUrl) {
-        // 메타데이터에 사용될 정보 암호화
-        String encryptedCreditorName = contractPdfService.encryptForMetadata(contract, contract.getCreditor().getNickname());
-        String encryptedDebtorName = contractPdfService.encryptForMetadata(contract, contract.getDebtor().getNickname());
-
-        // 간단한 JSON 생성 예시 (실제로는 Jackson 등 사용 권장)
-        return String.format(
-                "{\n" +
-                        "  \"name\": \"Loan Contract #%d\",\n" +
-                        "  \"description\": \"Loan contract between %s and %s\",\n" +
-                        "  \"image\": \"%s\",\n" +
-                        "  \"attributes\": [\n" +
-                        "    {\n" +
-                        "      \"trait_type\": \"Contract Type\",\n" +
-                        "      \"value\": \"Loan\"\n" +
-                        "    },\n" +
-                        "    {\n" +
-                        "      \"trait_type\": \"Loan Amount\",\n" +
-                        "      \"value\": \"%s\"\n" +
-                        "    },\n" +
-                        "    {\n" +
-                        "      \"trait_type\": \"Interest Rate\",\n" +
-                        "      \"value\": \"%s%%\"\n" +
-                        "    },\n" +
-                        "    {\n" +
-                        "      \"trait_type\": \"Term\",\n" +
-                        "      \"value\": \"%d months\"\n" +
-                        "    },\n" +
-                        "    {\n" +
-                        "      \"trait_type\": \"Maturity Date\",\n" +
-                        "      \"value\": \"%s\"\n" +
-                        "    },\n" +
-                        "    {\n" +
-                        "      \"trait_type\": \"Contract ID\",\n" +
-                        "      \"value\": \"%d\"\n" +
-                        "    }\n" +
-                        "  ]\n" +
-                        "}",
-                contract.getContractId(),
-                encryptedCreditorName,
-                encryptedDebtorName,
-                pdfUrl,
-                contract.getLoanAmount(),
-                contract.getInterestRate(),
-                contract.getLoanTerm(),
-                contract.getMaturityDate().toString(),
-                contract.getContractId()
-        );
     }
 
     /**

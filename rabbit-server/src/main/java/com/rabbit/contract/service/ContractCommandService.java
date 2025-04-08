@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
+import com.rabbit.user.service.WalletService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -38,6 +39,7 @@ public class ContractCommandService {
     private final SysCommonCodeService sysCommonCodeService;
     private final UserService userService;
     private final ContractQueryService contractQueryService;
+    private final WalletService walletService;
     private final ContractProcessingService contractProcessingService;
     private final ContractNotificationHelper notificationHelper;
     private final MailService mailService;
@@ -100,6 +102,18 @@ public class ContractCommandService {
         log.info("[계약 생성 완료] 계약 ID: {}, 채권자: {}, 채무자: {}, 원본 계약 ID: {}",
                 savedContract.getContractId(), creditor.getUserId(), debtor.getUserId(), contractIdParam);
 
+        // 채권자 지갑 주소 확인
+        String creditorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getCreditor().getUserId());
+        if (creditorWalletAddress == null || creditorWalletAddress.isBlank()) {
+            creditorWalletAddress = "";
+        }
+
+        // 채무자 지갑 주소 확인
+        String debtorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getDebtor().getUserId());
+        if (debtorWalletAddress == null || debtorWalletAddress.isBlank()) {
+            debtorWalletAddress = "";
+        }
+
         // 채권자에게 알림 발송
         notificationHelper.sendNotification(
                 creditor.getUserId(),
@@ -128,7 +142,7 @@ public class ContractCommandService {
         }
 
         // 응답 생성
-        ContractResponseDTO responseDTO = ContractResponseDTO.from(savedContract);
+        ContractResponseDTO responseDTO = ContractResponseDTO.createFrom(savedContract, creditorWalletAddress, debtorWalletAddress);
         responseDTO.setContractStatusName(sysCommonCodeService.getCodeName(
                 CONTRACT_STATUS, responseDTO.getContractStatus().getCode()));
 
@@ -181,6 +195,8 @@ public class ContractCommandService {
      */
     @Transactional
     public ContractResponseDTO completeContract(Integer contractId, Integer userId) {
+        // 시작 시간 측정
+        long startTime = System.currentTimeMillis();
         Contract contract = contractQueryService.findContractById(contractId);
 
         // 상태 전이 검증
@@ -195,13 +211,25 @@ public class ContractCommandService {
         contractProcessingService.completeContractProcessing(contract);
 
         Contract updatedContract = contractRepository.save(contract);
+
+        // 2. 채무자 지갑 주소 확인
+        String debtorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getDebtor().getUserId());
+        if (debtorWalletAddress == null || debtorWalletAddress.isBlank()) {
+            debtorWalletAddress = "";
+        }
+
         log.info("[계약 완료 처리] 계약 ID: {}, 채권자: {}, 채무자: {}",
                 contractId, contract.getCreditor().getUserId(), contract.getDebtor().getUserId());
 
         // PDF 생성, 이메일 및 알림 발송
         notificationHelper.sendContractCompletionNotifications(updatedContract);
 
-        return ContractResponseDTO.from(updatedContract);
+        // 종료 시간 측정 및 소요 시간 로깅
+        long endTime = System.currentTimeMillis();
+        long elapsedTime = endTime - startTime;
+        log.info("[성능 측정] 계약 ID: {}, NFT 생성 총 소요 시간: {}ms", contract.getContractId(), elapsedTime);
+
+        return ContractResponseDTO.successFrom(updatedContract, debtorWalletAddress);
     }
 
     /**

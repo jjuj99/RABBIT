@@ -134,3 +134,42 @@ export const CheckNicknameAPI = async (
   const data = await res.json();
   return data;
 };
+export const CheckEmailAPI = async (
+  email: string,
+): Promise<ApiResponse<CheckNicknameResponse>> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/auth/check-email?email=${email}`,
+    fetchOption("GET", undefined, "access"),
+  );
+  if (!res.ok) {
+    throw new Error("이메일 중복 확인에 실패했습니다");
+  }
+  const data = await res.json();
+  return data;
+};
+export interface PermitCoinRequest {
+  owner: string;
+  spender: string;
+  value: string;
+  deadline: string; //timestamp 초단위 변환
+  signature: string;
+}
+export interface PermitCoinResponse {
+  message: string;
+}
+export const PermitCoinAPI = async (
+  request: PermitCoinRequest,
+): Promise<ApiResponse<PermitCoinResponse>> => {
+  console.log("api까지 들어옴", request);
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/coins/permit`,
+    fetchOption("POST", request),
+  );
+  console.log(res);
+
+  if (!res.ok) {
+    throw new Error("허가 코인 확인에 실패했습니다");
+  }
+  const data = await res.json();
+  return data;
+};

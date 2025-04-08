@@ -89,11 +89,11 @@ export const getLentDetailAPI = async (
 };
 
 export const earlypayAPI = async (
-  debtId: string,
+  contractId: string,
   prepaymentAmount: number,
 ): Promise<ApiResponse<EarlypayResponse>> => {
   const res = await fetch(
-    `${VITE_API_URL}/${VITE_API_VERSION}/promissory-notes/debts/${debtId}/prepayment`,
+    `${VITE_API_URL}/${VITE_API_VERSION}/promissory-notes/debts/${contractId}/prepayment`,
     fetchOption("POST", { prepaymentAmount }),
   );
   const data = await res.json();

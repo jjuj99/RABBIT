@@ -1,13 +1,18 @@
-import { useState, useEffect } from "react";
+import { BankList } from "@/entities/account/types/response";
+import useSignup from "@/entities/auth/hooks/useSignup";
+import { signupSchema } from "@/entities/auth/types/schema";
+import useGetWallet from "@/entities/wallet/hooks/useGetWallet";
+import tokenApprove from "@/entities/wallet/utils/tokenApprove";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/shared/ui/dialog";
+import { Form, FormControl, FormField, FormItem } from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import {
@@ -17,13 +22,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SignUpRequest, signupSchema } from "@/entities/auth/types/schema";
-import useSignup from "@/entities/auth/hooks/useSignup";
-import { BankList } from "@/entities/account/types/response";
+import { Check } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 // 회원가입 확인 모달 컴포넌트
 const SignupConfirmDialog = ({
@@ -65,8 +69,9 @@ const SignupFormDialog = ({
   isSignupModalOpen: boolean;
   setIsSignupModalOpen: (isOpen: boolean) => void;
 }) => {
-  const { bankList, send1won, verify1won, checkNickname, signup } = useSignup();
-
+  const { bankList, send1won, verify1won, checkNickname, checkEmail, signup } =
+    useSignup();
+  const { address } = useGetWallet();
   const [isChecking, setIsChecking] = useState({
     nickname: false,
     email: false,
@@ -81,9 +86,23 @@ const SignupFormDialog = ({
 
   const [showVerificationCode, setShowVerificationCode] = useState(false);
   const [banks, setBanks] = useState<BankList[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contractStatus, setContractStatus] = useState<
+    "loading" | "ready" | "error"
+  >("loading");
+  const [contractError, setContractError] = useState<string | null>(null);
 
-  const form = useForm<SignUpRequest>({
+  const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
+    defaultValues: {
+      userName: "",
+      email: "",
+      nickname: "",
+      bankId: undefined,
+      refundAccount: "",
+      walletAddress: "",
+      verificationCode: "",
+    },
   });
 
   // 은행 목록 가져오기
@@ -103,6 +122,24 @@ const SignupFormDialog = ({
     return () => subscription.unsubscribe();
   }, [form.watch, isVerified.nickname]);
 
+  // 이메일 변경 감지를 위한 useEffect 추가
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "email" && isVerified.email) {
+        setIsVerified((prev) => ({ ...prev, email: false }));
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form.watch, isVerified.email]);
+
+  useEffect(() => {
+    if (address) {
+      form.setValue("walletAddress", address);
+    }
+  }, [address, form]);
+
+  // 토큰 컨트랙트 초기화 useEffect 제거 - permit 서명 시에만 초기화할 예정
+
   const handleCheckNickname = async () => {
     const nickname = form.getValues("nickname");
     if (!nickname) {
@@ -112,21 +149,25 @@ const SignupFormDialog = ({
 
     setIsChecking((prev) => ({ ...prev, nickname: true }));
     try {
-      await checkNickname(nickname);
-      setIsVerified((prev) => ({ ...prev, nickname: true }));
-      toast.success("사용 가능한 닉네임입니다");
+      const response = await checkNickname(nickname);
+      if (response.data?.duplicated) {
+        toast.error("중복된 닉네임입니다");
+      } else {
+        setIsVerified((prev) => ({ ...prev, nickname: true }));
+        toast.success("사용 가능한 닉네임입니다");
+      }
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        toast.error("중복된 닉네임입니다");
+        toast.error("닉네임 중복 확인 중 오류가 발생했습니다");
       }
     } finally {
       setIsChecking((prev) => ({ ...prev, nickname: false }));
     }
   };
 
-  const checkEmail = async () => {
+  const handleCheckEmail = async () => {
     const email = form.getValues("email");
     if (!email) {
       toast.error("이메일을 입력해주세요");
@@ -135,15 +176,18 @@ const SignupFormDialog = ({
 
     setIsChecking((prev) => ({ ...prev, email: true }));
     try {
-      // const response = await checkEmailAPI(email);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setIsVerified((prev) => ({ ...prev, email: true }));
-      toast.success("사용 가능한 이메일입니다");
+      const response = await checkEmail(email);
+      if (response.data?.duplicated) {
+        toast.error("중복된 이메일입니다");
+      } else {
+        setIsVerified((prev) => ({ ...prev, email: true }));
+        toast.success("사용 가능한 이메일입니다");
+      }
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        toast.error("중복된 이메일입니다");
+        toast.error("이메일 중복 확인 중 오류가 발생했습니다");
       }
     } finally {
       setIsChecking((prev) => ({ ...prev, email: false }));
@@ -159,8 +203,9 @@ const SignupFormDialog = ({
 
     setIsChecking((prev) => ({ ...prev, account: true }));
     try {
+      const email = form.getValues("email");
       await send1won({
-        email: form.getValues("email"),
+        email,
         accountNumber: refundAccount,
       });
       setShowVerificationCode(true);
@@ -199,17 +244,73 @@ const SignupFormDialog = ({
     }
   };
 
-  const onSubmit = async (data: SignUpRequest) => {
+  const onSubmit = async (data: z.infer<typeof signupSchema>) => {
+    // 폼 검증
+    if (!isVerified.nickname || !isVerified.email || !isVerified.account) {
+      toast.error("모든 항목의 검증이 필요합니다");
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      await signup(data);
+      // 서명 생성
+      // const permitData = await createPermitSignature(
+      //   tokenAddress,
+      //   data.walletAddress,
+      //   ownerAddress,
+      //   "1000000000000000000",
+      //   Date.now() + 1000 * 60 * 5,
+      // );
+      // console.log("permitData", permitData);
+
+      // //PermitCoinRequest 형식으로 변환
+      // const permitCoinRequest: PermitCoinRequest = {
+      //   owner: data.walletAddress,
+      //   spender: ownerAddress,
+      //   value: "1000000000000000000",
+      //   deadline: (Date.now() + 1000 * 60 * 5).toString(),
+      //   signature: permitData,
+      // };
+      // console.log("permitCoinRequest", permitCoinRequest);
+      // // 토큰 승인 API 호출
+      // const permitCoinResponse = await permitCoin(permitCoinRequest);
+      // console.log("permitCoinResponse", permitCoinResponse);
+      // toast.success("토큰 승인이 완료되었습니다");
+
+      const contractOwnerAddress = import.meta.env
+        .VITE_RABBIT_CONTRACT_OWNER_ADDRESS;
+      const repaymentAddress = import.meta.env.VITE_RABBIT_REPAYMENT_ADDRESS;
+      const auctionAddress = import.meta.env.VITE_RABBIT_AUCTION_ADDRESS;
+      await tokenApprove(contractOwnerAddress, "1000000000000000000");
+      await tokenApprove(repaymentAddress, "1000000000000000000");
+      await tokenApprove(auctionAddress, "1000000000000000000");
+
+      // 회원가입 API 호출
+      const submitData = {
+        ...data,
+        bankId: Number(data.bankId),
+      };
+
+      const result = await signup(submitData);
+      console.log(result);
       toast.success("회원가입이 완료되었습니다");
       setIsSignupModalOpen(false);
     } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("회원가입에 실패했습니다");
+      console.error("회원가입 중 오류 발생:", error);
+
+      // 사용자 거부인 경우
+      if (error instanceof Error && error.message.includes("User denied")) {
+        toast.error("사용자가 서명을 거부했습니다");
       }
+      // 기타 오류
+      else {
+        toast.error(
+          `회원가입 중 오류가 발생했습니다: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -223,192 +324,272 @@ const SignupFormDialog = ({
             <br /> 가입을 위한 추가정보를 입력해주세요.
           </DialogDescription>
         </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* 이메일 */}
-          <div className="space-y-2">
-            <Label htmlFor="email">이메일</Label>
-            <div className="flex gap-2">
-              <Input
-                id="email"
-                type="email"
-                {...form.register("email")}
-                placeholder="이메일을 입력해주세요"
-                className="flex-1"
-                readOnly={isVerified.email}
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={checkEmail}
-                disabled={
-                  isChecking.email ||
-                  isVerified.email ||
-                  !form.getValues("email")?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+              // 폼 유효성 검사
+              const isValid = await form.trigger();
+
+              if (isValid) {
+                try {
+                  await onSubmit(form.getValues());
+                } catch (error) {
+                  console.error("폼 제출 에러:", error);
                 }
-              >
-                {isChecking.email
-                  ? "확인 중..."
-                  : isVerified.email
-                    ? "확인 완료"
-                    : "중복확인"}
-              </Button>
-            </div>
-            {form.formState.errors.email && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.email.message}
-              </p>
-            )}
-          </div>
-
-          {/* 실명 */}
-          <div className="space-y-2">
-            <Label htmlFor="name">실명</Label>
-            <Input
-              id="name"
-              {...form.register("name")}
-              placeholder="실명을 입력해주세요"
-              readOnly={isVerified.account}
-            />
-            {form.formState.errors.name && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.name.message}
-              </p>
-            )}
-          </div>
-
-          {/* 닉네임 */}
-          <div className="space-y-2">
-            <Label htmlFor="nickname">닉네임</Label>
-            <div className="flex gap-2">
-              <Input
-                id="nickname"
-                {...form.register("nickname")}
-                placeholder="사용하실 닉네임을 입력해주세요"
-                className="flex-1"
-                readOnly={isVerified.nickname}
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleCheckNickname}
-                disabled={
-                  isChecking.nickname ||
-                  isVerified.nickname ||
-                  form.getValues("nickname")?.length < 2
-                }
-              >
-                {isChecking.nickname
-                  ? "확인 중..."
-                  : isVerified.nickname
-                    ? "확인 완료"
-                    : "중복확인"}
-              </Button>
-            </div>
-            {form.formState.errors.nickname && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.nickname.message}
-              </p>
-            )}
-          </div>
-
-          {/* 계좌정보 */}
-          <div className="space-y-2">
-            <Label>계좌정보</Label>
-            <div className="space-y-2">
-              <Select
-                onValueChange={(value) =>
-                  form.setValue("bankId", Number(value))
-                }
-                disabled={isVerified.account}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="은행을 선택해주세요" />
-                </SelectTrigger>
-                <SelectContent>
-                  {banks.map((bank) => (
-                    <SelectItem
-                      key={bank.bankId}
-                      value={bank.bankId.toString()}
-                    >
-                      {bank.bankName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <div className="flex gap-2">
-                <Input
-                  {...form.register("refundAccount")}
-                  placeholder="계좌번호를 입력해주세요"
-                  className="flex-1"
-                  readOnly={isVerified.account}
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={sendVerification}
-                  disabled={
-                    isChecking.account ||
-                    isVerified.account ||
-                    !form.getValues("bankId") ||
-                    !form.getValues("refundAccount")?.match(/^\d{10,14}$/)
-                  }
-                >
-                  {isChecking.account
-                    ? "송금 중..."
-                    : isVerified.account
-                      ? "인증 완료"
-                      : "1원 송금"}
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* 메타마스크 지갑 주소 */}
-          <div className="space-y-2">
-            <Label htmlFor="metamaskWallet">메타마스크 지갑 주소</Label>
-            <Input
-              id="metamaskWallet"
-              {...form.register("metamaskWallet")}
-              placeholder="메타마스크 지갑 주소를 입력해주세요"
-            />
-            {form.formState.errors.metamaskWallet && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.metamaskWallet.message}
-              </p>
-            )}
-          </div>
-
-          {/* 인증번호 입력 */}
-          {showVerificationCode && !isVerified.account && (
-            <div className="space-y-2">
-              <Label htmlFor="verificationCode">인증번호</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="verificationCode"
-                  {...form.register("verificationCode")}
-                  placeholder="인증번호를 입력해주세요"
-                  className="flex-1"
-                />
-                <Button type="button" onClick={verifyAccount}>
-                  확인
-                </Button>
-              </div>
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            variant="primary"
-            className="w-full"
-            disabled={
-              !isVerified.nickname || !isVerified.email || !isVerified.account
-            }
+              }
+            }}
+            className="space-y-6"
           >
-            회원가입
-          </Button>
-        </form>
+            {/* 이메일 */}
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <Label>이메일</Label>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="이메일을 입력해주세요(.com으로 끝내주세요.)"
+                        className="flex-1"
+                        {...field}
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="gradient"
+                      onClick={handleCheckEmail}
+                      disabled={
+                        isChecking.email ||
+                        isVerified.email ||
+                        !form.formState.dirtyFields.email ||
+                        !!form.formState.errors.email
+                      }
+                    >
+                      {isChecking.email
+                        ? "확인 중..."
+                        : isVerified.email
+                          ? "확인 완료"
+                          : "중복확인"}
+                    </Button>
+                  </div>
+                  {form.formState.errors.email && (
+                    <p className="text-sm text-red-500">
+                      {form.formState.errors.email.message}
+                    </p>
+                  )}
+                </FormItem>
+              )}
+            />
+
+            {/* 실명 */}
+            <FormField
+              control={form.control}
+              name="userName"
+              render={({ field }) => (
+                <FormItem>
+                  <Label>실명</Label>
+                  <FormControl>
+                    <Input
+                      placeholder="실명을 입력해주세요"
+                      readOnly={isVerified.account}
+                      {...field}
+                    />
+                  </FormControl>
+                  {form.formState.errors.userName && (
+                    <p className="text-sm text-red-500">
+                      {form.formState.errors.userName.message}
+                    </p>
+                  )}
+                </FormItem>
+              )}
+            />
+
+            {/* 닉네임 */}
+            <FormField
+              control={form.control}
+              name="nickname"
+              render={({ field }) => (
+                <FormItem>
+                  <Label>닉네임</Label>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input
+                        placeholder="사용하실 닉네임을 입력해주세요"
+                        className="flex-1"
+                        readOnly={isVerified.nickname}
+                        {...field}
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="gradient"
+                      onClick={handleCheckNickname}
+                      disabled={
+                        isChecking.nickname ||
+                        isVerified.nickname ||
+                        form.getValues("nickname")?.length < 2
+                      }
+                    >
+                      {isChecking.nickname
+                        ? "확인 중..."
+                        : isVerified.nickname
+                          ? "확인 완료"
+                          : "중복확인"}
+                    </Button>
+                  </div>
+                  {form.formState.errors.nickname && (
+                    <p className="text-sm text-red-500">
+                      {form.formState.errors.nickname.message}
+                    </p>
+                  )}
+                </FormItem>
+              )}
+            />
+
+            {/* 계좌정보 */}
+            <div className="space-y-2">
+              <Label>계좌정보</Label>
+              <div className="space-y-2">
+                <FormField
+                  control={form.control}
+                  name="bankId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Select
+                        onValueChange={(value) => {
+                          const numValue = Number(value);
+                          field.onChange(numValue);
+                        }}
+                        value={field.value ? field.value.toString() : ""}
+                        disabled={isVerified.account}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="은행을 선택해주세요" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {banks.map((bank) => (
+                            <SelectItem
+                              key={bank.bankId}
+                              value={bank.bankId.toString()}
+                            >
+                              {bank.bankName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="refundAccount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input
+                            placeholder="계좌번호를 입력해주세요"
+                            readOnly={isVerified.account}
+                            {...field}
+                          />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          variant="gradient"
+                          onClick={sendVerification}
+                          disabled={
+                            isChecking.account ||
+                            isVerified.account ||
+                            !form.getValues("bankId") ||
+                            !!form.formState.errors.refundAccount ||
+                            !form.getValues("refundAccount") ||
+                            form.getValues("refundAccount").length < 10 ||
+                            form.getValues("refundAccount").length > 14
+                          }
+                        >
+                          {isChecking.account
+                            ? "송금 중..."
+                            : isVerified.account
+                              ? "인증 완료"
+                              : "1원 송금"}
+                        </Button>
+                      </div>
+                      {form.formState.errors.refundAccount && (
+                        <p className="text-sm text-red-500">
+                          {form.formState.errors.refundAccount.message}
+                        </p>
+                      )}
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* 인증번호 입력 */}
+            {showVerificationCode && !isVerified.account && (
+              <FormField
+                control={form.control}
+                name="verificationCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <Label>인증번호</Label>
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input
+                          placeholder="인증번호를 입력해주세요"
+                          className="flex-1"
+                          {...field}
+                        />
+                      </FormControl>
+                      <Button type="button" onClick={verifyAccount}>
+                        확인
+                      </Button>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* 메타마스크 지갑 주소 */}
+            <FormField
+              control={form.control}
+              name="walletAddress"
+              render={({ field }) => (
+                <FormItem>
+                  <Label>메타마스크 지갑 주소</Label>
+                  <div className="flex items-center gap-2 rounded-md border border-gray-600 bg-gray-800 px-3 py-2">
+                    <div className="flex-1 text-sm text-gray-300">
+                      {field.value || "지갑 연결 대기중..."}
+                    </div>
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
+                      <Check className="h-3 w-3 text-white" />
+                    </div>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full"
+              isLoading={isSubmitting}
+              disabled={
+                isSubmitting ||
+                !isVerified.nickname ||
+                !isVerified.email ||
+                !isVerified.account
+              }
+            >
+              회원가입
+            </Button>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

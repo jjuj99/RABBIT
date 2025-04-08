@@ -6,7 +6,11 @@ import { Button } from "@/shared/ui/button";
 import NFTEventList from "@/entities/common/ui/NFTEventList";
 import NFTEventListMobile from "@/entities/common/ui/NFTEventListMobile";
 import useMediaQuery from "@/shared/hooks/useMediaQuery";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { getBorrowDetailAPI, earlypayAPI } from "@/entities/loan/api/loanApi";
 import { useNavigate, useParams } from "react-router";
 import {
@@ -31,10 +35,9 @@ const BorrowDetail = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data } = useQuery({
+  const { data } = useSuspenseQuery({
     queryKey: ["borrowDetail", contractId],
     queryFn: () => getBorrowDetailAPI(contractId!),
-    enabled: !!contractId,
   });
 
   const earlyRepaymentMutation = useMutation({

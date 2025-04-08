@@ -1,4 +1,7 @@
-import { NotificationContext } from "@/shared/lib/notification/NotificationContext.tsx";
+import {
+  NotificationContext,
+  NotificationResponse,
+} from "@/shared/lib/notification/NotificationContext.tsx";
 import {
   Menubar,
   MenubarContent,
@@ -20,74 +23,16 @@ import { Button } from "@/shared/ui/button";
 import { useNavigate } from "react-router";
 import { ReadNotificationAPI } from "@/widget/common/api/NotificationAPI";
 
-interface Notification {
-  notificationId: number;
-  type:
-    | "AUCTION_FAILED"
-    | "AUCTION_SUCCESS"
-    | "AUCTION_TRANSFERRED"
-    | "BID_FAILED";
-  title: string;
-  content: string;
-  readFlag: boolean;
-  relatedId: number;
-  relatedType: string;
-  createdAt: string;
-}
-
 const AlarmButton = () => {
   const context = useContext(NotificationContext);
   const notifications = context?.notifications || [];
   const unreadCount = notifications.filter((n) => !n.readFlag).length;
   const [selectedNotification, setSelectedNotification] =
-    useState<Notification | null>(null);
+    useState<NotificationResponse | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
 
-  const notificationstest: Notification[] = [
-    {
-      notificationId: 20,
-      type: "AUCTION_FAILED",
-      title: "경매 유찰",
-      content: "경매에 낙찰자가 없어 유찰되었습니다.",
-      readFlag: false,
-      relatedId: 58,
-      relatedType: "AUCTION",
-      createdAt: "2025-04-03 16:16:00",
-    },
-    {
-      notificationId: 19,
-      type: "AUCTION_TRANSFERRED",
-      title: "NFT 전송 예정",
-      content: "경매가 완료되어 NFT가 낙찰자에게 전송됩니다.",
-      readFlag: false,
-      relatedId: 57,
-      relatedType: "AUCTION",
-      createdAt: "2025-04-03 15:55:00",
-    },
-    {
-      notificationId: 18,
-      type: "AUCTION_SUCCESS",
-      title: "경매 낙찰 성공",
-      content: "경매에 낙찰되었습니다. NFT가 곧 전송됩니다.",
-      readFlag: false,
-      relatedId: 57,
-      relatedType: "AUCTION",
-      createdAt: "2025-04-03 15:55:00",
-    },
-    {
-      notificationId: 17,
-      type: "BID_FAILED",
-      title: "입찰 실패",
-      content: "다른 입찰자가 더 높은 금액을 입찰했습니다.",
-      readFlag: false,
-      relatedId: 25,
-      relatedType: "AUCTION",
-      createdAt: "2025-04-03 15:40:22",
-    },
-  ];
-
-  const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = (notification: NotificationResponse) => {
     setSelectedNotification(notification);
     setIsModalOpen(true);
   };
@@ -131,11 +76,11 @@ const AlarmButton = () => {
             )}
           </MenubarTrigger>
           <MenubarContent>
-            {notificationstest.length === 0 ? (
+            {notifications.length === 0 ? (
               <MenubarItem disabled>새로운 알림이 없습니다.</MenubarItem>
             ) : (
               <ScrollArea className="h-[300px] w-full">
-                {notificationstest.map((notification, index) => (
+                {notifications.map((notification, index) => (
                   <>
                     <MenubarItem
                       key={notification.notificationId}
@@ -157,7 +102,7 @@ const AlarmButton = () => {
                         </p>
                       </div>
                     </MenubarItem>
-                    {index !== notificationstest.length - 1 && (
+                    {index !== notifications.length - 1 && (
                       <Separator className="h-[1px] w-full" />
                     )}
                   </>

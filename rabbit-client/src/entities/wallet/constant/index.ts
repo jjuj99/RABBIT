@@ -18,8 +18,7 @@ const LOGIN_MESSAGE = (walletAddres: string, nonce: string) => {
 
 지갑 주소: ${walletAddres}
 Nonce: ${nonce}
-네트워크: Sepolia Testnet
-타임스탬프: ${new Date().toISOString()}`;
+네트워크: Sepolia Testnet`;
 };
 
 export { SEPOLIA_CHAIN_ID, SEPOLIA_NETWORK_PARAMS, LOGIN_MESSAGE };

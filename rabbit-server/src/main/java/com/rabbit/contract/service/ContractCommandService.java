@@ -250,7 +250,7 @@ public class ContractCommandService {
         // 계약 상태 결정 (취소 또는 수정 요청)
         SysCommonCodes.Contract newStatus = requestDTO.isCanceled() ?
                 SysCommonCodes.Contract.CANCELED :
-                SysCommonCodes.Contract.MODIFICATION_REQUESTED;
+                SysCommonCodes.Contract.REJECTED;
 
         // 상태 업데이트
         contract.updateStatus(newStatus);

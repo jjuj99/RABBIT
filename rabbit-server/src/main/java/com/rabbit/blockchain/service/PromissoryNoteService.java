@@ -49,7 +49,7 @@ public class PromissoryNoteService {
 
         // 가스 설정
 //        ContractGasProvider gasProvider = new StaticGasProvider(gasPrice, gasLimit);
-
+//        log.info("@@@metadata.addTerms.addTermsHash : {}",metadata.addTerms.addTermsHash);
         // 컨트랙트 로드
         PromissoryNote contract = PromissoryNote.load(
                 contractAddress,

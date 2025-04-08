@@ -19,6 +19,7 @@ import com.rabbit.global.util.LoanUtil;
 import com.rabbit.loan.domain.dto.response.LentAuctionResponseDTO;
 import com.rabbit.loan.domain.dto.response.*;
 import com.rabbit.loan.util.DataUtil;
+import com.rabbit.promissorynote.service.PromissoryNoteBusinessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +42,7 @@ public class LoanService {
     private final EventService eventService;
 
     private final ContractRepository contractRepository;
+    private final PromissoryNoteBusinessService promissoryNoteBusinessService;
     private final AuctionRepository auctionRepository;
     private final BankService bankService;
     private final LoanUtil loanUtil;
@@ -192,15 +194,21 @@ public class LoanService {
 //        }
 
         Contract contract = Contract.builder()
-                .contractId(20)
-                .tokenId(BigInteger.valueOf(13))
+                .contractId(36)
+                .tokenId(BigInteger.valueOf(22))
                 .build();
+
+
 
         try {
             PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(contract.getTokenId());
             RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(contract.getTokenId());
 
             List<ContractEventDTO> events = eventService.getEventList(contract.getTokenId());
+
+            String pdfUrl = promissoryNoteBusinessService.getPromissoryNotePdfUriByTokenId(contract.getTokenId());
+
+//            log.info("promissoryMetadata.addTerms.addTermsHash : {}",promissoryMetadata.addTerms.addTermsHash);
 
             return BorrowDetailResponseDTO.builder()
                     .contractId(contractId)
@@ -228,7 +236,7 @@ public class LoanService {
                     .accel(repaymentInfo.overdueInfo.accel.intValue())
                     .accelDir(20) // 기한 이익 상실 연체 이자율을 없는 거 같은데
                     .addTerms(promissoryMetadata.addTerms.addTerms)
-                    .addTermsHash(promissoryMetadata.addTerms.addTermsHash)
+                    .addTermsHash(pdfUrl)
                      .eventList(events) // 이벤트 내역 불러오기도 있는가
                     .build();
         } catch (Exception e) {
@@ -393,6 +401,7 @@ public class LoanService {
             RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(contract.getTokenId());
 
             List<ContractEventDTO> events = eventService.getEventList(contract.getTokenId());
+            String pdfUrl = promissoryNoteBusinessService.getPromissoryNotePdfUriByTokenId(contract.getTokenId());
 
             return LentDetailResponseDTO.builder()
                     .contractId(contractId)
@@ -420,7 +429,7 @@ public class LoanService {
                     .accel(repaymentInfo.overdueInfo.accel.intValue())
                     .accelDir(20) // 기한 이익 상실 연체 이자율을 없는 거 같은데
                     .addTerms(promissoryMetadata.addTerms.addTerms)
-                    .addTermsHash(promissoryMetadata.addTerms.addTermsHash)
+                    .addTermsHash(pdfUrl)
                     .eventList(events) // 이벤트 내역 불러오기도 있는가
                     .build();
         } catch (Exception e) {

@@ -57,4 +57,13 @@ public interface PromissoryNoteRepository extends JpaRepository<PromissoryNoteEn
      */
     @Query("SELECT p FROM PromissoryNoteEntity p WHERE p.tokenId IN :tokenIds AND p.deletedFlag = false")
     List<PromissoryNoteEntity> findByTokenIdsAndDeletedFlagFalse(@Param("tokenIds") List<BigInteger> tokenIds);
+
+    /**
+     * 토큰 ID로 addTermsHash 값 조회
+     *
+     * @param tokenId 토큰 ID
+     * @return addTermsHash 값 (PDF URI)
+     */
+    @Query("SELECT p.addTermsHash FROM PromissoryNoteEntity p WHERE p.tokenId = :tokenId AND p.deletedFlag = false")
+    Optional<String> findAddTermsHashByTokenId(@Param("tokenId") BigInteger tokenId);
 }

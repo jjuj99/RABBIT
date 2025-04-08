@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import { Separator } from "@/shared/ui/Separator";
+import addNFTToWallet from "@/entities/wallet/utils/addNFTToWallet";
 
 const ContractComplete = () => {
   const navigate = useNavigate();
@@ -13,7 +14,10 @@ const ContractComplete = () => {
   const [init, setInit] = useState(false);
   const [showParticles, setShowParticles] = useState(false);
   const [showEnhancedGlow, setShowEnhancedGlow] = useState(false);
-
+  console.log(state);
+  useEffect(() => {
+    addNFTToWallet(state.tokenId, state.nftImageUrl);
+  }, []);
   useEffect(() => {
     initParticlesEngine(async (engine) => {
       await loadSlim(engine);

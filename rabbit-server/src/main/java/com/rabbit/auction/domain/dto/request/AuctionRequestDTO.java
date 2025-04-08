@@ -16,5 +16,4 @@ public class AuctionRequestDTO {
     private Long minimumBid;
     private ZonedDateTime endDate;
     private BigInteger tokenId;
-    private String sellerSign;
 }

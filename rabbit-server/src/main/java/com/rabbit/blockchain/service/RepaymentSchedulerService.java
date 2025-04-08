@@ -17,12 +17,14 @@ import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.gas.DefaultGasProvider;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -31,6 +33,8 @@ public class RepaymentSchedulerService {
 
     private final Web3j web3j;
     private final Credentials credentials;
+
+    private final RepaymentScheduler repaymentScheduler;
 
     @Value("${blockchain.repaymentScheduler.address}")
     private String contractAddress;
@@ -142,5 +146,32 @@ public class RepaymentSchedulerService {
                 (BigInteger) values.get(19).getValue(), // currentIr
                 (BigInteger) values.get(20).getValue()  // totalDefCnt
         );
+    }
+
+    public void processEarlyRepayment(BigInteger tokenId, BigInteger amount) {
+        try {
+            // 1. 중도상환 수수료 계산
+            BigInteger feeAmount = repaymentScheduler.getEarlyRepaymentFee(tokenId, amount)
+                    .send();
+
+            // 2. 중도 상환 실행
+            TransactionReceipt receipt = repaymentScheduler.processEarlyRepayment(tokenId, amount, feeAmount)
+                    .sendAsync()
+                    .get(20, TimeUnit.SECONDS);;
+
+            // 3. 중도 상환 실패 (잔액 부족) 오류 감지
+            List<RepaymentScheduler.InsufficientBalanceEventResponse> failedEvents = RepaymentScheduler.getInsufficientBalanceEvents(receipt);
+
+            // 3-1. 잔액 부족 이벤트가 감지된다면 -> 중도 상환 실패
+            if (!failedEvents.isEmpty()) {
+                log.error("[BLOCKCHAIN ERROR] RepaymentScheduler getEarlyRepaymentFee 잔액 부족");
+                throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "RAB 코인 잔액이 부족합니다");
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e){
+            log.error("[BLOCKCHAIN ERROR] RepaymentScheduler getEarlyRepaymentFee {}", e.getMessage());
+            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "중도상환 중 오류가 발생했습니다");
+        }
     }
 }

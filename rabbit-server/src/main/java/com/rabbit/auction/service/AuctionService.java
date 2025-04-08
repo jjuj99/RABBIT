@@ -95,7 +95,7 @@ public class AuctionService {
     private static final String AUCTION_STATUS = SysCommonCodes.Auction.values()[0].getCodeType();
     private static final String BID_STATUS = SysCommonCodes.Bid.values()[0].getCodeType();
 
-    public void addAuction(@Valid AuctionRequestDTO auctionRequest, Integer userId) {
+    public AuctionIdDTO addAuction(@Valid AuctionRequestDTO auctionRequest, Integer userId) {
         String tokenId = auctionRequest.getTokenId().toString();
         PromissoryNoteEntity promissoryNote = promissoryNoteRepository.findById(Long.parseLong(tokenId))
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 tokenId의 계약이 없습니다."));
@@ -116,7 +116,7 @@ public class AuctionService {
 
         User assignor = userService.findById(userId);
 
-        Auction auction= Auction.builder()
+        Auction auction = Auction.builder()
                 .assignor(assignor)  //아직 임의로 설정해둠
                 .minimumBid(auctionRequest.getMinimumBid())
                 .endDate(auctionRequest.getEndDate())
@@ -129,6 +129,10 @@ public class AuctionService {
         Auction savedAuction = auctionRepository.save(auction);
 
         auctionScheduler.scheduleAuctionEnd(savedAuction.getAuctionId(), savedAuction.getEndDate());
+
+        return AuctionIdDTO.builder()
+                .auctionId(savedAuction.getAuctionId())
+                .build();
     }
 
     public PageResponseDTO<AuctionResponseDTO> searchAuctions(AuctionFilterRequestDTO request, Pageable pageable) {

@@ -10,6 +10,7 @@ import {
   RejectContractResponse,
 } from "../types/response";
 import { CreateContractRequest, RejectContractRequest } from "../types/request";
+import { Pagination } from "@/shared/type/PaginationResponse";
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 const VITE_API_VERSION = import.meta.env.VITE_API_VERSION;
@@ -30,7 +31,7 @@ export const createContractAPI = async (
 
 export const getContractListAPI = async (
   type: "sent" | "received",
-): Promise<ApiResponse<ContractListResponse[]>> => {
+): Promise<ApiResponse<Pagination<ContractListResponse>>> => {
   const response = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/contracts?searchCondition.type=${type}`,
     fetchOption("GET"),

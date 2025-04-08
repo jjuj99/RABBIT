@@ -10,7 +10,8 @@ interface LoanInfoProps {
   crName: string;
   crWallet: string;
   la: number;
-  totalAmount: number;
+  totalAmount?: number;
+  remainingPrincipal?: number;
   repayType: string;
   ir: number;
   dir: number;
@@ -19,6 +20,8 @@ interface LoanInfoProps {
   pnStatus: pnStatus;
   earlypayFlag?: boolean;
   earlypayFee?: number;
+  accel?: number;
+  accelDir?: number;
 }
 
 const LoanInfo = ({
@@ -27,6 +30,7 @@ const LoanInfo = ({
   crWallet,
   la,
   totalAmount,
+  remainingPrincipal,
   repayType,
   ir,
   dir,
@@ -35,6 +39,8 @@ const LoanInfo = ({
   pnStatus,
   earlypayFlag,
   earlypayFee,
+  accel,
+  accelDir,
 }: LoanInfoProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -82,16 +88,32 @@ const LoanInfo = ({
             }
           />
           <InfoRow label="대출 금액" value={`${la.toLocaleString()}₩`} />
-          <InfoRow
-            label="만기시 총 수취액"
-            value={`${totalAmount.toLocaleString()}₩`}
-          />
+          {totalAmount !== undefined ? (
+            <InfoRow
+              label="만기시 총 수취액"
+              value={`${totalAmount.toLocaleString()}₩`}
+            />
+          ) : (
+            <InfoRow
+              label="남은 원금"
+              value={`${remainingPrincipal?.toLocaleString()}원`}
+            />
+          )}
           <InfoRow label="상환 방식" value={repayType} />
           <InfoRow label="이자율" value={`${ir}%`} />
           <InfoRow label="연체 이자율" value={`${dir}%`} />
           <InfoRow label="연체" value={`${defCnt}회`} />
-          {earlypayFee && earlypayFlag !== undefined && (
-            <InfoRow label="기한 이익 상실" value={`${earlypayFee}%`} />
+          {accel !== undefined && accelDir !== undefined && (
+            <InfoRow
+              label="기한 이익 상실"
+              value={`${accel}회 연체시 이자율 ${accelDir}%`}
+            />
+          )}
+          {earlypayFee !== undefined && (
+            <InfoRow
+              label="중도 상환 수수료"
+              value={earlypayFlag ? `${earlypayFee}%` : "불가능"}
+            />
           )}
         </div>
       </div>

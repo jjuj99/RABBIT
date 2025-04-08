@@ -62,7 +62,7 @@ export interface BorrowDetailResponse {
   crName: string;
   crWallet: string;
   la: number;
-  totalAmount: number;
+  remainingPrincipal: number;
   repayType: string;
   ir: number;
   dir: number;

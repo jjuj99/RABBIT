@@ -77,7 +77,8 @@ const ContractDetail = () => {
 
   const handleCancel = async () => {
     try {
-      cancelContract();
+      await cancelContract();
+      console.log("계약 취소 성공");
       toast.success("계약이 취소되었습니다.");
       setIsCancelDialogOpen(false);
       navigate("/contract/sent");
@@ -123,8 +124,11 @@ const ContractDetail = () => {
 
   const renderActionButtons = () => {
     // 로그인한 사용자가 채무자인 경우
-    if (contract.drWallet === address) {
+    console.log("contract.drWallet", contract.drWallet);
+    console.log("address", address);
+    if (contract.drWallet.toLowerCase() === address?.toLowerCase()) {
       if (contract.contractStatus === "REQUESTED") {
+        console.log("REQUESTED");
         return (
           <>
             <Button
@@ -221,7 +225,7 @@ const ContractDetail = () => {
       }
     }
     // 로그인한 사용자가 채권자인 경우
-    else if (contract.crWallet === address) {
+    else if (contract.crWallet.toLowerCase() === address?.toLowerCase()) {
       if (contract.contractStatus === "REQUESTED") {
         return (
           <>
@@ -268,8 +272,17 @@ const ContractDetail = () => {
         return null;
       }
       if (contract.contractStatus === "CONTRACTED") {
-        navigate("/credit");
-        return null;
+        return (
+          <>
+            <Button
+              onClick={() => navigate("/loan/lent")}
+              className="flex-1 text-base font-bold text-gray-700 md:max-w-[150px] md:text-lg"
+              variant="secondary"
+            >
+              나의 채권
+            </Button>
+          </>
+        );
       }
       if (contract.contractStatus === "CANCELED") {
         return null; // 목록으로 버튼만 표시

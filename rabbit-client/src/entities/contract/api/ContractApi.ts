@@ -81,7 +81,7 @@ export const cancelContractAPI = async (
 ): Promise<ApiResponse<CancelContractResponse>> => {
   const response = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/contracts/${contractId}/cancel`,
-    fetchOption("POST"),
+    fetchOption("PATCH"),
   );
   if (!response.ok) {
     const errorData = await response.json();

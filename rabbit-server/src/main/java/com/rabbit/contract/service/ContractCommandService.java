@@ -74,7 +74,7 @@ public class ContractCommandService {
             // 권한 검증 - 채무자만 수정 가능
             if (!Objects.equals(originalContract.getDebtor().getUserId(), userId)) {
                 log.warn("[계약 수정 권한 없음] 사용자 ID: {}, 원본 계약 ID: {}", userId, contractIdParam);
-                throw new BusinessException(ErrorCode.ACCESS_DENIED, "원본 계약의 채무자만 계약을 수정할 수 있습니다");
+                throw new BusinessException(ErrorCode.ACCESS_DENIED, "원본 계약의 채무자만 계약을 취소할 수 있습니다");
             }
 
             // 원본 계약 상태 검증 - MODIFICATION_REQUESTED 상태인지 확인
@@ -380,7 +380,9 @@ public class ContractCommandService {
                 break;
 
             case MODIFICATION_REQUESTED:
-                throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "수정 요청된 계약의 상태는 변경할 수 없습니다");
+                if (newStatus != SysCommonCodes.Contract.CANCELED) {
+                    throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "수정 요청된 계약의 상태는 변경할 수 없습니다");
+                }
 
             case REJECTED:
                 throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "거절된 계약의 상태는 변경할 수 없습니다");

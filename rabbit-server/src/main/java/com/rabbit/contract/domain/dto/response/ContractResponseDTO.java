@@ -160,7 +160,7 @@ public class ContractResponseDTO {
      * @param contract 계약 엔티티
      * @return 계약 응답 DTO - 체결 시
      */
-    public static ContractResponseDTO createFrom(Contract contract, String crWallet) {
+    public static ContractResponseDTO createFrom(Contract contract, String crWallet, String drWallet) {
         if (contract == null) {
             return null;
         }
@@ -172,6 +172,7 @@ public class ContractResponseDTO {
                 .crWallet(crWallet)
                 .drId(contract.getDebtor().getUserId())
                 .drName(contract.getDebtor().getNickname())
+                .drWallet(drWallet)
                 .la(contract.getLoanAmount())
                 .ir(contract.getInterestRate())
                 .contractDt(contract.getContractDate())

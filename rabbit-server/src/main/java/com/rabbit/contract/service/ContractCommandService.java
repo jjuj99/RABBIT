@@ -181,6 +181,8 @@ public class ContractCommandService {
      */
     @Transactional
     public ContractResponseDTO completeContract(Integer contractId, Integer userId) {
+        // 시작 시간 측정
+        long startTime = System.currentTimeMillis();
         Contract contract = contractQueryService.findContractById(contractId);
 
         // 상태 전이 검증
@@ -200,6 +202,11 @@ public class ContractCommandService {
 
         // PDF 생성, 이메일 및 알림 발송
         notificationHelper.sendContractCompletionNotifications(updatedContract);
+
+        // 종료 시간 측정 및 소요 시간 로깅
+        long endTime = System.currentTimeMillis();
+        long elapsedTime = endTime - startTime;
+        log.info("[성능 측정] 계약 ID: {}, NFT 생성 총 소요 시간: {}ms", contract.getContractId(), elapsedTime);
 
         return ContractResponseDTO.from(updatedContract);
     }

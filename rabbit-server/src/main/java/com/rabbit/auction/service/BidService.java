@@ -65,21 +65,20 @@ public class BidService {
 
         Integer previousBidderId = auction.getWinningBidder();
 
-        if(previousBidderId!=null){
+        BigInteger currentBalance = rabbitCoinService.balanceOf(currentBidderWallet.getWalletAddress());
+        BigInteger previousAmount = promissoryNoteAuctionService.getBiddingAmount(auction.getTokenId());
+        BigInteger bidAmount = BigInteger.valueOf(bidRequest.getBidAmount());
 
-            BigInteger currentBalance = rabbitCoinService.balanceOf(currentBidderWallet.getWalletAddress());
-            BigInteger previousAmount = promissoryNoteAuctionService.getBiddingAmount(auction.getTokenId());
-            BigInteger bidAmount = BigInteger.valueOf(bidRequest.getBidAmount());
+        log.info("가진 금액 {}", currentBalance);
 
-            // 현재 입찰자가 가격을 올려서 입찰
-            if(previousBidderId.equals(userId)){
-                if(currentBalance.add(previousAmount).compareTo(bidAmount) < 0){
-                    throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "입찰 금액이 부족합니다.");
-                }
-            }else{  //다른 사람이 입찰
-                if(currentBalance.compareTo(bidAmount) < 0){
-                    throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "입찰 금액이 부족합니다.");
-                }
+        // 현재 입찰자가 가격을 올려서 입찰
+        if(previousBidderId!=null && previousBidderId.equals(userId)){
+            if(currentBalance.add(previousAmount).compareTo(bidAmount) < 0){
+                throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "입찰 금액이 부족합니다.");
+            }
+        }else{  //다른 사람이 입찰
+            if(currentBalance.compareTo(bidAmount) < 0){
+                throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "입찰 금액이 부족합니다.");
             }
         }
 

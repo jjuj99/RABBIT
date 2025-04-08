@@ -28,7 +28,7 @@ export const ConfirmAPI = async (
 
 export const GetBankListAPI = async (): Promise<ApiResponse<BankList[]>> => {
   const res = await fetch(
-    `${VITE_API_URL}/${VITE_API_VERSION}/bank/list`,
+    `${VITE_API_URL}/${VITE_API_VERSION}/bank/auth/list`,
     fetchOption("GET", undefined, "access"),
   );
   if (!res.ok) {

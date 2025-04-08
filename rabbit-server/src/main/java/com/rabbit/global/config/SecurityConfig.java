@@ -43,7 +43,6 @@ public class SecurityConfig {
                                 .requestMatchers("/api/v1/sse/**").permitAll()
 //                                .requestMatchers("/api/v1/coins/**").permitAll()
                                 .requestMatchers("/api/v1/ipfs/**").permitAll()
-                                .requestMatchers("/api/v1/loans/**").permitAll()
                                 .anyRequest().authenticated() // 모든 요청 인증 필요
 //                                .anyRequest().permitAll()
                 )

@@ -20,3 +20,13 @@ export interface Verify1wonResponse {
 export interface Send1wonResponse {
   message: string;
 }
+
+export interface AccountHistoryResponse {
+  type: "DEPOSIT" | "WITHDRAW";
+  amount: number;
+  createdAt: string;
+}
+
+export interface WithdrawResponse {
+  message: string;
+}

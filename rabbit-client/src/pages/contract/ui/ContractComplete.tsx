@@ -1,4 +1,3 @@
-import { CompleteContractResponse } from "@/entities/contract/types/response";
 import { Button } from "@/shared/ui/button";
 import RAB from "@/shared/ui/RAB";
 import { useEffect, useState } from "react";
@@ -44,8 +43,6 @@ const ContractComplete = () => {
 
     return () => clearTimeout(timer);
   }, [init]);
-
-  const contract = state as CompleteContractResponse;
 
   return (
     <main className="relative mt-20 flex h-full flex-col items-center justify-center gap-9">
@@ -108,26 +105,26 @@ const ContractComplete = () => {
           <div className="absolute inset-[-2px] animate-[enhancedGlow_1.5s_ease-out] rounded-lg bg-white/20" />
         )}
         <div className="relative h-full w-full rounded-sm">
-          <img src="/images/NFT.png" alt="NFT" />
+          <img src={state.nftImageUrl} alt="NFT" />
         </div>
 
         <div className="bg-radial-accent flex w-full flex-col items-center gap-1 rounded-sm px-6 py-3">
           <div className="flex w-full justify-between">
             <span>채권자</span>
-            <span className="font-bold">{contract.crName}</span>
-          </div>
-          <div className="flex w-full justify-between">
-            <span>채무액</span>
-            <RAB amount={contract.la} size="sm" isColored={false} />
-          </div>
-          <div className="flex w-full justify-between">
-            <span>이자율</span>
-            <span>{contract.ir}%</span>
+            <span className="font-bold">{state.crName}</span>
           </div>
           <Separator className="w-full" />
           <div className="flex w-full justify-between">
-            <span>월 납부액</span>
-            <span>{contract.ir}</span>
+            <span>채무액</span>
+            <RAB amount={state.la} size="sm" isColored={false} />
+          </div>
+          <div className="flex w-full justify-between">
+            <span>이자율</span>
+            <span>{state.ir}%</span>
+          </div>
+          <div className="flex w-full justify-between">
+            <span>상환방식</span>
+            <span>{state.repayTypeName}</span>
           </div>
         </div>
       </div>
@@ -136,7 +133,7 @@ const ContractComplete = () => {
         <span className="text-2xl font-bold">
           계약이 성공적으로 체결되었습니다!
         </span>
-        <span className="text-lg">RABBIT #{contract.contractId}</span>
+        <span className="text-lg">RABBIT #{state.contractId}</span>
       </div>
 
       <Button

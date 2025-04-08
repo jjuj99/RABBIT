@@ -1,10 +1,12 @@
-import { AccountNav, CoinChargeForm, CoinStatus } from "@/entities/account";
+import { AccountNav, CoinStatus } from "@/entities/account";
+import useGetTrasitionHistory from "@/entities/coin/hook/useGetTrasitionHistory";
 import AccountHistory from "@/features/account/ui/AccountHistory";
+import CoinWithdrawForm from "@/features/account/ui/CoinWithdrawForm";
 import { useState } from "react";
 
 const CoinWithdraw = () => {
   const amountState = useState(0);
-
+  const { data } = useGetTrasitionHistory();
   return (
     <main className="grid grid-cols-1 gap-6 md:grid-cols-2">
       <div className="flex flex-col gap-6">
@@ -13,10 +15,10 @@ const CoinWithdraw = () => {
         <AccountNav />
 
         {/* 충전폼 */}
-        {/* <CoinChargeForm amountState={amountState} /> */}
+        <CoinWithdrawForm amountState={amountState} />
       </div>
 
-      <AccountHistory />
+      <AccountHistory data={data?.data} />
     </main>
   );
 };

@@ -182,13 +182,13 @@ const LoginButton = () => {
       <div className="flex flex-col items-center">
         <button
           className={cn(
-            "cursor-pointer rounded-md px-4 pb-1.5 text-xl text-nowrap",
+            "cursor-pointer rounded-md px-4 pb-1.5 text-base text-nowrap md:text-xl",
             isLoading ? "opacity-50" : "",
           )}
           onClick={handleLogin}
           disabled={isLoading}
         >
-          {isLoading ? "로그인 중..." : "로그인"}
+          {isLoading ? <div className="loader-sprite" /> : "로그인"}
         </button>
       </div>
 

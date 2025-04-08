@@ -108,6 +108,12 @@ public class ContractCommandService {
             creditorWalletAddress = "";
         }
 
+        // 채무자 지갑 주소 확인
+        String debtorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getDebtor().getUserId());
+        if (debtorWalletAddress == null || debtorWalletAddress.isBlank()) {
+            debtorWalletAddress = "";
+        }
+
         // 채권자에게 알림 발송
         notificationHelper.sendNotification(
                 creditor.getUserId(),
@@ -136,7 +142,7 @@ public class ContractCommandService {
         }
 
         // 응답 생성
-        ContractResponseDTO responseDTO = ContractResponseDTO.createFrom(savedContract, creditorWalletAddress);
+        ContractResponseDTO responseDTO = ContractResponseDTO.createFrom(savedContract, creditorWalletAddress, debtorWalletAddress);
         responseDTO.setContractStatusName(sysCommonCodeService.getCodeName(
                 CONTRACT_STATUS, responseDTO.getContractStatus().getCode()));
 

@@ -46,7 +46,7 @@ public class AuctionRepositoryCustomImpl implements AuctionRepositoryCustom {
                 .select(fields(
                         AuctionResponseDTO.class,
                         auction.auctionId.as("auctionId"),
-                        auction.price,
+                        auction.price.coalesce(auction.minimumBid).as("price"),
                         auction.endDate,
                         auction.createdAt,
                         auction.tokenId
@@ -83,6 +83,7 @@ public class AuctionRepositoryCustomImpl implements AuctionRepositoryCustom {
                 .select(Projections.constructor(MyAuctionResponseDTO.class,
                         auction.auctionId,
                         bid.createdAt,
+                        auction.tokenId,
                         auction.auctionStatus,
                         auction.price,
                         bid.bidAmount,

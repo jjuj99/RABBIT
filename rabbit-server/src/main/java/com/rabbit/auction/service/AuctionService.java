@@ -57,6 +57,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -184,6 +185,7 @@ public class AuctionService {
                                 .earlypayFee(new BigDecimal(metadata.earlyPayFee))
                                 .creditScore(creditScore)
                                 .defCnt(repaymentInfo.overdueInfo.defCnt.intValue())
+                                .nftImageUrl(metadata.nftImage)
                                 .build();
 
                     } catch (Exception e) {
@@ -280,6 +282,11 @@ public class AuctionService {
                 dto.setBidStatusName(sysCommonCodeService.getCodeName(
                         BID_STATUS, dto.getBidStatus()));
             }
+
+            if (dto.getTokenId() != null) {
+                Optional<String> imageOpt = promissoryNoteRepository.findNftImageByTokenId(dto.getTokenId());
+                imageOpt.ifPresent(dto::setNftImage);
+            }
         });
 
         return PageResponseDTO.<MyAuctionResponseDTO>builder()
@@ -317,9 +324,11 @@ public class AuctionService {
                     LoanUtil.LegalLimits.getDefaultLimits()
             );
 
+            Long curPrice = auction.getPrice()==null? auction.getMinimumBid(): auction.getPrice();
+
             return AuctionDetailResponseDTO.builder()
                     .auctionId(auction.getAuctionId())
-                    .price(auction.getPrice())  //현재 가격
+                    .price(curPrice)  //현재 가격
                     .ir(ir)
                     .repayType(SysCommonCodes.Repayment.fromCode(promissoryMetadata.repayType).getCodeName())
                     .totalAmount(totalAmount.longValue())
@@ -332,6 +341,7 @@ public class AuctionService {
                     .defCnt(repaymentInfo.defCnt.intValue())   //연체 횟수
                     .endDate(auction.getEndDate())
                     .createdAt(auction.getCreatedAt())
+                    .nftImageUrl(promissoryMetadata.nftImage)
                     .build();
         } catch (Exception e) {
             log.error("[블록체인 오류] getPromissoryMetadata 실패", e);

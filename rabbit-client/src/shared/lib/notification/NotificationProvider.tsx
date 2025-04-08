@@ -6,6 +6,7 @@ import {
   NotificationEvent,
 } from "./NotificationContext";
 import { useAuthUser } from "@/entities/auth/hooks/useAuth";
+import { getAccessToken } from "@/entities/auth/utils/authUtils";
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState<NotificationResponse[]>(
@@ -19,8 +20,14 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     if (!isAuthenticated) {
       return;
     }
+
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      return;
+    }
+
     const eventSource = new EventSource(
-      `${VITE_API_URL}/${VITE_API_VERSION}/sse/subscribe?type=user`,
+      `${VITE_API_URL}/${VITE_API_VERSION}/sse/subscribe/user?token=${accessToken}`,
     );
 
     eventSource.onmessage = (event) => {

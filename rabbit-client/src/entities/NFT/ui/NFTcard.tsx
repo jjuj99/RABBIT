@@ -34,7 +34,7 @@ export const NFTCard = ({ item }: NFTCardProps) => {
           <span
             className={cn(
               "text-brand-gradient font-partial",
-              item.price.toString().length < 10 ? "text-2xl" : "text-lg",
+              item.price.toString().length < 10 ? "text-xl" : "text-base",
             )}
           >
             {item.price.toLocaleString()}

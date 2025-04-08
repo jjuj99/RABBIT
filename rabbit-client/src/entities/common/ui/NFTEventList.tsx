@@ -27,10 +27,10 @@ const NFTEventList = ({ data }: NFTEventListProps) => {
     }
   };
 
-  if (!data) {
+  if (!data || data.length === 0) {
     return (
-      <div className="flex h-[200px] items-center justify-center rounded-sm bg-gray-800">
-        <div className="text-base text-gray-400">이벤트 정보가 없습니다.</div>
+      <div className="flex h-[100px] items-center justify-center rounded-sm bg-gray-800">
+        <div className="text-base text-gray-100">이벤트 정보가 없습니다.</div>
       </div>
     );
   }

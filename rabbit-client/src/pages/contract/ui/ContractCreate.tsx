@@ -51,7 +51,9 @@ const ContractCreate = () => {
             className="flex w-full flex-col items-center gap-9 bg-gray-900 px-4 py-9 md:px-11"
           >
             <div className="flex w-full flex-col items-center gap-2">
-              <h2 className="text-2xl md:text-3xl">신규 차용증 작성</h2>
+              <h2 className="text-2xl md:text-3xl">
+                {isModify ? "수정 차용증 작성" : "신규 차용증 작성"}
+              </h2>
               <span className="text-text-disabled text-lg md:text-2xl">
                 입력된 내용은 계약서에 반영되면, 법적 효력이 발생합니다.
               </span>
@@ -136,7 +138,7 @@ const ContractCreate = () => {
                     <EmailSearchDialog
                       title="사용자 검색"
                       description="사용자를 검색하세요."
-                      open={isSearchUserDialogOpen}
+                      open={isModify ? false : isSearchUserDialogOpen}
                       setOpen={setIsSearchUserDialogOpen}
                       onUserSelect={(user) => {
                         form.setValue("crEmail", user.email);

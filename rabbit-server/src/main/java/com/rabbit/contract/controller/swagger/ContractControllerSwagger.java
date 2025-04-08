@@ -216,7 +216,7 @@ public interface ContractControllerSwagger {
                                             @ExampleObject(
                                                     name = "성공 응답 - 계약 상세 정보",
                                                     summary = "계약 상세 정보 조회 성공",
-                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 1,\n    \"crId\": 1,\n    \"crName\": \"홍길동\",\n    \"crWallet\": \"0x123...\",\n    \"drId\": 2,\n    \"drName\": \"김철수\",\n    \"drWallet\": \"0x456...\",\n    \"la\": 1000000,\n    \"ir\": 5.0,\n    \"contractDt\": \"2025-04-10 00:00:00\",\n    \"matDt\": \"2025-10-10 00:00:00\",\n    \"lt\": 12,\n    \"earlypayFee\": 2.0,\n    \"repayType\": \"EPIP\",\n    \"repayTypeName\": \"원금균등상환\",\n    \"mpDt\": 15,\n    \"dir\": 15.0,\n    \"defCnt\": 3,\n    \"earlypay\": true,\n    \"pnTransFlag\": true,\n    \"addTerms\": \"본 계약은 다음 조건으로 체결됩니다...\",\n    \"tokenId\": \"123456\",\n    \"nftImageUrl\": \"https://example.com/nft.png\",\n    \"contractStatus\": \"REQUESTED\",\n    \"contractStatusName\": \"요청됨\",\n    \"createdAt\": \"2025-04-01 12:00:00\",\n    \"updatedAt\": \"2025-04-01 12:00:00\",\n    \"remainingDays\": 120,\n    \"matAmt\": 1025000,\n    \"message\": \"잘 부탁드립니다\",\n    \"rejectMessage\": null,\n    \"rejectedAt\": null\n  },\n  \"error\": null\n}"
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 2,\n    \"crId\": 1,\n    \"crName\": \"박수양\",\n    \"crEmail\": \"sktndid1203@naver.com\",\n    \"crWallet\": \"0xE7aCa373766503357a1A8E84B1c3f71706e4d4f6\",\n    \"drId\": 3,\n    \"drName\": \"서주원\",\n    \"drWallet\": \"0x2fbED3C89B03D9802539d5a60c4fDC556D20809C\",\n    \"la\": 1000000,\n    \"ir\": 10.0,\n    \"contractDt\": \"2025-04-09 00:00:00\",\n    \"matDt\": \"2026-02-08 00:00:00\",\n    \"lt\": 10,\n    \"earlypayFee\": 5.0,\n    \"repayType\": \"EPIP\",\n    \"repayTypeName\": \"원리금 균등 상환\",\n    \"mpDt\": 10,\n    \"dir\": 10.0,\n    \"defCnt\": 0,\n    \"earlypay\": true,\n    \"pnTransFlag\": true,\n    \"addTerms\": \"안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요\",\n    \"tokenId\": 1,\n    \"nftImageUrl\": \"https://gateway.pinata.cloud/ipfs/QmbFoJoSo5FeutwmkBqkzg9Si49AmVc4Wx8XdDFgRxNtGt\",\n    \"contractStatus\": \"CONTRACTED\",\n    \"contractStatusName\": \"체결\",\n    \"createdAt\": \"2025-04-08 17:10:14\",\n    \"updatedAt\": \"2025-04-08 17:18:53\",\n    \"remainingDays\": 305,\n    \"matAmt\": 1083562,\n    \"message\": \"안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요\",\n    \"rejectMessage\": null,\n    \"rejectedAt\": null\n  },\n  \"error\": null\n}"
                                             )
                                     }
                             )
@@ -274,8 +274,8 @@ public interface ContractControllerSwagger {
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
     @Operation(
-            summary = "계약 생성",
-            description = "새로운 차용증 계약을 작성합니다. 계약 작성자는 채권자(Creditor)로 설정되며, 채무자(Debtor) 정보를 지정해야 합니다.",
+            summary = "계약 생성 또는 수정",
+            description = "새로운 차용증 계약을 작성하거나 기존 계약을 수정합니다. 계약 작성자는 채권자(Creditor)로 설정되며, 채무자(Debtor) 정보를 지정해야 합니다. 계약 수정 시에는 contractId를 포함해야 합니다.",
             security = {@SecurityRequirement(name = "bearerAuth")},
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "계약 정보",
@@ -288,6 +288,11 @@ public interface ContractControllerSwagger {
                                             name = "계약 생성 요청",
                                             summary = "새 계약 생성 요청 예시",
                                             value = "{\n  \"drPhone\": \"01012345678\",\n  \"drName\": \"김철수\",\n  \"drWallet\": \"0x1234567890abcdef\",\n  \"crEmail\": \"creditor@example.com\",\n  \"crName\": \"홍길동\",\n  \"crWallet\": \"0xabcdef1234567890\",\n  \"la\": 1000000,\n  \"ir\": 5.0,\n  \"lt\": 12,\n  \"repayType\": \"EPIP\",\n  \"mpDt\": 15,\n  \"dir\": 15.0,\n  \"contractDt\": \"2025-04-10 00:00:00\",\n  \"defCnt\": 3,\n  \"pnTransFlag\": true,\n  \"earlypay\": true,\n  \"earlypayFee\": 2.0,\n  \"addTerms\": \"본 계약은 다음 조건으로 체결됩니다...\",\n  \"message\": \"잘 부탁드립니다.\",\n  \"passAuthToken\": \"token123\",\n  \"txId\": \"tx_abc123\",\n  \"authResultCode\": \"SUCCESS\"\n}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "계약 수정 요청",
+                                            summary = "기존 계약 수정 요청 예시",
+                                            value = "{\n  \"contractId\": 5,\n  \"drPhone\": \"01012345678\",\n  \"drName\": \"김철수\",\n  \"drWallet\": \"0x1234567890abcdef\",\n  \"crEmail\": \"creditor@example.com\",\n  \"crName\": \"홍길동\",\n  \"crWallet\": \"0xabcdef1234567890\",\n  \"la\": 1500000,\n  \"ir\": 6.0,\n  \"lt\": 24,\n  \"repayType\": \"EPIP\",\n  \"mpDt\": 15,\n  \"dir\": 15.0,\n  \"contractDt\": \"2025-04-15 00:00:00\",\n  \"defCnt\": 3,\n  \"pnTransFlag\": true,\n  \"earlypay\": true,\n  \"earlypayFee\": 2.0,\n  \"addTerms\": \"본 계약은 수정된 조건으로 체결됩니다...\",\n  \"message\": \"수정된 계약으로 진행 부탁드립니다.\",\n  \"passAuthToken\": \"token123\",\n  \"txId\": \"tx_abc123\",\n  \"authResultCode\": \"SUCCESS\"\n}"
                                     )
                             }
                     )
@@ -303,7 +308,12 @@ public interface ContractControllerSwagger {
                                             @ExampleObject(
                                                     name = "성공 응답 - 계약 생성",
                                                     summary = "계약 생성 성공",
-                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 3,\n    \"crId\": 2,\n    \"crName\": \"clapsheep\",\n    \"drId\": 1,\n    \"drName\": \"열정두배\",\n    \"la\": 1000000,\n    \"ir\": 5,\n    \"contractDt\": \"2025-04-10 00:00:00\",\n    \"matDt\": \"2026-04-09 00:00:00\",\n    \"lt\": 12,\n    \"earlypayFee\": 2,\n    \"repayType\": \"EPIP\",\n    \"repayTypeName\": \"원리금균등상환\",\n    \"mpDt\": 15,\n    \"dir\": 15,\n    \"defCnt\": 3,\n    \"earlypay\": true,\n    \"pnTransFlag\": true,\n    \"addTerms\": \"본 계약은 다음 조건으로 체결됩니다...\",\n    \"tokenId\": 1,\n    \"nftImageUrl\": \"https://gateway.pinata.cloud/ipfs/QmXxjataPMCM2x7mZUVrqqD2mP67mwfUWfh9bWKVKdWMwq\",\n    \"contractStatus\": \"REQUESTED\",\n    \"contractStatusName\": \"요청\",\n    \"message\": \"잘 부탁드립니다.\",\n    \"createdAt\": \"2025-04-04 17:01:34\"\n  },\n  \"error\": null\n}"
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 11,\n    \"crId\": 2,\n    \"crName\": \"문종하\",\n    \"crWallet\": \"0x777DeE1aF94D0874f70BD73b0B8D731A1D12f2d8\",\n    \"drId\": 1,\n    \"drName\": \"박수양\",\n    \"drWallet\": \"0xE7aCa373766503357a1A8E84B1c3f71706e4d4f6\",\n    \"la\": 1000000,\n    \"ir\": 5,\n    \"contractDt\": \"2025-04-10 00:00:00\",\n    \"matDt\": \"2026-04-09 00:00:00\",\n    \"lt\": 12,\n    \"earlypayFee\": 2,\n    \"repayType\": \"EPIP\",\n    \"repayTypeName\": \"원리금 균등 상환\",\n    \"mpDt\": 15,\n    \"dir\": 15,\n    \"defCnt\": 3,\n    \"earlypay\": true,\n    \"pnTransFlag\": true,\n    \"addTerms\": \"본 계약은 다음 조건으로 체결됩니다...\",\n    \"tokenId\": 1,\n    \"nftImageUrl\": \"https://gateway.pinata.cloud/ipfs/QmXxjataPMCM2x7mZUVrqqD2mP67mwfUWfh9bWKVKdWMwq\",\n    \"contractStatus\": \"REQUESTED\",\n    \"contractStatusName\": \"요청\",\n    \"message\": \"잘 부탁드립니다.\",\n    \"createdAt\": \"2025-04-08 23:21:14\"\n  },\n  \"error\": null\n}"
+                                            ),
+                                            @ExampleObject(
+                                                    name = "성공 응답 - 계약 수정",
+                                                    summary = "계약 수정 성공",
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"contractId\": 12,\n    \"crId\": 2,\n    \"crName\": \"문종하\",\n    \"crWallet\": \"0x777DeE1aF94D0874f70BD73b0B8D731A1D12f2d8\",\n    \"drId\": 1,\n    \"drName\": \"박수양\",\n    \"drWallet\": \"0xE7aCa373766503357a1A8E84B1c3f71706e4d4f6\",\n    \"la\": 1500000,\n    \"ir\": 6,\n    \"contractDt\": \"2025-04-15 00:00:00\",\n    \"matDt\": \"2027-04-14 00:00:00\",\n    \"lt\": 24,\n    \"earlypayFee\": 2,\n    \"repayType\": \"EPIP\",\n    \"repayTypeName\": \"원리금 균등 상환\",\n    \"mpDt\": 15,\n    \"dir\": 15,\n    \"defCnt\": 3,\n    \"earlypay\": true,\n    \"pnTransFlag\": true,\n    \"addTerms\": \"본 계약은 수정된 조건으로 체결됩니다...\",\n    \"tokenId\": 2,\n    \"nftImageUrl\": \"https://gateway.pinata.cloud/ipfs/QmXxjataPMCM2x7mZUVrqqD2mP67mwfUWfh9bWKVKdWMwq\",\n    \"contractStatus\": \"REQUESTED\",\n    \"contractStatusName\": \"요청\",\n    \"message\": \"수정된 계약으로 진행 부탁드립니다.\",\n    \"createdAt\": \"2025-04-09 10:15:22\"\n  },\n  \"error\": null\n}"
                                             )
                                     }
                             ),
@@ -322,6 +332,11 @@ public interface ContractControllerSwagger {
                                                     name = "실패 응답 - 유효성 검사 실패",
                                                     summary = "요청 데이터 오류",
                                                     value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 400,\n    \"message\": \"대출 만기일은 미래 날짜여야 합니다\"\n  }\n}"
+                                            ),
+                                            @ExampleObject(
+                                                    name = "실패 응답 - 계약 상태 오류",
+                                                    summary = "수정할 수 없는 계약 상태",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 400,\n    \"message\": \"수정 요청된 계약만 수정할 수 있습니다\"\n  }\n}"
                                             )
                                     }
                             )
@@ -342,8 +357,23 @@ public interface ContractControllerSwagger {
                             )
                     ),
                     @ApiResponse(
+                            responseCode = "403",
+                            description = "접근 권한 없음",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomApiResponse.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "권한 오류",
+                                                    summary = "계약 수정 권한 없음",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 403,\n    \"message\": \"원본 계약의 채무자만 계약을 취소할 수 있습니다\"\n  }\n}"
+                                            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
                             responseCode = "404",
-                            description = "채무자를 찾을 수 없음",
+                            description = "리소스를 찾을 수 없음",
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = CustomApiResponse.class),
@@ -352,6 +382,11 @@ public interface ContractControllerSwagger {
                                                     name = "실패 응답 - 채무자 없음",
                                                     summary = "존재하지 않는 채무자 정보",
                                                     value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 404,\n    \"message\": \"존재하지 않는 사용자입니다\"\n  }\n}"
+                                            ),
+                                            @ExampleObject(
+                                                    name = "실패 응답 - 계약 없음",
+                                                    summary = "존재하지 않는 계약 ID",
+                                                    value = "{\n  \"status\": \"ERROR\",\n  \"data\": null,\n  \"error\": {\n    \"statusCode\": 404,\n    \"message\": \"존재하지 않는 계약입니다\"\n  }\n}"
                                             )
                                     }
                             )

@@ -33,6 +33,9 @@ public class ContractDetailResponseDTO {
     @Schema(description = "채권자 이름", example = "홍길동")
     private String crName;
 
+    @Schema(description = "채권자 이메일", example = "123@naver.com")
+    private String crEmail;
+    
     @Schema(description = "채권자 지갑 주소", example = "0x123...")
     private String crWallet;
 
@@ -144,6 +147,7 @@ public class ContractDetailResponseDTO {
                 .contractId(contract.getContractId())
                 .crId(contract.getCreditor().getUserId())
                 .crName(contract.getCreditor().getNickname())
+                .crEmail(contract.getCreditor().getEmail())
                 .drId(contract.getDebtor().getUserId())
                 .drName(contract.getDebtor().getNickname())
                 .la(contract.getLoanAmount())

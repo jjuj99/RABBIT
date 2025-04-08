@@ -27,6 +27,10 @@ export const clearAccessToken = () => {
 export const refreshAccessToken = async (): Promise<{
   userName: string;
   nickname: string;
+  email: string;
+  bankId: number;
+  bankName: string;
+  refundAccount: string;
   accessToken: string;
 } | null> => {
   try {

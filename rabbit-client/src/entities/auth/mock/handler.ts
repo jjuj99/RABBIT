@@ -120,7 +120,14 @@ export const authHandlers = [
   http.get(`${VITE_API_URL}/${VITE_API_VERSION}/user/me`, async () => {
     const response: ApiResponse<User> = {
       status: "SUCCESS",
-      data: { nickname: "test", userName: "test" },
+      data: {
+        nickname: "test",
+        userName: "test",
+        email: "test@test.com",
+        bankId: 1,
+        bankName: "test",
+        refundAccount: "1234567890",
+      },
     };
     return HttpResponse.json(response);
   }),

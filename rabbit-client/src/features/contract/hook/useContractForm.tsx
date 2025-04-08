@@ -85,7 +85,7 @@ const useContractForm = () => {
     txId: z.string(),
     authResultCode: z.string(),
     contractDt: z.date(),
-    contractId: z.string().nullable(),
+    contractId: z.number().nullable(),
   });
 
   useEffect(() => {
@@ -99,6 +99,9 @@ const useContractForm = () => {
       handlePassComplete();
     }
   }, [passState]);
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
   const form = useForm<z.infer<typeof contractSchema>>({
     resolver: zodResolver(contractSchema),
@@ -124,8 +127,8 @@ const useContractForm = () => {
       passAuthToken: "",
       txId: "",
       authResultCode: "",
-      contractDt: new Date(),
-      contractId: state?.contractId ?? null,
+      contractDt: tomorrow,
+      contractId: state?.contractId ? Number(state.contractId) : null,
     },
   });
 
@@ -184,7 +187,6 @@ const useContractForm = () => {
     rejectMessage: state?.rejectMessage ?? "",
     isModifyDialogOpen,
     setIsModifyDialogOpen,
-
     isLoading,
   };
 };

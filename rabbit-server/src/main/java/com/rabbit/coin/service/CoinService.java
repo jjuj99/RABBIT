@@ -182,7 +182,7 @@ public class CoinService {
     }
 
     public List<CoinLogListResponseDTO> getTransactions(Integer userId){
-        List<CoinLog> coinLogs = coinLogRepository.findByUserId(userId);
+        List<CoinLog> coinLogs = coinLogRepository.findByUserIdAndStatus(userId, CoinLogStatus.SUCCESS);
 
         // 조회된 로그가 없는 경우 null 반환
         if (coinLogs == null || coinLogs.isEmpty()) {

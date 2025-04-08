@@ -25,6 +25,7 @@ import { truncateAddress } from "@/shared/utils/truncateAddress";
 import PASSDialog from "@/widget/common/ui/PASSDialog";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { toast } from "sonner";
+import LoadingOverlay from "@/widget/common/ui/LoadingOverray";
 
 const ContractDetail = () => {
   const navigate = useNavigate();
@@ -47,11 +48,23 @@ const ContractDetail = () => {
     rejectContract,
     requestModifyContract,
     cancelContract,
+    isCompleting,
+    isCanceling,
+    isRejecting,
+    isRequestingModify,
   } = useContractMutate({
     contractId: contractId ?? "",
   });
   const { isModifyDialogOpen, setIsModifyDialogOpen, handleModifyConfirm } =
     useContractForm();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // useEffect로 전체 로딩 상태 관리
+  useEffect(() => {
+    setIsLoading(
+      isCompleting || isCanceling || isRejecting || isRequestingModify,
+    );
+  }, [isCompleting, isCanceling, isRejecting, isRequestingModify]);
 
   const handleApprove = () => {
     try {
@@ -311,6 +324,7 @@ const ContractDetail = () => {
 
   return (
     <>
+      <LoadingOverlay isLoading={isLoading} />
       <main className="mt-9 md:text-xl">
         <div
           className={cn(

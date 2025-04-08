@@ -17,7 +17,7 @@ const ContractComplete = () => {
   console.log(state);
   useEffect(() => {
     addNFTToWallet(state.tokenId, state.nftImageUrl);
-  }, []);
+  }, [state]);
   useEffect(() => {
     initParticlesEngine(async (engine) => {
       await loadSlim(engine);

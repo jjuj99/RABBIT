@@ -5,6 +5,7 @@ import {
   NotificationResponse,
   NotificationEvent,
 } from "./NotificationContext";
+import { useAuthUser } from "@/entities/auth/hooks/useAuth";
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState<NotificationResponse[]>(
@@ -12,8 +13,12 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   );
   const VITE_API_URL = import.meta.env.VITE_API_URL;
   const VITE_API_VERSION = import.meta.env.VITE_API_VERSION;
+  const { isAuthenticated } = useAuthUser();
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
     const eventSource = new EventSource(
       `${VITE_API_URL}/${VITE_API_VERSION}/sse/subscribe?type=user`,
     );

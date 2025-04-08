@@ -1,5 +1,4 @@
 import { useAuthUser } from "@/entities/auth/hooks/useAuth";
-import useContractMutate from "@/entities/contract/hooks/useContractMutate";
 import useCreateContract from "@/entities/contract/hooks/useCreateContract";
 import useGetWallet from "@/entities/wallet/hooks/useGetWallet";
 import { useWeb3 } from "@/shared/lib/web3/context/useWeb3";
@@ -9,7 +8,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation } from "react-router";
-import { toast } from "sonner";
 import { z } from "zod";
 
 const useContractForm = () => {
@@ -21,9 +19,7 @@ const useContractForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { state } = useLocation();
   console.log("state", state);
-  const { cancelContract } = useContractMutate({
-    contractId: state?.contractId ?? "",
-  });
+
   const [passState, setPassState] = useState<passType>({
     authResultCode: "FAIL",
     passAuthToken: "",
@@ -89,6 +85,7 @@ const useContractForm = () => {
     txId: z.string(),
     authResultCode: z.string(),
     contractDt: z.date(),
+    contractId: z.string().nullable(),
   });
 
   useEffect(() => {
@@ -128,6 +125,7 @@ const useContractForm = () => {
       txId: "",
       authResultCode: "",
       contractDt: new Date(),
+      contractId: state?.contractId ?? null,
     },
   });
 
@@ -137,19 +135,6 @@ const useContractForm = () => {
     if (!account) {
       setIsLoading(false);
       return;
-    }
-
-    if (state) {
-      try {
-        setIsModifyDialogOpen(true);
-        await cancelContract();
-      } catch (error) {
-        if (error instanceof Error) {
-          toast.error(error.message);
-        }
-        setIsLoading(false);
-        return;
-      }
     }
 
     console.log("보내기 전 데이터", data);
@@ -183,18 +168,6 @@ const useContractForm = () => {
     setIsLoading(false);
   };
 
-  const handleModifyConfirm = async () => {
-    setIsLoading(true);
-    try {
-      await cancelContract();
-      setIsModifyDialogOpen(false);
-    } catch (error) {
-      console.error("Contract cancellation failed:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return {
     form,
     onSubmit,
@@ -211,7 +184,7 @@ const useContractForm = () => {
     rejectMessage: state?.rejectMessage ?? "",
     isModifyDialogOpen,
     setIsModifyDialogOpen,
-    handleModifyConfirm,
+
     isLoading,
   };
 };

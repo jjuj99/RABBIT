@@ -8,7 +8,6 @@ import useGetContractDetail from "@/entities/contract/hooks/useGetContractDetail
 import ContractStatusBadge from "@/entities/contract/ui/ContractStatusBadge";
 import RejectDialog from "@/entities/contract/ui/RejectDialog";
 import useGetWallet from "@/entities/wallet/hooks/useGetWallet";
-import useContractForm from "@/features/contract/hook/useContractForm";
 import { cn } from "@/shared/lib/utils";
 import { passType } from "@/shared/type/Types";
 import { Checkbox } from "@/shared/ui/checkbox";
@@ -17,7 +16,6 @@ import {
   DialogContent,
   DialogDescription,
   DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
 import currencyFormat from "@/shared/utils/currencyFormat";
@@ -55,8 +53,7 @@ const ContractDetail = () => {
   } = useContractMutate({
     contractId: contractId ?? "",
   });
-  const { isModifyDialogOpen, setIsModifyDialogOpen, handleModifyConfirm } =
-    useContractForm();
+
   const [isLoading, setIsLoading] = useState(false);
 
   // useEffect로 전체 로딩 상태 관리
@@ -614,43 +611,8 @@ const ContractDetail = () => {
         onReject={handleReject}
         onModify={handleModifyRequest}
       />
-
-      <ModifyConfirmDialog
-        isOpen={isModifyDialogOpen}
-        onOpenChange={setIsModifyDialogOpen}
-        onConfirm={handleModifyConfirm}
-      />
     </>
   );
 };
 
 export default ContractDetail;
-const ModifyConfirmDialog = ({
-  isOpen,
-  onOpenChange,
-  onConfirm,
-}: {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
-}) => {
-  return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>수정 확인</DialogTitle>
-          <DialogDescription>
-            수정을 진행하시면 이전 요청은 자동으로 취소됩니다. 계속
-            진행하시겠습니까?
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            취소
-          </Button>
-          <Button onClick={onConfirm}>확인</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};

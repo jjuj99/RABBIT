@@ -33,6 +33,7 @@ const ContractCreate = () => {
     setPassState,
     isModify,
     rejectMessage,
+    isLoading,
   } = useContractForm();
 
   const [isSearchUserDialogOpen, setIsSearchUserDialogOpen] = useState(false);
@@ -543,6 +544,8 @@ const ContractCreate = () => {
               </Button>
               <Button
                 type="submit"
+                isLoading={isLoading}
+                disabled={isLoading}
                 className="h-11 flex-1 text-lg font-bold text-gray-700 md:max-w-[170px] md:text-xl"
                 variant="primary"
               >

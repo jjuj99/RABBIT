@@ -119,6 +119,7 @@ const ContractDetail = () => {
       }
     }
   };
+  console.log("contract", contract);
 
   const renderActionButtons = () => {
     // 로그인한 사용자가 채무자인 경우

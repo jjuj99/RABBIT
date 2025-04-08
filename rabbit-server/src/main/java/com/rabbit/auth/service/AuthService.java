@@ -17,9 +17,11 @@ import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.global.util.JwtUtil;
 import com.rabbit.global.util.SignatureUtil;
 import com.rabbit.global.util.WalletAddressUtil;
+import com.rabbit.user.domain.entity.Bank;
 import com.rabbit.user.domain.entity.MetamaskWallet;
 import com.rabbit.user.domain.entity.RefundAccount;
 import com.rabbit.user.domain.entity.User;
+import com.rabbit.user.repository.BankRepository;
 import com.rabbit.user.repository.MetamaskWalletRepository;
 import com.rabbit.user.repository.RefundAccountRepository;
 import com.rabbit.user.repository.UserRepository;
@@ -42,6 +44,7 @@ public class AuthService {
     private final RefundAccountRepository refundAccountRepository;
     private final MetamaskWalletRepository metamaskWalletRepository;
     private final SsafyAccountRepository ssafyAccountRepository;
+    private final BankRepository bankRepository;
 
     private final BankApiService bankApiService;
     private final JwtUtil jwtUtil;
@@ -80,6 +83,14 @@ public class AuthService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "서명이 일치하지 않습니다.");
         }
 
+        // usreId로 계좌 정보 불러오기
+        RefundAccount refundAccount = refundAccountRepository.findByUserIdAndPrimaryFlagTrue(user.getUserId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "등록된 환불 계좌 정보가 없습니다."));
+
+        // 은행 정보 불러오기
+        Bank bank = bankRepository.findById(refundAccount.getBankId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "등록되지 않은 은행 정보입니다."));
+
         // JWT 토큰 생성
         String accessToken = jwtUtil.createAccessToken(String.valueOf(user.getUserId()));
         String refreshToken = jwtUtil.createRefreshToken(String.valueOf(user.getUserId()));
@@ -94,6 +105,9 @@ public class AuthService {
         return LoginServiceResult.builder()
                 .userName(user.getUserName())
                 .nickname(user.getNickname())
+                .email(user.getEmail())
+                .bank(bank)
+                .refundAccount(refundAccount.getAccountNumber())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -201,11 +215,23 @@ public class AuthService {
         }
 
         User user = userToken.getUser();
-        String accessToken = jwtUtil.createAccessToken(String.valueOf(user.getUserId()));
+
+        RefundAccount refundAccount = refundAccountRepository.findByUserIdAndPrimaryFlagTrue(user.getUserId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "등록된 환불 계좌 정보가 없습니다."));
+
+        Bank bank = bankRepository.findById(refundAccount.getBankId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "등록되지 않은 은행 정보입니다."));
+
+        String accessToken = jwtUtil.createAccessToken(userId);
 
         return RefreshResponseDTO.builder()
                 .userName(user.getUserName())
                 .nickname(user.getNickname())
+                .email(user.getEmail())
+                .bankId(bank.getBankId())
+                .bankName(bank.getBankName())
+                .refundAccount(refundAccount.getAccountNumber())
+                .refundAccount(refundAccount.getAccountNumber())
                 .accessToken(accessToken)
                 .build();
     }

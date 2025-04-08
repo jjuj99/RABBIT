@@ -29,8 +29,8 @@ public class PNService {
         Contract contract = contractRepository.findByContractIdAndDeletedFlagFalse(contractId)
                  .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "존재하지 않는 차용증 ID입니다."));
 
-        // 2. 채무자 정보가 현재 userId 정보와 같은지 확인
-        if (contract.getDebtor().getUserId().equals(userId)) {
+        // 2. 채무자 정보가 현재 userId 정보와 같은지 확인 -> 다르면 오류
+        if (!contract.getDebtor().getUserId().equals(userId)) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED, "접근 권한이 없는 차용증입니다.");
         }
 

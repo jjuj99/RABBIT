@@ -18,10 +18,12 @@ const VITE_API_VERSION = import.meta.env.VITE_API_VERSION;
 export const createContractAPI = async (
   data: CreateContractRequest,
 ): Promise<ApiResponse<CreateContractResponse>> => {
+  console.log("생성요청 보냄");
   const response = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/contracts`,
     fetchOption("POST", data),
   );
+  console.log("생성요청 응답 받음");
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.error.message || "Failed to create contract");

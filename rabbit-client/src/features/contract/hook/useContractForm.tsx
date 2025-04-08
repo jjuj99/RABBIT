@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation } from "react-router";
+import { toast } from "sonner";
 import { z } from "zod";
 
 const useContractForm = () => {
@@ -17,6 +18,7 @@ const useContractForm = () => {
   const [dialogMessage, setDialogMessage] = useState("");
   const [isPassDialogOpen, setIsPassDialogOpen] = useState(false);
   const [isModifyDialogOpen, setIsModifyDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { state } = useLocation();
   console.log("state", state);
   const { cancelContract } = useContractMutate({
@@ -130,30 +132,45 @@ const useContractForm = () => {
   });
 
   const onSubmit = async (data: z.infer<typeof contractSchema>) => {
+    setIsLoading(true);
     const account = await web3?.eth.getAccounts();
     if (!account) {
+      setIsLoading(false);
       return;
     }
+
     if (state) {
       try {
         setIsModifyDialogOpen(true);
         await cancelContract();
       } catch (error) {
-        console.error(error);
+        if (error instanceof Error) {
+          toast.error(error.message);
+        }
+        setIsLoading(false);
         return;
       }
     }
-    createContractMutation.mutate({
-      ...data,
-      earlypayFee: data.earlypayFee ?? 0,
-      repayType: data.repayType as "EPIP" | "EPP" | "BP",
-      addTerms: data.addTerms ?? null,
-      message: data.message ?? null,
-      contractDt: dateFormat(String(data.contractDt)),
-    });
+
+    console.log("보내기 전 데이터", data);
+    try {
+      await createContractMutation.mutateAsync({
+        ...data,
+        earlypayFee: data.earlypayFee ?? 0,
+        repayType: data.repayType as "EPIP" | "EPP" | "BP",
+        addTerms: data.addTerms ?? null,
+        message: data.message ?? null,
+        contractDt: dateFormat(String(data.contractDt)),
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePassComplete = () => {
+    setIsLoading(true);
     console.log("passState", passState);
     if (passState.authResultCode === "SUCCESS") {
       form.setValue("drPhone", passState.phoneNumber);
@@ -163,14 +180,18 @@ const useContractForm = () => {
       form.setValue("authResultCode", passState.authResultCode);
       setIsPassDialogOpen(false);
     }
+    setIsLoading(false);
   };
 
   const handleModifyConfirm = async () => {
+    setIsLoading(true);
     try {
       await cancelContract();
       setIsModifyDialogOpen(false);
     } catch (error) {
       console.error("Contract cancellation failed:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -191,6 +212,7 @@ const useContractForm = () => {
     isModifyDialogOpen,
     setIsModifyDialogOpen,
     handleModifyConfirm,
+    isLoading,
   };
 };
 

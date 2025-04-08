@@ -182,7 +182,7 @@ const LoginButton = () => {
       <div className="flex flex-col items-center">
         <button
           className={cn(
-            "cursor-pointer rounded-md px-4 pb-1.5 text-lg text-nowrap",
+            "cursor-pointer rounded-md px-4 pb-1.5 text-xl text-nowrap",
             isLoading ? "opacity-50" : "",
           )}
           onClick={handleLogin}

@@ -8,7 +8,6 @@ import useGetContractDetail from "@/entities/contract/hooks/useGetContractDetail
 import ContractStatusBadge from "@/entities/contract/ui/ContractStatusBadge";
 import RejectDialog from "@/entities/contract/ui/RejectDialog";
 import useGetWallet from "@/entities/wallet/hooks/useGetWallet";
-import useContractForm from "@/features/contract/hook/useContractForm";
 import { cn } from "@/shared/lib/utils";
 import { passType } from "@/shared/type/Types";
 import { Checkbox } from "@/shared/ui/checkbox";
@@ -17,7 +16,6 @@ import {
   DialogContent,
   DialogDescription,
   DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
 import currencyFormat from "@/shared/utils/currencyFormat";
@@ -25,6 +23,7 @@ import { truncateAddress } from "@/shared/utils/truncateAddress";
 import PASSDialog from "@/widget/common/ui/PASSDialog";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { toast } from "sonner";
+import LoadingOverlay from "@/widget/common/ui/LoadingOverray";
 
 const ContractDetail = () => {
   const navigate = useNavigate();
@@ -47,11 +46,22 @@ const ContractDetail = () => {
     rejectContract,
     requestModifyContract,
     cancelContract,
+    isCompleting,
+    isCanceling,
+    isRejecting,
+    isRequestingModify,
   } = useContractMutate({
     contractId: contractId ?? "",
   });
-  const { isModifyDialogOpen, setIsModifyDialogOpen, handleModifyConfirm } =
-    useContractForm();
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  // useEffect로 전체 로딩 상태 관리
+  useEffect(() => {
+    setIsLoading(
+      isCompleting || isCanceling || isRejecting || isRequestingModify,
+    );
+  }, [isCompleting, isCanceling, isRejecting, isRequestingModify]);
 
   const handleApprove = () => {
     try {
@@ -77,9 +87,10 @@ const ContractDetail = () => {
 
   const handleCancel = async () => {
     try {
-      cancelContract();
-      toast.success("계약이 취소되었습니다.");
       setIsCancelDialogOpen(false);
+      await cancelContract();
+      console.log("계약 취소 성공");
+      toast.success("계약이 취소되었습니다.");
       navigate("/contract/sent");
     } catch (error) {
       if (error instanceof Error && error.message) {
@@ -92,8 +103,8 @@ const ContractDetail = () => {
 
   const handleReject = async (rejectMessage: string) => {
     try {
-      rejectContract({ rejectMessage });
       setIsRejectDialogOpen(false);
+      rejectContract({ rejectMessage });
       toast.success("거절 완료");
       navigate("/contract/received"); // 목록 페이지로 이동
     } catch (error) {
@@ -107,8 +118,8 @@ const ContractDetail = () => {
 
   const handleModifyRequest = async (rejectMessage: string) => {
     try {
-      requestModifyContract({ rejectMessage });
       setIsRejectDialogOpen(false);
+      requestModifyContract({ rejectMessage });
       toast.success("수정 요청 완료");
       navigate("/contract/received"); // 목록 페이지로 이동
     } catch (error) {
@@ -119,11 +130,15 @@ const ContractDetail = () => {
       }
     }
   };
+  console.log("contract", contract);
 
   const renderActionButtons = () => {
     // 로그인한 사용자가 채무자인 경우
-    if (contract.drWallet === address) {
+    console.log("contract.drWallet", contract.drWallet);
+    console.log("address", address);
+    if (contract.drWallet.toLowerCase() === address?.toLowerCase()) {
       if (contract.contractStatus === "REQUESTED") {
+        console.log("REQUESTED");
         return (
           <>
             <Button
@@ -220,7 +235,7 @@ const ContractDetail = () => {
       }
     }
     // 로그인한 사용자가 채권자인 경우
-    else if (contract.crWallet === address) {
+    else if (contract.crWallet.toLowerCase() === address?.toLowerCase()) {
       if (contract.contractStatus === "REQUESTED") {
         return (
           <>
@@ -267,8 +282,17 @@ const ContractDetail = () => {
         return null;
       }
       if (contract.contractStatus === "CONTRACTED") {
-        navigate("/credit");
-        return null;
+        return (
+          <>
+            <Button
+              onClick={() => navigate("/loan/lent")}
+              className="flex-1 text-base font-bold text-gray-700 md:max-w-[150px] md:text-lg"
+              variant="secondary"
+            >
+              나의 채권
+            </Button>
+          </>
+        );
       }
       if (contract.contractStatus === "CANCELED") {
         return null; // 목록으로 버튼만 표시
@@ -297,6 +321,7 @@ const ContractDetail = () => {
 
   return (
     <>
+      <LoadingOverlay isLoading={isLoading} />
       <main className="mt-9 md:text-xl">
         <div
           className={cn(
@@ -586,43 +611,8 @@ const ContractDetail = () => {
         onReject={handleReject}
         onModify={handleModifyRequest}
       />
-
-      <ModifyConfirmDialog
-        isOpen={isModifyDialogOpen}
-        onOpenChange={setIsModifyDialogOpen}
-        onConfirm={handleModifyConfirm}
-      />
     </>
   );
 };
 
 export default ContractDetail;
-const ModifyConfirmDialog = ({
-  isOpen,
-  onOpenChange,
-  onConfirm,
-}: {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
-}) => {
-  return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>수정 확인</DialogTitle>
-          <DialogDescription>
-            수정을 진행하시면 이전 요청은 자동으로 취소됩니다. 계속
-            진행하시겠습니까?
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            취소
-          </Button>
-          <Button onClick={onConfirm}>확인</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};

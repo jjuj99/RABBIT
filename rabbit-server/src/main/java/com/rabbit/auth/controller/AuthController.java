@@ -63,6 +63,10 @@ public class AuthController {
         LoginResponseDTO response = LoginResponseDTO.builder()
                 .userName(result.getUserName())
                 .nickname(result.getNickname())
+                .email(result.getEmail())
+                .bankId(result.getBank().getBankId())
+                .bankName(result.getBank().getBankName())
+                .refundAccount(result.getRefundAccount())
                 .accessToken(result.getAccessToken())
                 .build();
 

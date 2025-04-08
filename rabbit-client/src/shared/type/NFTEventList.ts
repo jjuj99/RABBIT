@@ -1,4 +1,4 @@
-export type EventType = "상환" | "양도" | "연체";
+export type EventType = "상환" | "양도" | "연체" | "연체 상환";
 
 export interface NFTEvent {
   eventType: EventType;

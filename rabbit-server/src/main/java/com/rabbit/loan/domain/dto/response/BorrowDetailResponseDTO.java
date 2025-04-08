@@ -22,7 +22,7 @@ public class BorrowDetailResponseDTO {
     private String crName; // 채권자 이름
     private String crWallet; // 채권자 지갑
     private Long la; // 총 대출 금액
-    private Long totalAmount; // 만기수취액
+    private Long remainingPrincipal; // 남은 원굼
     private String repayType; // 상환 방식
     private double ir; // 이자율
     private double dir; // 연체 이자율
@@ -41,5 +41,6 @@ public class BorrowDetailResponseDTO {
     private int accel; // 기한이익상실
     private double accelDir; // 기한이익상실 연체이자율
     private String addTerms; // 추가 약정 사항
+    private String addTermsHash; // 차용증 계약서 pdf, nftPdfUrl
     private List<ContractEventDTO> eventList; // 이벤트 내역
 }

@@ -8,12 +8,12 @@ spring:
     url: jdbc:postgresql://${PROD_DB_HOST}:${PROD_DB_PORT:5432}/${PROD_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&useUniCode=yes&characterEncoding=UTF-8&rewriteBatchedStatements=true
     username: ${PROD_DB_USERNAME}
     password: ${PROD_DB_PASSWORD}
-  #    hikari:
-  #      maximum-pool-size: 50
-  #      minimum-idle: 20
-  #      connection-timeout: 30000
-  #      idle-timeout: 600000
-  #      max-lifetime: 1800000
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
   # JPA 설정 추가
   jpa:

@@ -1,7 +1,6 @@
 package com.rabbit.blockchain.service;
 
 import com.rabbit.blockchain.wrapper.PromissoryNote;
-import com.rabbit.blockchain.wrapper.PromissoryNoteAuction;
 import com.rabbit.blockchain.wrapper.RepaymentScheduler;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;

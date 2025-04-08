@@ -30,6 +30,18 @@ contract PromissoryNoteAuction is IPromissoryNoteAuction, ERC721, Ownable {
         promissoryNoteAddress = _promissoryNoteAddress;
     }
 
+    // RabbitCoin 주소 업데이트 함수 (관리자 전용)
+    function updateRabbitCoinAddress(address _rabbitCoinAddress) external onlyOwner {
+        require(_rabbitCoinAddress != address(0), "Invalid address");
+        rabbitCoinAddress = _rabbitCoinAddress;
+    }
+
+    // PromissoryNote 주소 업데이트 함수 (관리자 전용)
+    function updatePromissoryNoteAddress(address _promissoryNoteAddress) external onlyOwner {
+        require(_promissoryNoteAddress != address(0), "Invalid address");
+        promissoryNoteAddress = _promissoryNoteAddress;
+    }
+
     // ========== NFT 예치 ==========
 
     // 예치된 NFT의 소유자 확인
@@ -37,29 +49,12 @@ contract PromissoryNoteAuction is IPromissoryNoteAuction, ERC721, Ownable {
         return nftDepositors[tokenId];
     }
 
-    // NFT 예치 함수
-    function depositNFTWithPermit(
-        uint256 tokenId,
-        address owner,
-        uint256 deadline,
-        bytes memory signature
-    ) external {
-        IPromissoryNote promissoryNote = IPromissoryNote(promissoryNoteAddress);
+    // NFT 예치 기록
+    function recordDepositor(uint256 tokenId, address depositor) external {
+        // 예치자 정보 저장
+        nftDepositors[tokenId] = depositor;
         
-        // permit 함수 호출하여 승인 처리
-        promissoryNote.permit(
-            owner,
-            address(this),
-            tokenId,
-            deadline,
-            signature
-        );
-        
-        // 승인 후 NFT 예치 처리
-        promissoryNote.transferFrom(owner, address(this), tokenId);
-        nftDepositors[tokenId] = owner; // 실제 소유자(예치자) 정보 저장
-        
-        emit NFTDeposited(tokenId, owner, block.timestamp);
+        emit NFTDeposited(tokenId, depositor, block.timestamp);
     }
 
     // ========== RAB 예치 ==========

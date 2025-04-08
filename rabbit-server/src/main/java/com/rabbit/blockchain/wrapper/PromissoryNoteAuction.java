@@ -47,8 +47,6 @@ public class PromissoryNoteAuction extends Contract {
 
     public static final String FUNC_CANCELAUCTION = "cancelAuction";
 
-    public static final String FUNC_DEPOSITNFTWITHPERMIT = "depositNFTWithPermit";
-
     public static final String FUNC_DEPOSITRAB = "depositRAB";
 
     public static final String FUNC_FINALIZEAUCTION = "finalizeAuction";
@@ -73,6 +71,8 @@ public class PromissoryNoteAuction extends Contract {
 
     public static final String FUNC_RABBITCOINADDRESS = "rabbitCoinAddress";
 
+    public static final String FUNC_RECORDDEPOSITOR = "recordDepositor";
+
     public static final String FUNC_RENOUNCEOWNERSHIP = "renounceOwnership";
 
     public static final String FUNC_safeTransferFrom = "safeTransferFrom";
@@ -88,6 +88,10 @@ public class PromissoryNoteAuction extends Contract {
     public static final String FUNC_TRANSFERFROM = "transferFrom";
 
     public static final String FUNC_TRANSFEROWNERSHIP = "transferOwnership";
+
+    public static final String FUNC_UPDATEPROMISSORYNOTEADDRESS = "updatePromissoryNoteAddress";
+
+    public static final String FUNC_UPDATERABBITCOINADDRESS = "updateRabbitCoinAddress";
 
     public static final Event APPROVAL_EVENT = new Event("Approval", 
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>(true) {}, new TypeReference<Address>(true) {}, new TypeReference<Uint256>(true) {}));
@@ -460,18 +464,6 @@ public class PromissoryNoteAuction extends Contract {
         return executeRemoteCallTransaction(function);
     }
 
-    public RemoteFunctionCall<TransactionReceipt> depositNFTWithPermit(BigInteger tokenId,
-            String owner, BigInteger deadline, byte[] signature) {
-        final Function function = new Function(
-                FUNC_DEPOSITNFTWITHPERMIT, 
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(tokenId), 
-                new org.web3j.abi.datatypes.Address(160, owner), 
-                new org.web3j.abi.datatypes.generated.Uint256(deadline), 
-                new org.web3j.abi.datatypes.DynamicBytes(signature)), 
-                Collections.<TypeReference<?>>emptyList());
-        return executeRemoteCallTransaction(function);
-    }
-
     public RemoteFunctionCall<TransactionReceipt> depositRAB(BigInteger tokenId, BigInteger amount,
             String bidder) {
         final Function function = new Function(
@@ -566,6 +558,16 @@ public class PromissoryNoteAuction extends Contract {
         return executeRemoteCallSingleValueReturn(function, String.class);
     }
 
+    public RemoteFunctionCall<TransactionReceipt> recordDepositor(BigInteger tokenId,
+            String depositor) {
+        final Function function = new Function(
+                FUNC_RECORDDEPOSITOR, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(tokenId), 
+                new org.web3j.abi.datatypes.Address(160, depositor)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
     public RemoteFunctionCall<TransactionReceipt> renounceOwnership() {
         final Function function = new Function(
                 FUNC_RENOUNCEOWNERSHIP, 
@@ -643,6 +645,24 @@ public class PromissoryNoteAuction extends Contract {
         final Function function = new Function(
                 FUNC_TRANSFEROWNERSHIP, 
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, newOwner)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> updatePromissoryNoteAddress(
+            String _promissoryNoteAddress) {
+        final Function function = new Function(
+                FUNC_UPDATEPROMISSORYNOTEADDRESS, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, _promissoryNoteAddress)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> updateRabbitCoinAddress(
+            String _rabbitCoinAddress) {
+        final Function function = new Function(
+                FUNC_UPDATERABBITCOINADDRESS, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, _rabbitCoinAddress)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }

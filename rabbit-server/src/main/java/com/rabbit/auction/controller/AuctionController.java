@@ -2,10 +2,7 @@ package com.rabbit.auction.controller;
 
 import com.rabbit.auction.controller.swagger.AuctionControllerSwagger;
 import com.rabbit.auction.domain.dto.request.AuctionFilterRequestDTO;
-import com.rabbit.auction.domain.dto.response.AuctionDetailResponseDTO;
-import com.rabbit.auction.domain.dto.response.AuctionResponseDTO;
-import com.rabbit.auction.domain.dto.response.MyAuctionResponseDTO;
-import com.rabbit.auction.domain.dto.response.SimilarAuctionResponseDTO;
+import com.rabbit.auction.domain.dto.response.*;
 import com.rabbit.auction.service.AuctionService;
 import com.rabbit.auction.domain.dto.request.AuctionRequestDTO;
 import com.rabbit.global.exception.BusinessException;
@@ -37,7 +34,7 @@ public class AuctionController {
 
     @AuctionControllerSwagger.InsertAuctionApi
     @PostMapping
-    public ResponseEntity<CustomApiResponse<?>> addAuction(@Valid @RequestBody AuctionRequestDTO auctionRequest, Authentication authentication) {
+    public ResponseEntity<CustomApiResponse<AuctionIdDTO>> addAuction(@Valid @RequestBody AuctionRequestDTO auctionRequest, Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
 
         //최소 입찰가
@@ -50,14 +47,14 @@ public class AuctionController {
         }
 
         //파라미터 누락
-        if(auctionRequest.getTokenId() == null || auctionRequest.getSellerSign() == null){
+        if(auctionRequest.getTokenId() == null){
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "필수 파라미터가 누락되었습니다.");
         }
 
-        auctionService.addAuction(auctionRequest, Integer.parseInt(userId));
+        AuctionIdDTO auctionIdDTO = auctionService.addAuction(auctionRequest, Integer.parseInt(userId));
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(CustomApiResponse.success(MessageResponse.of("경매 등록 성공했습니다.")));
+                .body(CustomApiResponse.success(auctionIdDTO));
     }
 
     @AuctionControllerSwagger.SearchAuctionApi

@@ -39,10 +39,9 @@ public class JwtFilter extends OncePerRequestFilter {
             "/api/v1/auth/check-email",
             "/api/v1/auth/check-nickname",
             "/api/v1/bank/**",
+//            "/api/v1/coins/**",
             "/api/v1/sse/**",
-            "/api/v1/auctions/**",
             "/api/v1/ipfs/**",
-            "/api/v1/loans/**"
     };
 
     @Override

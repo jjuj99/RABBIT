@@ -1,5 +1,4 @@
 import { useAuthUser } from "@/entities/auth/hooks/useAuth";
-import useContractMutate from "@/entities/contract/hooks/useContractMutate";
 import useCreateContract from "@/entities/contract/hooks/useCreateContract";
 import useGetWallet from "@/entities/wallet/hooks/useGetWallet";
 import { useWeb3 } from "@/shared/lib/web3/context/useWeb3";
@@ -17,11 +16,10 @@ const useContractForm = () => {
   const [dialogMessage, setDialogMessage] = useState("");
   const [isPassDialogOpen, setIsPassDialogOpen] = useState(false);
   const [isModifyDialogOpen, setIsModifyDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { state } = useLocation();
   console.log("state", state);
-  const { cancelContract } = useContractMutate({
-    contractId: state?.contractId ?? "",
-  });
+
   const [passState, setPassState] = useState<passType>({
     authResultCode: "FAIL",
     passAuthToken: "",
@@ -87,6 +85,7 @@ const useContractForm = () => {
     txId: z.string(),
     authResultCode: z.string(),
     contractDt: z.date(),
+    contractId: z.string().nullable(),
   });
 
   useEffect(() => {
@@ -126,34 +125,37 @@ const useContractForm = () => {
       txId: "",
       authResultCode: "",
       contractDt: new Date(),
+      contractId: state?.contractId ?? null,
     },
   });
 
   const onSubmit = async (data: z.infer<typeof contractSchema>) => {
+    setIsLoading(true);
     const account = await web3?.eth.getAccounts();
     if (!account) {
+      setIsLoading(false);
       return;
     }
-    if (state) {
-      try {
-        setIsModifyDialogOpen(true);
-        await cancelContract();
-      } catch (error) {
-        console.error(error);
-        return;
-      }
+
+    console.log("보내기 전 데이터", data);
+    try {
+      await createContractMutation.mutateAsync({
+        ...data,
+        earlypayFee: data.earlypayFee ?? 0,
+        repayType: data.repayType as "EPIP" | "EPP" | "BP",
+        addTerms: data.addTerms ?? null,
+        message: data.message ?? null,
+        contractDt: dateFormat(String(data.contractDt)),
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
-    createContractMutation.mutate({
-      ...data,
-      earlypayFee: data.earlypayFee ?? 0,
-      repayType: data.repayType as "EPIP" | "EPP" | "BP",
-      addTerms: data.addTerms ?? null,
-      message: data.message ?? null,
-      contractDt: dateFormat(String(data.contractDt)),
-    });
   };
 
   const handlePassComplete = () => {
+    setIsLoading(true);
     console.log("passState", passState);
     if (passState.authResultCode === "SUCCESS") {
       form.setValue("drPhone", passState.phoneNumber);
@@ -163,15 +165,7 @@ const useContractForm = () => {
       form.setValue("authResultCode", passState.authResultCode);
       setIsPassDialogOpen(false);
     }
-  };
-
-  const handleModifyConfirm = async () => {
-    try {
-      await cancelContract();
-      setIsModifyDialogOpen(false);
-    } catch (error) {
-      console.error("Contract cancellation failed:", error);
-    }
+    setIsLoading(false);
   };
 
   return {
@@ -190,7 +184,8 @@ const useContractForm = () => {
     rejectMessage: state?.rejectMessage ?? "",
     isModifyDialogOpen,
     setIsModifyDialogOpen,
-    handleModifyConfirm,
+
+    isLoading,
   };
 };
 

@@ -36,6 +36,10 @@ export interface RefreshTokenResponse {
 export interface User {
   nickname: string;
   userName: string;
+  email: string;
+  bankId: number;
+  bankName: string;
+  refundAccount: string;
 }
 
 export interface SignupResponse {

@@ -14,6 +14,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -211,11 +212,28 @@ public class ContractEncryptionService {
         return text; // 이미 암호화되지 않은 경우
     }
 
-    // 마스터 키를 사용한 암호화/복호화 메서드
+    // AES 키 길이 문제 해결용 유틸리티 메서드 추가
+    private byte[] getValidAESKey(String keyString) {
+        // AES는 16, 24, 또는 32바이트(128, 192, 256비트) 키만 지원
+        // 원래 키의 바이트 얻기
+        byte[] originalBytes = keyString.getBytes(StandardCharsets.UTF_8);
+
+        // 32바이트(256비트) 키로 조정
+        byte[] result = new byte[32];
+
+        // 원본 키가 32바이트보다 짧으면 0으로 패딩, 길면 잘라냄
+        System.arraycopy(originalBytes, 0, result, 0, Math.min(originalBytes.length, 32));
+
+        return result;
+    }
+
+
+    // 마스터 키를 사용한 암호화 메서드 수정
     private String encryptWithMasterKey(String plainText) {
         try {
-            SecretKey secretKey = new SecretKeySpec(
-                    masterKeyString.getBytes(StandardCharsets.UTF_8), "AES");
+            // 유효한 길이의 키로 조정
+            byte[] keyBytes = getValidAESKey(masterKeyString);
+            SecretKey secretKey = new SecretKeySpec(keyBytes, "AES");
 
             byte[] iv = new byte[GCM_IV_LENGTH];
             secureRandom.nextBytes(iv);
@@ -237,10 +255,12 @@ public class ContractEncryptionService {
         }
     }
 
+    // 마스터 키를 사용한 복호화 메서드 수정
     private String decryptWithMasterKey(String encryptedText) {
         try {
-            SecretKey secretKey = new SecretKeySpec(
-                    masterKeyString.getBytes(StandardCharsets.UTF_8), "AES");
+            // 유효한 길이의 키로 조정
+            byte[] keyBytes = getValidAESKey(masterKeyString);
+            SecretKey secretKey = new SecretKeySpec(keyBytes, "AES");
 
             byte[] combined = Base64.getDecoder().decode(encryptedText);
 
@@ -289,5 +309,67 @@ public class ContractEncryptionService {
                 .orElseThrow(() -> new RuntimeException("계약을 찾을 수 없습니다. ID: " + contractId));
 
         return decryptWithContractKey(contract, encryptedText);
+    }
+
+    /**
+     * 암호화된 데이터의 무결성 검증 (복호화 없이)
+     * @param contract 계약 엔티티
+     * @param encryptedText 암호화된 데이터 (Base64 인코딩)
+     * @return 검증 결과 (true: 유효한 데이터, false: 변조된 데이터)
+     */
+    public boolean verifyEncryptedData(Contract contract, String encryptedText) {
+        if (encryptedText == null || encryptedText.isEmpty() || encryptedText.equals("ENC_ERROR")) {
+            return false;
+        }
+
+        try {
+            // 계약 키 조회
+            String contractKey = getContractKey(contract);
+            SecretKey secretKey = new SecretKeySpec(Base64.getDecoder().decode(contractKey), "AES");
+
+            // Base64 디코딩
+            byte[] combined = Base64.getDecoder().decode(encryptedText);
+
+            // IV 추출
+            byte[] iv = new byte[GCM_IV_LENGTH];
+            System.arraycopy(combined, 0, iv, 0, iv.length);
+
+            // 암호화된 데이터 추출
+            byte[] encryptedData = new byte[combined.length - iv.length];
+            System.arraycopy(combined, iv.length, encryptedData, 0, encryptedData.length);
+
+            // GCM 모드에서는 복호화 과정에서 인증 태그 검증이 자동으로 이루어짐
+            // 만약 데이터가 변조되었다면 예외 발생
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH * 8, iv);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);
+
+            // 검증만 하고 결과는 사용하지 않음
+            cipher.doFinal(encryptedData);
+
+            // 예외가 발생하지 않았다면 검증 성공
+            return true;
+        } catch (Exception e) {
+            log.warn("계약 ID {}의 암호화 데이터 검증 실패", contract.getContractId(), e);
+            return false;
+        }
+    }
+
+    /**
+     * 암호화 프리픽스가 포함된 데이터 검증
+     * @param contract 계약 엔티티
+     * @param text 암호화된 텍스트 (프리픽스 포함)
+     * @return 검증 결과
+     */
+    public boolean verifyWithPrefix(Contract contract, String text) {
+        if (text == null || text.isEmpty() || text.equals("N/A")) {
+            return false;
+        }
+
+        if (text.startsWith("ENC:")) {
+            return verifyEncryptedData(contract, text.substring(4));
+        }
+
+        return true; // 암호화되지 않은 데이터는 항상 유효함
     }
 }

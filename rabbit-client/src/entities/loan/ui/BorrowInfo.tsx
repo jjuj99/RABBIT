@@ -95,7 +95,7 @@ const BorrowInfo = ({ data, onPageChange }: BorrowInfoProps) => {
               </td>
               <td className="px-4 py-3 text-center">
                 <div className="flex items-center justify-center gap-2 text-base font-medium">
-                  {item.drName}
+                  {item.crName}
                 </div>
               </td>
               <td className="px-4 py-3 text-center text-base text-white">
@@ -103,11 +103,11 @@ const BorrowInfo = ({ data, onPageChange }: BorrowInfoProps) => {
                   className="hover:text-brand-primary mx-auto max-w-[180px] cursor-pointer truncate"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setSelectedWallet(item.drWallet);
+                    setSelectedWallet(item.crWallet);
                     setIsOpen(true);
                   }}
                 >
-                  {item.drWallet || "-"}
+                  {item.crWallet || "-"}
                 </div>
               </td>
               <td className="px-4 py-3 text-center">

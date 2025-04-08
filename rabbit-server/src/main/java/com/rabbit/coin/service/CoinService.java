@@ -3,9 +3,11 @@ package com.rabbit.coin.service;
 
 import com.rabbit.bankApi.service.BankService;
 import com.rabbit.blockchain.service.RabbitCoinService;
+import com.rabbit.coin.domain.dto.request.CoinPermitRequestDTO;
 import com.rabbit.coin.domain.dto.request.CoinWithdrawRequestDTO;
 import com.rabbit.coin.domain.dto.request.TossConfirmRequestDTO;
 import com.rabbit.coin.domain.dto.request.TossWebhookDataDTO;
+import com.rabbit.coin.domain.dto.response.CoinLogListResponseDTO;
 import com.rabbit.coin.domain.entity.CoinLog;
 import com.rabbit.coin.domain.enums.CoinLogStatus;
 import com.rabbit.coin.domain.enums.CoinLogType;
@@ -16,15 +18,19 @@ import com.rabbit.user.domain.entity.MetamaskWallet;
 import com.rabbit.user.domain.entity.RefundAccount;
 import com.rabbit.user.repository.MetamaskWalletRepository;
 import com.rabbit.user.repository.RefundAccountRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -172,6 +178,51 @@ public class CoinService {
         } catch (Exception e) {
             log.error("RAB 전송 오류: {}", e.getMessage(), e);
             throw new BusinessException(ErrorCode.RAB_TRANSFER_FAIL, "RAB 전송 중 오류가 발생했습니다");
+        }
+    }
+
+    public List<CoinLogListResponseDTO> getTransactions(Integer userId){
+        List<CoinLog> coinLogs = coinLogRepository.findByUserIdAndStatus(userId, CoinLogStatus.SUCCESS);
+
+        // 조회된 로그가 없는 경우 null 반환
+        if (coinLogs == null || coinLogs.isEmpty()) {
+            return null;
+        }
+
+        return coinLogs.stream()
+                .map(coinLog -> CoinLogListResponseDTO.builder()
+                        .type(coinLog.getType())
+                        .amount(coinLog.getAmount())
+                        .createdAt(coinLog.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    public void permit(CoinPermitRequestDTO requestDTO) {
+        try {
+            // String을 byte[] 형태로 변환
+            byte[] signature = Numeric.hexStringToByteArray(requestDTO.getSignature());
+
+            // RabbitCoin 컨트랙트의 permit을 통해 승인
+            TransactionReceipt receipt = rabbitCoinService.permit(
+                    requestDTO.getOwner(),
+                    requestDTO.getSpender(),
+                    requestDTO.getValue(),
+                    requestDTO.getDeadline(),
+                    signature
+            );
+
+            // 트랜잭션 성공 여부 확인
+            boolean isSuccess = "0x1".equals(receipt.getStatus());
+            if (isSuccess) {
+                log.info("RAB permit 성공: {} -> {}, {}", requestDTO.getOwner(), requestDTO.getSpender(), requestDTO.getValue());
+            } else {
+                log.error("RAB permit 실패. 트랜잭션 상태: {}", receipt.getStatus());
+                throw new BusinessException(ErrorCode.RAB_PERMIT_FAIL, "RAB permit을 실패하였습니다");
+            }
+        } catch (Exception e) {
+            log.error("RAB permit 오류: {}", e.getMessage(), e);
+            throw new BusinessException(ErrorCode.RAB_PERMIT_ERROR, "RAB permit 중 오류가 발생했습니다");
         }
     }
 }

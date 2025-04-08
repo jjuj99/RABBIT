@@ -1,5 +1,5 @@
-import { CreateContractRequest } from "@/entities/contract/api/ContractApi";
 import { repaymentTypeConfig } from "@/entities/contract/types/repaymentTypeConfig";
+import { CreateContractRequest } from "@/entities/contract/types/request";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { truncateAddress } from "@/shared/utils/truncateAddress";
@@ -13,6 +13,8 @@ interface LocationState {
 const ContractRequestSuccess = () => {
   const { state } = useLocation() as { state: LocationState };
   const { contractData } = state;
+  console.log("state에 담긴 데이터", contractData);
+
   const navigate = useNavigate();
 
   return (
@@ -65,7 +67,7 @@ const ContractRequestSuccess = () => {
             <span className="text-text-secondary">채권자 : </span>
             <span className="flex">
               <span>{contractData.data.crName}</span>(
-              <span className="max-w-[100px] truncate">{`010-1234-5678`}</span>)
+              {truncateAddress(contractData.data.crWallet)})
             </span>
           </div>
           <div className="flex w-[220px] justify-between">

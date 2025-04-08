@@ -23,6 +23,8 @@ const ContractReceivedList = () => {
   const { data: contractList } = useGetContractList({
     type: "received",
   });
+  console.log(contractList);
+
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     field: "createdAt",
     order: "desc",
@@ -46,8 +48,8 @@ const ContractReceivedList = () => {
   };
 
   const filteredAndSortedData = useMemo(() => {
-    if (!contractList) return [];
-    let result = [...contractList.data!];
+    if (!contractList.data) return [];
+    let result = [...contractList.data.content!];
 
     // 필터 적용
     if (selectedFilters.size > 0) {

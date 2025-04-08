@@ -1,10 +1,8 @@
 package com.rabbit.coin.controller;
 
-import com.rabbit.coin.domain.dto.request.CoinWithdrawRequestDTO;
-import com.rabbit.coin.domain.dto.request.TossConfirmRequestDTO;
-import com.rabbit.coin.domain.dto.request.TossWebhookDTO;
-import com.rabbit.coin.domain.dto.request.TossWebhookDataDTO;
+import com.rabbit.coin.domain.dto.request.*;
 import com.rabbit.coin.controller.swagger.CoinControllerSwagger;
+import com.rabbit.coin.domain.dto.response.CoinLogListResponseDTO;
 import com.rabbit.coin.service.CoinService;
 import com.rabbit.global.response.CustomApiResponse;
 import com.rabbit.global.response.MessageResponse;
@@ -21,6 +19,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
 import static com.rabbit.global.util.TossErrorUtil.extractErrorMessage;
@@ -98,6 +97,25 @@ public class CoinController {
 
         return ResponseEntity.ok(CustomApiResponse.success(
                 MessageResponse.of("출금이 완료되었습니다")
+        ));
+    }
+
+    @CoinControllerSwagger.GetTransactionsAPI
+    @GetMapping("/transactions")
+    public ResponseEntity<CustomApiResponse<List<CoinLogListResponseDTO>>> getTransactions(Authentication authentication){
+        String userId = (String) authentication.getPrincipal();
+
+        List<CoinLogListResponseDTO> response = coinService.getTransactions(Integer.parseInt(userId));
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
+
+    @PostMapping("/permit")
+    public ResponseEntity<CustomApiResponse<MessageResponse>> permit(@Valid @RequestBody CoinPermitRequestDTO coinPermitRequestDTO){
+        coinService.permit(coinPermitRequestDTO);
+
+        return ResponseEntity.ok(CustomApiResponse.success(
+                MessageResponse.of("permit이 완료되었습니다")
         ));
     }
 }

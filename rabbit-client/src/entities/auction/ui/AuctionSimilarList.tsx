@@ -10,7 +10,7 @@ import {
   Legend,
 } from "chart.js";
 import { ScrollArea } from "@/shared/ui/scroll-area";
-import { formatNumber } from "@/utils/format";
+import { formatNumber } from "@/shared/utils/formatNumber";
 
 ChartJS.register(
   CategoryScale,
@@ -79,29 +79,27 @@ const AuctionSimilarList = ({ data }: AuctionSimilarListProps) => {
         <div className="flex h-fit w-full flex-col gap-4 rounded-lg bg-gray-900 p-4">
           <h3 className="text-lg font-semibold text-white">유사 경매 리스트</h3>
           <div className="rounded-sm bg-gray-800">
-            <table className="min-w-full divide-y divide-gray-700">
-              <thead className="bg-gray-800">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-400 uppercase">
-                    경매 ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-400 uppercase">
-                    잔여원금
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-400 uppercase">
-                    잔여상환일
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-400 uppercase">
-                    수익률
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-400 uppercase">
-                    퍼센타일
-                  </th>
-                </tr>
-              </thead>
-            </table>
             <ScrollArea className="h-[400px]">
               <table className="min-w-full divide-y divide-gray-700">
+                <thead className="sticky top-0 bg-gray-800">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-medium tracking-wider text-gray-200">
+                      경매 ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium tracking-wider text-gray-200">
+                      잔여원금
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium tracking-wider text-gray-200">
+                      잔여상환일
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium tracking-wider text-gray-200">
+                      수익률
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium tracking-wider text-gray-200">
+                      순위 퍼센트
+                    </th>
+                  </tr>
+                </thead>
                 <tbody className="divide-y divide-gray-700 bg-gray-800">
                   {sortedAuctions.map((auction) => (
                     <tr

@@ -1,6 +1,7 @@
 import fetchOption from "@/shared/utils/fetchOption";
 import { AuctionListRequest } from "../types/request";
 import {
+  AuctionDetailResponse,
   AuctionListResponse,
   AuctionSimilarListResponse,
   AvailableAuctionsResponse,
@@ -33,7 +34,7 @@ export const getAuctionListAPI = async (
 
   const queryString = queryParams.toString();
   const url = `${VITE_API_URL}/${VITE_API_VERSION}/auctions${queryString ? `?${queryString}` : ""}`;
-  const res = await fetch(url, fetchOption("GET", {}, "access"));
+  const res = await fetch(url, fetchOption("GET"));
   const data = await res.json();
   return data;
 };
@@ -76,12 +77,10 @@ export const createAuctionAPI = async ({
   minimumBid,
   endDate,
   tokenId,
-  sellerSign,
 }: {
   minimumBid: number;
   endDate: string;
   tokenId: string;
-  sellerSign: string;
 }): Promise<ApiResponse<CreateAuctionResponse>> => {
   const res = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/auctions`,
@@ -89,8 +88,18 @@ export const createAuctionAPI = async ({
       minimumBid,
       endDate,
       tokenId,
-      sellerSign,
     }),
+  );
+  const data = await res.json();
+  return data;
+};
+
+export const deleteAuctionAPI = async (
+  auctionId: number,
+): Promise<ApiResponse<AuctionDetailResponse>> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/${auctionId}`,
+    fetchOption("DELETE"),
   );
   const data = await res.json();
   return data;

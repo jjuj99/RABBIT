@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
+import com.rabbit.user.service.WalletService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -38,6 +39,7 @@ public class ContractCommandService {
     private final SysCommonCodeService sysCommonCodeService;
     private final UserService userService;
     private final ContractQueryService contractQueryService;
+    private final WalletService walletService;
     private final ContractProcessingService contractProcessingService;
     private final ContractNotificationHelper notificationHelper;
     private final MailService mailService;
@@ -72,7 +74,7 @@ public class ContractCommandService {
             // 권한 검증 - 채무자만 수정 가능
             if (!Objects.equals(originalContract.getDebtor().getUserId(), userId)) {
                 log.warn("[계약 수정 권한 없음] 사용자 ID: {}, 원본 계약 ID: {}", userId, contractIdParam);
-                throw new BusinessException(ErrorCode.ACCESS_DENIED, "원본 계약의 채무자만 계약을 수정할 수 있습니다");
+                throw new BusinessException(ErrorCode.ACCESS_DENIED, "원본 계약의 채무자만 계약을 취소할 수 있습니다");
             }
 
             // 원본 계약 상태 검증 - MODIFICATION_REQUESTED 상태인지 확인
@@ -99,6 +101,18 @@ public class ContractCommandService {
         Contract savedContract = contractRepository.save(contract);
         log.info("[계약 생성 완료] 계약 ID: {}, 채권자: {}, 채무자: {}, 원본 계약 ID: {}",
                 savedContract.getContractId(), creditor.getUserId(), debtor.getUserId(), contractIdParam);
+
+        // 채권자 지갑 주소 확인
+        String creditorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getCreditor().getUserId());
+        if (creditorWalletAddress == null || creditorWalletAddress.isBlank()) {
+            creditorWalletAddress = "";
+        }
+
+        // 채무자 지갑 주소 확인
+        String debtorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getDebtor().getUserId());
+        if (debtorWalletAddress == null || debtorWalletAddress.isBlank()) {
+            debtorWalletAddress = "";
+        }
 
         // 채권자에게 알림 발송
         notificationHelper.sendNotification(
@@ -128,7 +142,7 @@ public class ContractCommandService {
         }
 
         // 응답 생성
-        ContractResponseDTO responseDTO = ContractResponseDTO.from(savedContract);
+        ContractResponseDTO responseDTO = ContractResponseDTO.createFrom(savedContract, creditorWalletAddress, debtorWalletAddress);
         responseDTO.setContractStatusName(sysCommonCodeService.getCodeName(
                 CONTRACT_STATUS, responseDTO.getContractStatus().getCode()));
 
@@ -181,6 +195,8 @@ public class ContractCommandService {
      */
     @Transactional
     public ContractResponseDTO completeContract(Integer contractId, Integer userId) {
+        // 시작 시간 측정
+        long startTime = System.currentTimeMillis();
         Contract contract = contractQueryService.findContractById(contractId);
 
         // 상태 전이 검증
@@ -195,13 +211,25 @@ public class ContractCommandService {
         contractProcessingService.completeContractProcessing(contract);
 
         Contract updatedContract = contractRepository.save(contract);
+
+        // 2. 채무자 지갑 주소 확인
+        String debtorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getDebtor().getUserId());
+        if (debtorWalletAddress == null || debtorWalletAddress.isBlank()) {
+            debtorWalletAddress = "";
+        }
+
         log.info("[계약 완료 처리] 계약 ID: {}, 채권자: {}, 채무자: {}",
                 contractId, contract.getCreditor().getUserId(), contract.getDebtor().getUserId());
 
         // PDF 생성, 이메일 및 알림 발송
         notificationHelper.sendContractCompletionNotifications(updatedContract);
 
-        return ContractResponseDTO.from(updatedContract);
+        // 종료 시간 측정 및 소요 시간 로깅
+        long endTime = System.currentTimeMillis();
+        long elapsedTime = endTime - startTime;
+        log.info("[성능 측정] 계약 ID: {}, NFT 생성 총 소요 시간: {}ms", contract.getContractId(), elapsedTime);
+
+        return ContractResponseDTO.successFrom(updatedContract, debtorWalletAddress);
     }
 
     /**
@@ -219,10 +247,10 @@ public class ContractCommandService {
         // 상태 전이 규칙 검증과 채무자 권한 검증
         validateRejectContractAccess(contract, userId);
 
-        // 계약 상태 결정 (취소 또는 수정 요청)
+        // 계약 상태 결정 (거절 또는 수정 요청)
         SysCommonCodes.Contract newStatus = requestDTO.isCanceled() ?
-                SysCommonCodes.Contract.CANCELED :
-                SysCommonCodes.Contract.MODIFICATION_REQUESTED;
+                SysCommonCodes.Contract.MODIFICATION_REQUESTED :
+                SysCommonCodes.Contract.REJECTED;
 
         // 상태 업데이트
         contract.updateStatus(newStatus);
@@ -352,7 +380,9 @@ public class ContractCommandService {
                 break;
 
             case MODIFICATION_REQUESTED:
-                throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "수정 요청된 계약의 상태는 변경할 수 없습니다");
+                if (newStatus != SysCommonCodes.Contract.CANCELED) {
+                    throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "수정 요청된 계약의 상태는 변경할 수 없습니다");
+                }
 
             case REJECTED:
                 throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "거절된 계약의 상태는 변경할 수 없습니다");

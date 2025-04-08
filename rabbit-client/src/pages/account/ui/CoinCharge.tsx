@@ -1,23 +1,13 @@
 import { AccountNav, CoinStatus } from "@/entities/account";
-import { AccountHistoryType } from "@/entities/account/types/response";
+
+import useGetTrasitionHistory from "@/entities/coin/hook/useGetTrasitionHistory";
 import { CoinChargeForm } from "@/features/account";
 import AccountHistory from "@/features/account/ui/AccountHistory";
 import { useState } from "react";
 
 const CoinCharge = () => {
   const amountState = useState(0);
-  const mock: AccountHistoryType[] = [
-    {
-      type: "deposit",
-      amount: 10000,
-      date: "2025-03-25",
-    },
-    {
-      type: "withdraw",
-      amount: 10000,
-      date: "2025-03-25",
-    },
-  ];
+  const { data } = useGetTrasitionHistory();
 
   return (
     <main className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -30,7 +20,7 @@ const CoinCharge = () => {
         <CoinChargeForm amountState={amountState} />
       </div>
 
-      <AccountHistory data={mock} />
+      <AccountHistory data={data?.data} />
     </main>
   );
 };

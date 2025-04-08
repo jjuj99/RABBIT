@@ -13,6 +13,7 @@ import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.Utf8String;
+import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.abi.datatypes.generated.Uint8;
 import org.web3j.crypto.Credentials;
@@ -40,17 +41,19 @@ import org.web3j.tx.gas.ContractGasProvider;
 public class RabbitCoin extends Contract {
     public static final String BINARY = "Bin file was not provided";
 
+    public static final String FUNC_DOMAIN_SEPARATOR = "DOMAIN_SEPARATOR";
+
+    public static final String FUNC_DOMAIN_TYPEHASH = "DOMAIN_TYPEHASH";
+
+    public static final String FUNC_PERMIT_TYPEHASH = "PERMIT_TYPEHASH";
+
     public static final String FUNC_ALLOWANCE = "allowance";
 
     public static final String FUNC_APPROVE = "approve";
 
-    public static final String FUNC_APPROVEINFINITEFORSYSTEM = "approveInfiniteForSystem";
-
     public static final String FUNC_BALANCEOF = "balanceOf";
 
     public static final String FUNC_BURN = "burn";
-
-    public static final String FUNC_CHARGE = "charge";
 
     public static final String FUNC_DECIMALS = "decimals";
 
@@ -58,13 +61,13 @@ public class RabbitCoin extends Contract {
 
     public static final String FUNC_NAME = "name";
 
+    public static final String FUNC_NONCES = "nonces";
+
     public static final String FUNC_OWNER = "owner";
 
-    public static final String FUNC_REFUND = "refund";
+    public static final String FUNC_PERMIT = "permit";
 
     public static final String FUNC_RENOUNCEOWNERSHIP = "renounceOwnership";
-
-    public static final String FUNC_SETSYSTEMCONTRACT = "setSystemContract";
 
     public static final String FUNC_SYMBOL = "symbol";
 
@@ -75,6 +78,8 @@ public class RabbitCoin extends Contract {
     public static final String FUNC_TRANSFERFROM = "transferFrom";
 
     public static final String FUNC_TRANSFEROWNERSHIP = "transferOwnership";
+
+    public static final String FUNC_VERSION = "version";
 
     public static final Event APPROVAL_EVENT = new Event("Approval", 
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>(true) {}, new TypeReference<Address>(true) {}, new TypeReference<Uint256>() {}));
@@ -217,6 +222,27 @@ public class RabbitCoin extends Contract {
         return transferEventFlowable(filter);
     }
 
+    public RemoteFunctionCall<byte[]> DOMAIN_SEPARATOR() {
+        final Function function = new Function(FUNC_DOMAIN_SEPARATOR, 
+                Arrays.<Type>asList(), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Bytes32>() {}));
+        return executeRemoteCallSingleValueReturn(function, byte[].class);
+    }
+
+    public RemoteFunctionCall<byte[]> DOMAIN_TYPEHASH() {
+        final Function function = new Function(FUNC_DOMAIN_TYPEHASH, 
+                Arrays.<Type>asList(), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Bytes32>() {}));
+        return executeRemoteCallSingleValueReturn(function, byte[].class);
+    }
+
+    public RemoteFunctionCall<byte[]> PERMIT_TYPEHASH() {
+        final Function function = new Function(FUNC_PERMIT_TYPEHASH, 
+                Arrays.<Type>asList(), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Bytes32>() {}));
+        return executeRemoteCallSingleValueReturn(function, byte[].class);
+    }
+
     public RemoteFunctionCall<BigInteger> allowance(String owner, String spender) {
         final Function function = new Function(FUNC_ALLOWANCE, 
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, owner), 
@@ -234,14 +260,6 @@ public class RabbitCoin extends Contract {
         return executeRemoteCallTransaction(function);
     }
 
-    public RemoteFunctionCall<TransactionReceipt> approveInfiniteForSystem(String account) {
-        final Function function = new Function(
-                FUNC_APPROVEINFINITEFORSYSTEM, 
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, account)), 
-                Collections.<TypeReference<?>>emptyList());
-        return executeRemoteCallTransaction(function);
-    }
-
     public RemoteFunctionCall<BigInteger> balanceOf(String account) {
         final Function function = new Function(FUNC_BALANCEOF, 
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, account)), 
@@ -253,15 +271,6 @@ public class RabbitCoin extends Contract {
         final Function function = new Function(
                 FUNC_BURN, 
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(amount)), 
-                Collections.<TypeReference<?>>emptyList());
-        return executeRemoteCallTransaction(function);
-    }
-
-    public RemoteFunctionCall<TransactionReceipt> charge(String account, BigInteger amount) {
-        final Function function = new Function(
-                FUNC_CHARGE, 
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, account), 
-                new org.web3j.abi.datatypes.generated.Uint256(amount)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
@@ -289,6 +298,13 @@ public class RabbitCoin extends Contract {
         return executeRemoteCallSingleValueReturn(function, String.class);
     }
 
+    public RemoteFunctionCall<BigInteger> nonces(String owner) {
+        final Function function = new Function(FUNC_NONCES, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, owner)), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
+        return executeRemoteCallSingleValueReturn(function, BigInteger.class);
+    }
+
     public RemoteFunctionCall<String> owner() {
         final Function function = new Function(FUNC_OWNER, 
                 Arrays.<Type>asList(), 
@@ -296,11 +312,15 @@ public class RabbitCoin extends Contract {
         return executeRemoteCallSingleValueReturn(function, String.class);
     }
 
-    public RemoteFunctionCall<TransactionReceipt> refund(String account, BigInteger amount) {
+    public RemoteFunctionCall<TransactionReceipt> permit(String owner, String spender,
+            BigInteger value, BigInteger deadline, byte[] signature) {
         final Function function = new Function(
-                FUNC_REFUND, 
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, account), 
-                new org.web3j.abi.datatypes.generated.Uint256(amount)), 
+                FUNC_PERMIT, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, owner), 
+                new org.web3j.abi.datatypes.Address(160, spender), 
+                new org.web3j.abi.datatypes.generated.Uint256(value), 
+                new org.web3j.abi.datatypes.generated.Uint256(deadline), 
+                new org.web3j.abi.datatypes.DynamicBytes(signature)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
@@ -309,14 +329,6 @@ public class RabbitCoin extends Contract {
         final Function function = new Function(
                 FUNC_RENOUNCEOWNERSHIP, 
                 Arrays.<Type>asList(), 
-                Collections.<TypeReference<?>>emptyList());
-        return executeRemoteCallTransaction(function);
-    }
-
-    public RemoteFunctionCall<TransactionReceipt> setSystemContract(String systemContract) {
-        final Function function = new Function(
-                FUNC_SETSYSTEMCONTRACT, 
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, systemContract)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
@@ -361,6 +373,13 @@ public class RabbitCoin extends Contract {
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, newOwner)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<String> version() {
+        final Function function = new Function(FUNC_VERSION, 
+                Arrays.<Type>asList(), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
+        return executeRemoteCallSingleValueReturn(function, String.class);
     }
 
     @Deprecated

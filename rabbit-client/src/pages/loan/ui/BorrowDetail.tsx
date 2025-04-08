@@ -6,7 +6,11 @@ import { Button } from "@/shared/ui/button";
 import NFTEventList from "@/entities/common/ui/NFTEventList";
 import NFTEventListMobile from "@/entities/common/ui/NFTEventListMobile";
 import useMediaQuery from "@/shared/hooks/useMediaQuery";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { getBorrowDetailAPI, earlypayAPI } from "@/entities/loan/api/loanApi";
 import { useNavigate, useParams } from "react-router";
 import {
@@ -17,24 +21,21 @@ import {
 } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
 import { useState } from "react";
-// import useGetBalance from "@/entities/wallet/hooks/useGetBalance";
+import useGetBalance from "@/entities/wallet/hooks/useGetBalance";
 
 const BorrowDetail = () => {
   const isDesktop = useMediaQuery("lg");
   const [isEarlyRepaymentOpen, setIsEarlyRepaymentOpen] = useState(false);
   const [repaymentAmount, setRepaymentAmount] = useState<number>(0);
 
-  // const { balance } = useGetBalance();
-
-  const balance = 1000000;
+  const { balance } = useGetBalance();
   const { contractId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data } = useQuery({
+  const { data } = useSuspenseQuery({
     queryKey: ["borrowDetail", contractId],
     queryFn: () => getBorrowDetailAPI(contractId!),
-    enabled: !!contractId,
   });
 
   const earlyRepaymentMutation = useMutation({
@@ -108,8 +109,8 @@ const BorrowDetail = () => {
             contractDt={data.data.contractDt}
             pnStatus={data.data.pnStatus}
           />
-          <div>
-            <div className="flex h-full flex-col gap-2 lg:flex-row">
+          <div className="flex h-full w-full flex-col gap-2">
+            <div className="flex h-full flex-col gap-2 lg:flex-col">
               <div className="flex h-full w-full flex-col justify-center gap-2 rounded-sm bg-gray-800 px-4 py-3">
                 <InfoRow label="다음 상환 일자" value={data.data.nextMpDt} />
                 <InfoRow
@@ -117,31 +118,54 @@ const BorrowDetail = () => {
                   value={data.data.nextAmount.toLocaleString()}
                 />
               </div>
-              <div className="flex h-full w-full flex-col justify-center gap-2 rounded-sm bg-gray-800 px-4 py-3">
-                <InfoRow
-                  label="중도 상환 수수료"
-                  value={`${data.data.earlypayFee}%`}
-                />
-                {data.data.earlypayFlag ? (
+              <div className="flex h-full w-full flex-row gap-2">
+                <div className="flex h-full w-full flex-col justify-center gap-2 rounded-sm bg-gray-800 px-4 py-3">
+                  <InfoRow
+                    label="중도 상환 수수료"
+                    value={`${data.data.earlypayFee}%`}
+                  />
+                  {data.data.earlypayFlag ? (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setIsEarlyRepaymentOpen(true)}
+                    >
+                      중도 상환
+                    </Button>
+                  ) : (
+                    <div className="text-center text-sm text-gray-400">
+                      중도 상환 불가능
+                    </div>
+                  )}
+                </div>
+                <div className="flex h-full w-fit flex-col gap-2 rounded-sm bg-gray-800 px-4 py-3">
+                  <div className="whitespace-nowrap text-gray-100">
+                    계약서 상세보기
+                  </div>
                   <Button
                     variant="primary"
                     size="sm"
                     className="w-full"
-                    onClick={() => setIsEarlyRepaymentOpen(true)}
+                    onClick={() => {
+                      if (data?.data?.addTermsHash) {
+                        window.open(
+                          data.data.addTermsHash,
+                          "_blank",
+                          "noopener,noreferrer",
+                        );
+                      }
+                    }}
                   >
-                    중도 상환
+                    확인
                   </Button>
-                ) : (
-                  <div className="text-center text-sm text-gray-400">
-                    중도 상환 불가능
-                  </div>
-                )}
+                </div>
               </div>
             </div>
             <Separator />
           </div>
         </div>
-      </div>{" "}
+      </div>
       {data.data.addTerms && (
         <div className="flex flex-col gap-2">
           <h2 className="text-xl font-bold sm:text-2xl">특약사항</h2>

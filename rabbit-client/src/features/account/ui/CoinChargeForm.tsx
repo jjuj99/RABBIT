@@ -3,9 +3,14 @@ import Checkout from "@/entities/account/ui/toss/Checkout";
 import { UnitInput } from "@/entities/common";
 import useGetBalance from "@/entities/wallet/hooks/useGetBalance";
 import { Button } from "@/shared/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/shared/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/shared/ui/dialog";
 import currencyFormat from "@/shared/utils/currencyFormat";
-import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
 import { useState } from "react";
 import { toast } from "sonner";
 

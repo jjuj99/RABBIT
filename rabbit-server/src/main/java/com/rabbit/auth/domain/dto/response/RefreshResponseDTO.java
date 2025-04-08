@@ -15,5 +15,9 @@ public class RefreshResponseDTO {
 
     private String userName;
     private String nickname;
+    private String email;
+    private Integer bankId;
+    private String bankName;
+    private String refundAccount;
     private String accessToken;
 }

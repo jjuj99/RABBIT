@@ -16,6 +16,7 @@ import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.gas.DefaultGasProvider;
 
 import java.math.BigInteger;
@@ -31,6 +32,60 @@ public class PromissoryNoteService {
 
     @Value("${blockchain.promissoryNote.address}")
     private String contractAddress;
+
+//    @Value("${blockchain.gas.price:50000000000}")
+//    private BigInteger gasPrice; // 기본값 50 Gwei
+//
+//    @Value("${blockchain.gas.limit:4500000}")
+//    private BigInteger gasLimit; // 기본값 4,500,000
+
+    /**
+     * 차용증 NFT 발행 함수
+     */
+    public BigInteger mintPromissoryNote(PromissoryNote.PromissoryMetadata metadata, String recipient) throws Exception {
+        log.info("차용증 NFT 발행 시작 - 수신자: {}", recipient);
+
+        // 가스 설정
+//        ContractGasProvider gasProvider = new StaticGasProvider(gasPrice, gasLimit);
+//        log.info("@@@metadata.addTerms.addTermsHash : {}",metadata.addTerms.addTermsHash);
+        // 컨트랙트 로드
+        PromissoryNote contract = PromissoryNote.load(
+                contractAddress,
+                web3j,
+                credentials,
+                new DefaultGasProvider()       // 가스 설정 (기본값 사용)
+        );
+
+        try {
+            // 민팅 트랜잭션 전송
+            log.info("민팅 트랜잭션 전송 - 수신자: {}, 주소: {}", recipient, contractAddress);
+            TransactionReceipt receipt = contract.mint(metadata, recipient).send();
+
+            // 트랜잭션 성공 확인
+            if (!receipt.isStatusOK()) {
+                log.error("민팅 트랜잭션 실패 - 상태: {}", receipt.getStatus());
+                throw new RuntimeException("NFT 발행 트랜잭션이 실패했습니다.");
+            }
+
+            // 토큰 ID 추출
+            List<PromissoryNote.PromissoryNoteMintedEventResponse> events =
+                    PromissoryNote.getPromissoryNoteMintedEvents(receipt);
+
+            if (events.isEmpty()) {
+                log.error("민팅 이벤트를 찾을 수 없음");
+                throw new RuntimeException("NFT 발행 이벤트를 찾을 수 없습니다.");
+            }
+
+            BigInteger tokenId = events.get(0).tokenId;
+            log.info("차용증 NFT 발행 성공 - 토큰 ID: {}, 트랜잭션: {}",
+                    tokenId, receipt.getTransactionHash());
+
+            return tokenId;
+        } catch (Exception e) {
+            log.error("민팅 중 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("NFT 발행 중 오류가 발생했습니다: " + e.getMessage(), e);
+        }
+    }
 
     public PromissoryNote.PromissoryMetadata getPromissoryMetadata(BigInteger tokenId) throws Exception {
         // 1. 스마트 컨트랙트 로드

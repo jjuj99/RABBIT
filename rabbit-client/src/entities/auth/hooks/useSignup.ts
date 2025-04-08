@@ -8,7 +8,13 @@ import {
   Verify1wonRequest,
 } from "@/entities/account/types/request";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { CheckNicknameAPI, SignupAPI } from "../api/authApi";
+import {
+  CheckEmailAPI,
+  CheckNicknameAPI,
+  PermitCoinAPI,
+  PermitCoinRequest,
+  SignupAPI,
+} from "../api/authApi";
 import { SignUpRequest } from "../types/schema";
 import { toast } from "sonner";
 
@@ -40,11 +46,24 @@ const useSignup = () => {
   const { mutateAsync: signup } = useMutation({
     mutationFn: (data: SignUpRequest) => SignupAPI(data),
   });
+  const { mutateAsync: checkEmail } = useMutation({
+    mutationFn: (email: string) => CheckEmailAPI(email),
+  });
+  const { mutateAsync: permitCoin } = useMutation({
+    mutationFn: (request: PermitCoinRequest) => {
+      console.log("호출");
+
+      return PermitCoinAPI(request);
+    },
+  });
+
   return {
     bankList,
+    permitCoin,
     send1won,
     verify1won,
     checkNickname,
+    checkEmail,
     signup,
   };
 };

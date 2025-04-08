@@ -102,6 +102,12 @@ public class ContractCommandService {
         log.info("[계약 생성 완료] 계약 ID: {}, 채권자: {}, 채무자: {}, 원본 계약 ID: {}",
                 savedContract.getContractId(), creditor.getUserId(), debtor.getUserId(), contractIdParam);
 
+        // 채권자 지갑 주소 확인
+        String creditorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getCreditor().getUserId());
+        if (creditorWalletAddress == null || creditorWalletAddress.isBlank()) {
+            creditorWalletAddress = "";
+        }
+
         // 채권자에게 알림 발송
         notificationHelper.sendNotification(
                 creditor.getUserId(),
@@ -130,7 +136,7 @@ public class ContractCommandService {
         }
 
         // 응답 생성
-        ContractResponseDTO responseDTO = ContractResponseDTO.from(savedContract);
+        ContractResponseDTO responseDTO = ContractResponseDTO.createFrom(savedContract, creditorWalletAddress);
         responseDTO.setContractStatusName(sysCommonCodeService.getCodeName(
                 CONTRACT_STATUS, responseDTO.getContractStatus().getCode()));
 
@@ -200,10 +206,10 @@ public class ContractCommandService {
 
         Contract updatedContract = contractRepository.save(contract);
 
-        // 2. 채권자 지갑 주소 확인
-        String creditorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getDebtor().getUserId());
-        if (creditorWalletAddress == null || creditorWalletAddress.isBlank()) {
-            creditorWalletAddress = "";
+        // 2. 채무자 지갑 주소 확인
+        String debtorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getDebtor().getUserId());
+        if (debtorWalletAddress == null || debtorWalletAddress.isBlank()) {
+            debtorWalletAddress = "";
         }
 
         log.info("[계약 완료 처리] 계약 ID: {}, 채권자: {}, 채무자: {}",
@@ -217,7 +223,7 @@ public class ContractCommandService {
         long elapsedTime = endTime - startTime;
         log.info("[성능 측정] 계약 ID: {}, NFT 생성 총 소요 시간: {}ms", contract.getContractId(), elapsedTime);
 
-        return ContractResponseDTO.successFrom(updatedContract, creditorWalletAddress);
+        return ContractResponseDTO.successFrom(updatedContract, debtorWalletAddress);
     }
 
     /**

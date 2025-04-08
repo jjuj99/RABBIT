@@ -6,6 +6,8 @@ import com.rabbit.contract.repository.ContractRepository;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.promissorynote.domain.dto.request.PrepaymentRequestDTO;
+import com.rabbit.promissorynote.domain.entity.PromissoryNoteEntity;
+import com.rabbit.promissorynote.repository.PromissoryNoteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ public class PNService {
     private final RepaymentSchedulerService repaymentSchedulerService;
 
     private final ContractRepository contractRepository;
+    private final PromissoryNoteRepository promissoryNoteRepository;
 
     public void prepayment(PrepaymentRequestDTO request, Integer contractId, Integer userId) {
         // 1. 차용증 정보 불러오기

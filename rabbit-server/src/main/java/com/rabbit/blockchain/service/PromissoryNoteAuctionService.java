@@ -14,14 +14,6 @@ import java.math.BigInteger;
 public class PromissoryNoteAuctionService {
     private final PromissoryNoteAuction contract;
 
-    public TransactionReceipt depositNFTWithPermit(BigInteger tokenId, String owner, BigInteger deadline, byte[] signature) {
-        try {
-            return contract.depositNFTWithPermit(tokenId, owner, deadline, signature).send();
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "NFT 예치 중 오류가 발생했습니다.", e);
-        }
-    }
-
     public TransactionReceipt cancelAuction(BigInteger tokenId) {
         try {
             return contract.cancelAuction(tokenId).send();

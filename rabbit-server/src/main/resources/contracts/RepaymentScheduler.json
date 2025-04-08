@@ -826,6 +826,32 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_promissoryNoteAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setPromissoryNoteAuctionAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_rabbitCoinAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setRabbitCoinAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "newOwner",
         "type": "address"
       }

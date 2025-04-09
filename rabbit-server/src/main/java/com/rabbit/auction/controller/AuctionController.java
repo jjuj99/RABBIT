@@ -33,7 +33,7 @@ public class AuctionController {
     private final AuctionService auctionService;
 
     @AuctionControllerSwagger.InsertAuctionApi
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<CustomApiResponse<AuctionIdDTO>> addAuction(@Valid @RequestBody AuctionRequestDTO auctionRequest, Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
 

@@ -22,7 +22,7 @@ public class PromissoryNoteEntity {
      * 블록체인 토큰 ID
      */
     @Id
-    @Column(name = "token_id")
+    @Column(name = "token_id", columnDefinition = "BIGINT")
     private BigInteger tokenId;
 
     /**

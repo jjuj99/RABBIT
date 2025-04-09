@@ -39,10 +39,13 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**", "/favicon.ico", "/api/v1/auctions/**", "/api/v1/auctions/{auctionId}/bids").permitAll()
                                 .requestMatchers("/api/v1/auth/**").permitAll()
                                 .requestMatchers("/api/v1/bank/**").permitAll()
-                                .requestMatchers("/api/v1/auctions/**").permitAll()
                                 .requestMatchers("/api/v1/sse/**").permitAll()
-//                                .requestMatchers("/api/v1/coins/**").permitAll()
                                 .requestMatchers("/api/v1/ipfs/**").permitAll()
+//                                .requestMatchers("/api/v1/auctions/**").permitAll()
+//                                .requestMatchers("/api/v1/coins/**").permitAll()
+
+                                .requestMatchers(HttpMethod.GET, "/api/v1/auctions/**").permitAll()
+
                                 .anyRequest().authenticated() // 모든 요청 인증 필요
 //                                .anyRequest().permitAll()
                 )

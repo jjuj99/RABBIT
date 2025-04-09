@@ -5,16 +5,7 @@ import java.math.BigInteger;
 import java.time.ZonedDateTime;
 
 import com.rabbit.user.domain.entity.User;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -73,13 +64,13 @@ public class Contract {
     /**
      * 대출 시작일
      */
-    @Column(nullable = false)
+    @Column(nullable = true)
     private ZonedDateTime contractDate;
 
     /**
      * 대출 만기일
      */
-    @Column(nullable = false)
+    @Column(nullable = true)
     private ZonedDateTime maturityDate;
 
     /**
@@ -256,6 +247,12 @@ public class Contract {
         this.updatedAt = ZonedDateTime.now();
 
         if (SysCommonCodes.Contract.CONTRACTED.equals(newStatus)) {
+            this.contractDate = ZonedDateTime.now()
+                    .withHour(0)
+                    .withMinute(0)
+                    .withSecond(0)
+                    .withNano(0);
+            this.maturityDate = contractDate.plusMonths(this.loanTerm).minusDays(1);
             this.updatedAt = ZonedDateTime.now();
         } else if (SysCommonCodes.Contract.CANCELED.equals(newStatus)) {
             this.updatedAt = ZonedDateTime.now();
@@ -321,8 +318,8 @@ public class Contract {
                 .debtor(debtor)
                 .loanAmount(dto.getLa())
                 .interestRate(dto.getIr())
-                .contractDate(dto.getContractDt())
-                .maturityDate(dto.calculateMaturityDate())
+//                .contractDate(dto.getContractDt())
+//                .maturityDate(dto.calculateMaturityDate())
                 .prepaymentInterestRate(dto.getEarlypayFee())
                 .graceLineDays(7) // 기본값 설정 또는 설정 정보에서 가져옴
                 .contractTerms(dto.getAddTerms())

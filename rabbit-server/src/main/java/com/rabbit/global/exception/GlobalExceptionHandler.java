@@ -24,6 +24,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 /**
  * Global Exception Handler
@@ -274,6 +275,25 @@ public class GlobalExceptionHandler {
         log.error("HttpRequestMethodNotSupportedException", e);
         ErrorCode errorCode = ErrorCode.METHOD_NOT_ALLOWED;
 
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(CustomApiResponse.error(
+                        errorCode.getStatus().value(),
+                        errorCode.getMessage(messageSource)
+                ));
+    }
+
+    /**
+     * ============================================
+     * 5-1. 요청 경로 관련 예외 처리 (404 Not Found)
+     * ============================================
+     */
+
+    // 요청한 리소스를 찾을 수 없음
+    @ExceptionHandler(NoHandlerFoundException.class)
+    protected ResponseEntity<CustomApiResponse<Void>> handleNoHandlerFoundException(NoHandlerFoundException e) {
+        log.error("요청한 경로를 찾을 수 없음: {}", e.getRequestURL(), e);
+        ErrorCode errorCode = ErrorCode.RESOURCE_NOT_FOUND;
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(CustomApiResponse.error(

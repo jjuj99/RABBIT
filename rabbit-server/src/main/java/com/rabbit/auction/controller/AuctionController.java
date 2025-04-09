@@ -85,7 +85,7 @@ public class AuctionController {
     @AuctionControllerSwagger.CancelAuctionApi
     @DeleteMapping("/{auctionId}")
     public ResponseEntity<CustomApiResponse<MessageResponse>> cancelAuction(
-            @PathVariable("auctionId") Integer auctionId, Authentication authentication) {
+            @Valid @PathVariable("auctionId") Integer auctionId, Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
 
         auctionService.cancelAuction(auctionId, Integer.valueOf(userId));
@@ -108,7 +108,7 @@ public class AuctionController {
     @AuctionControllerSwagger.GetAuctionDetailApi
     @GetMapping("/{auctionId}/info")
     public ResponseEntity<CustomApiResponse<AuctionDetailResponseDTO>> getAuctionDetail(
-            @PathVariable("auctionId") Integer auctionId) {
+            @Valid @PathVariable("auctionId") Integer auctionId) {
 
         AuctionDetailResponseDTO auctionDetailResponse = auctionService.getAuctionDetail(auctionId);
 
@@ -117,7 +117,7 @@ public class AuctionController {
 
     @AuctionControllerSwagger.GetSimilarAuctionsApi
     @GetMapping("/{auctionId}/similar")
-    public ResponseEntity<CustomApiResponse<?>> getSimilarAuctions(@Valid @PathVariable Integer auctionId) {
+    public ResponseEntity<CustomApiResponse<?>> getSimilarAuctions(@Valid @PathVariable("auctionId") Integer auctionId) {
 
         SimilarAuctionResponseDTO response = auctionService.getSimilarAuctions(auctionId);
 
@@ -126,7 +126,7 @@ public class AuctionController {
 
     @AuctionControllerSwagger.GetAuctionEventApi
     @GetMapping("/{auctionId}/event")
-    public ResponseEntity<CustomApiResponse<?>> getAuctionEvents(@Valid @PathVariable Integer auctionId) {
+    public ResponseEntity<CustomApiResponse<?>> getAuctionEvents(@Valid @PathVariable("auctionId") Integer auctionId) {
 
         List<ContractEventDTO> events = auctionService.getAuctionEvents(auctionId);
 
@@ -134,7 +134,7 @@ public class AuctionController {
     }
 
     @PostMapping("/{auctionId}/force-end")
-    public ResponseEntity<CustomApiResponse<?>> forceEndAuction(@PathVariable Integer auctionId) {
+    public ResponseEntity<CustomApiResponse<?>> forceEndAuction(@Valid @PathVariable("auctionId") Integer auctionId) {
         auctionService.processAuctionEnd(auctionId);
         return ResponseEntity.ok(CustomApiResponse.success("경매 종료 처리 완료"));
     }

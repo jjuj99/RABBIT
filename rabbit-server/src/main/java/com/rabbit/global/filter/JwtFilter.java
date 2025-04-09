@@ -48,7 +48,7 @@ public class JwtFilter extends OncePerRequestFilter {
             "/api/v1/auctions/*/similar",
             "/api/v1/auctions/*/event",
             "/api/v1/auctions/*/force-end",
-            "/api/v1/auctions/*/bids"
+            "/api/v1/auctions/*/bids/list"
     };
 
     @Override

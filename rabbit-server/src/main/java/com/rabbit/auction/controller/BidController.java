@@ -37,7 +37,7 @@ public class BidController {
     }
 
     @BidControllerSwagger.GetBidListApi
-    @GetMapping
+    @GetMapping("/list")
     public ResponseEntity<CustomApiResponse<?>> getBids(@PathVariable("auctionId") Integer auctionId) {
 
         List<BidResponseDTO> result = bidService.getBids(auctionId);

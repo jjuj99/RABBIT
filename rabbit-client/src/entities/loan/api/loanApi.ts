@@ -10,6 +10,7 @@ import {
 } from "../types/response";
 import fetchOption from "@/shared/utils/fetchOption";
 import { PaginationRequest } from "@/shared/type/PaginationRequest";
+import { NFTEvent } from "@/shared/type/NFTEventList";
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 const VITE_API_VERSION = import.meta.env.VITE_API_VERSION;
@@ -95,6 +96,17 @@ export const earlypayAPI = async (
   const res = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/promissory-notes/debts/${contractId}/prepayment`,
     fetchOption("POST", { prepaymentAmount }),
+  );
+  const data = await res.json();
+  return data;
+};
+
+export const getloanEventAPI = async (
+  contractId: string,
+): Promise<ApiResponse<NFTEvent[]>> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/loans/events/${contractId}`,
+    fetchOption("GET"),
   );
   const data = await res.json();
   return data;

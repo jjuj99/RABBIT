@@ -1,5 +1,4 @@
 import { Pagination } from "@/shared/type/PaginationResponse";
-import { NFTEvent } from "@/shared/type/NFTEventList";
 import { pnStatus } from "@/shared/type/Types";
 //페이지네이션
 export type BorrowListResponse = Pagination<BorrowInfoResponse>;
@@ -82,7 +81,6 @@ export interface BorrowDetailResponse {
   accelDir: number;
   addTermsHash: string;
   addTerms?: string[];
-  eventList: NFTEvent[];
 }
 
 //채권 상세
@@ -112,7 +110,6 @@ export interface LentDetailResponse {
   accelDir: number;
   addTermsHash: string;
   addTerms?: string[];
-  eventList: NFTEvent[];
 }
 
 export interface EarlypayResponse {

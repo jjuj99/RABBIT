@@ -187,6 +187,7 @@ const Home = () => {
                       <MyNFTcard
                         item={{
                           tokenId: "1",
+                          nftImageUrl: "/images/NFT.png",
                           crId: 1,
                           crName: "채권자 이름",
                           matDt: "2025-04-06",

@@ -16,7 +16,7 @@ const AuctionBidList = ({ data }: AuctionBidList) => {
     return (
       <div className="w-full rounded-sm bg-gray-900 px-4 py-4 sm:px-6">
         <h2 className="mb-4 text-lg font-semibold sm:text-2xl">입찰 내역</h2>
-        <div className="flex h-[316px] w-full items-center justify-center text-gray-400">
+        <div className="flex h-[100px] w-full items-center justify-center text-gray-100 lg:h-[316px]">
           입찰 내역이 없습니다
         </div>
       </div>

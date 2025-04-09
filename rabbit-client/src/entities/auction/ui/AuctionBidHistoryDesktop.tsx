@@ -41,11 +41,11 @@ const AuctionBidHistoryDesktop = ({ data }: AuctionBidHistoryDesktopProps) => {
                     RABBIT
                   </span>
                   <span className="font-bit text-base font-medium text-white">
-                    #{item.auctionId}
+                    #{item.tokenId}
                   </span>
                 </div>
                 <img
-                  src="/images/NFT.png"
+                  src={item.nftImageUrl}
                   alt="NFT"
                   className="h-[100px] w-[100px] rounded-lg object-cover"
                 />

@@ -13,6 +13,7 @@ import {
 } from "../types/response";
 import { ApiResponse } from "@/shared/type/ApiResponse";
 import { NFTEventListResponse } from "@/shared/type/NFTEventList";
+import { Pagination } from "@/shared/type/PaginationResponse";
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 const VITE_API_VERSION = import.meta.env.VITE_API_VERSION;
@@ -43,7 +44,7 @@ export const getPNInfoListAPI = async (
   auctionId: number,
 ): Promise<ApiResponse<PNInfoListResponse>> => {
   const res = await fetch(
-    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/${auctionId}`,
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/${auctionId}/info`,
     fetchOption("GET"),
   );
   const data = await res.json();
@@ -54,7 +55,9 @@ export const getBidListAPI = async (
   auctionId: number,
 ): Promise<ApiResponse<BidListResponse[]>> => {
   const res = await fetch(
-    `${VITE_API_URL}/${VITE_API_VERSION}/bids/auction/${auctionId}`,
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/${auctionId}/bids/list
+
+`,
     fetchOption("GET"),
   );
   const data = await res.json();
@@ -66,7 +69,7 @@ export const SubmitAuctionBidAPI = async (
   bidAmount: number,
 ): Promise<ApiResponse<SubmitAuctionBidResponse>> => {
   const res = await fetch(
-    `${VITE_API_URL}/${VITE_API_VERSION}/bids/auction/${auctionId}`,
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/${auctionId}/bids`,
     fetchOption("POST", { bidAmount }),
   );
   const data = await res.json();
@@ -83,7 +86,7 @@ export const createAuctionAPI = async ({
   tokenId: string;
 }): Promise<ApiResponse<CreateAuctionResponse>> => {
   const res = await fetch(
-    `${VITE_API_URL}/${VITE_API_VERSION}/auctions`,
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/add`,
     fetchOption("POST", {
       minimumBid,
       endDate,
@@ -106,10 +109,10 @@ export const deleteAuctionAPI = async (
 };
 
 export const getBidHistoryAPI = async (): Promise<
-  ApiResponse<BidHistoryResponse[]>
+  ApiResponse<Pagination<BidHistoryResponse>>
 > => {
   const res = await fetch(
-    `${VITE_API_URL}/${VITE_API_VERSION}/auction/my-bids`,
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/my-bids`,
     fetchOption("GET", undefined, "access"),
   );
   const data = await res.json();
@@ -139,7 +142,7 @@ export const getAuctionSimilarListAPI = async (
 };
 
 export const getAvailableAuctionsAPI = async (): Promise<
-  ApiResponse<AvailableAuctionsResponse[]>
+  ApiResponse<Pagination<AvailableAuctionsResponse>>
 > => {
   const res = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/loans/lent/available-auctions`,

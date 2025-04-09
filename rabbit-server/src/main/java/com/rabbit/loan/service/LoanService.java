@@ -19,7 +19,10 @@ import com.rabbit.global.util.LoanUtil;
 import com.rabbit.loan.domain.dto.response.LentAuctionResponseDTO;
 import com.rabbit.loan.domain.dto.response.*;
 import com.rabbit.loan.util.DataUtil;
+import com.rabbit.promissorynote.domain.entity.PromissoryNoteEntity;
+import com.rabbit.promissorynote.repository.PromissoryNoteRepository;
 import com.rabbit.promissorynote.service.PromissoryNoteBusinessService;
+import com.rabbit.user.repository.MetamaskWalletRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -27,10 +30,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -43,9 +43,11 @@ public class LoanService {
 
     private final ContractRepository contractRepository;
     private final PromissoryNoteBusinessService promissoryNoteBusinessService;
+    private final PromissoryNoteRepository promissoryNoteRepository;
     private final AuctionRepository auctionRepository;
     private final BankService bankService;
     private final LoanUtil loanUtil;
+    private final MetamaskWalletRepository metamaskWalletRepository;
 
     public BorrowSummaryResponseDTO borrowSummary(int userId) {
         // 1. 유저 Id로 해당 유저가 채무자인 차용증 리스트를 호출한다.
@@ -371,7 +373,11 @@ public class LoanService {
     }
 
     public PageResponseDTO<LentAuctionResponseDTO> getAuctionAvailable(Integer userId, Pageable pageable) {
-        List<Contract> contracts = contractRepository.findByCreditorId(userId);
+        Optional<String> userWallet = metamaskWalletRepository.findPrimaryWalletAddressByUserId(userId);
+
+        List<PromissoryNoteEntity> contracts = userWallet
+                .map(wallet -> promissoryNoteRepository.findByCreditorWalletAddressAndDeletedFlagFalse(wallet))
+                .orElse(Collections.emptyList());
 
         // 이미 경매중인 차용증 제외
         List<LentAuctionResponseDTO> content = contracts.stream()
@@ -384,7 +390,7 @@ public class LoanService {
                         RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(contract.getTokenId());
 
                         // 채무자 신용점수 조회
-                        String creditScore = bankService.getCreditScore(contract.getDebtor().getUserId());
+                        String creditScore = bankService.getCreditScore(userId);
 
                         BigDecimal ir = new BigDecimal(metadata.ir).divide(BigDecimal.valueOf(10000));
                         BigDecimal dir = new BigDecimal(metadata.dir).divide(BigDecimal.valueOf(10000));
@@ -402,8 +408,8 @@ public class LoanService {
                         );
 
                         return LentAuctionResponseDTO.builder()
-                                .crId(contract.getCreditor().getUserId())
-                                .crName(contract.getCreditor().getUserName())
+                                .crId(userId)
+                                .crName(contract.getCreditorName())
                                 .matDt(DateTimeUtils.toZonedDateTimeAtEndOfDay(metadata.matDt))
                                 .tokenId(contract.getTokenId())
                                 .la(repaymentInfo.remainingPrincipal.longValue())
@@ -415,6 +421,7 @@ public class LoanService {
                                 .earlypayFee(earlyPayFee)
                                 .defCnt(repaymentInfo.overdueInfo.defCnt.intValue())
                                 .creditScore(creditScore)
+                                .nftImageUrl(metadata.nftImage)
                                 .build();
                     } catch (Exception e) {
                         log.warn("[채권자 NFT 조회 실패] tokenId={}", contract.getTokenId(), e);

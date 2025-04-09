@@ -329,6 +329,7 @@ public class AuctionService {
             Long curPrice = auction.getPrice()==null? auction.getMinimumBid(): auction.getPrice();
 
             return AuctionDetailResponseDTO.builder()
+                    .tokenId(auction.getTokenId())
                     .auctionId(auction.getAuctionId())
                     .price(curPrice)  //현재 가격
                     .ir(ir)

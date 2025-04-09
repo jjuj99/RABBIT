@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 
 @Getter
@@ -13,6 +14,7 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuctionDetailResponseDTO {
+    private BigInteger tokenId;
     private Integer auctionId;          // 경매 ID
     private Long price;              // 금액
     private ZonedDateTime endDate;   // 경매 종료일

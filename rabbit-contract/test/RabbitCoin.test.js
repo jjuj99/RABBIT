@@ -24,26 +24,6 @@ describe("RabbitCoin", function () {
     
     // 컨트랙트 배포
     rabbitCoin = await RabbitCoin.deploy(initialSupply);
-  
-    // EIP-712 도메인 설정
-    const { chainId } = await ethers.provider.getNetwork();
-    domain = {
-      name: await rabbitCoin.name(),
-      version: await rabbitCoin.version(),
-      chainId: chainId,
-      verifyingContract: await rabbitCoin.getAddress()
-    };
-  
-    // EIP-712 허가 타입 설정
-    types = {
-      Permit: [
-        { name: "owner", type: "address" },
-        { name: "spender", type: "address" },
-        { name: "value", type: "uint256" },
-        { name: "nonce", type: "uint256" },
-        { name: "deadline", type: "uint256" }
-      ]
-    };
   });
 
   // describe: 테스트 그룹을 정의
@@ -98,19 +78,19 @@ describe("RabbitCoin", function () {
       // owner가 addr1에게 100 RAB를 사용할 수 있도록 승인
       const approveAmount = ethers.parseUnits("100", 0);
       await rabbitCoin.approve(addr1.address, approveAmount);
-
+    
       // 승인된 금액 확인
       expect(await rabbitCoin.allowance(owner.address, addr1.address)).to.equal(approveAmount);
-
+    
       // addr1이 owner의 50 RAB를 addr2에게 전송
       const transferAmount = ethers.parseUnits("50", 0);
       await rabbitCoin.connect(addr1).transferFrom(owner.address, addr2.address, transferAmount);
-
+    
       // 잔액 확인
       expect(await rabbitCoin.balanceOf(addr2.address)).to.equal(transferAmount);
-
-      // 남은 allowance 확인
-      expect(await rabbitCoin.allowance(owner.address, addr1.address)).to.equal(approveAmount - transferAmount);
+      
+      // 수정된 컨트랙트에서는 allowance가 차감되지 않음
+      expect(await rabbitCoin.allowance(owner.address, addr1.address)).to.equal(approveAmount);
     });
 
     it("approve 함수를 중복 호출하면 allowance가 덮어써져야 함", async function () {
@@ -131,6 +111,21 @@ describe("RabbitCoin", function () {
         rabbitCoin.transfer(ethers.ZeroAddress, 100)
       ).to.be.revertedWith("ERC20: transfer to the zero address");
     });
+
+    it("transferFrom 후 allowance가 자동으로 차감되지 않아야 함", async function () {
+      // owner가 addr1에게 100 RAB를 사용할 수 있도록 승인
+      const approveAmount = ethers.parseUnits("100", 0);
+      await rabbitCoin.approve(addr1.address, approveAmount);
+      
+      // addr1이 owner의 50 RAB를 addr2에게 전송
+      const transferAmount = ethers.parseUnits("50", 0);
+      await rabbitCoin.connect(addr1).transferFrom(owner.address, addr2.address, transferAmount);
+      
+      // allowance가 그대로 유지되어야 함 (수정된 RabbitCoin에서는 차감하지 않음)
+      expect(await rabbitCoin.allowance(owner.address, addr1.address)).to.equal(approveAmount);
+    });
+
+
   });
 
   describe("민팅", function () {
@@ -187,6 +182,42 @@ describe("RabbitCoin", function () {
       await expect(
         rabbitCoin.connect(addr1).burn(1)
       ).to.be.revertedWith("ERC20: burn amount exceeds balance");
+    });
+
+    describe("burnFrom", function () {
+      it("승인된 주소가 다른 주소의 토큰을 소각할 수 있어야 함", async function () {
+        // owner가 addr1에게 100 RAB를 전송
+        const transferAmount = ethers.parseUnits("100", 0);
+        await rabbitCoin.transfer(addr1.address, transferAmount);
+    
+        // addr1이 addr2에게 50 RAB를 소각할 수 있도록 승인
+        const approveAmount = ethers.parseUnits("50", 0);
+        await rabbitCoin.connect(addr1).approve(addr2.address, approveAmount);
+    
+        // addr2가 addr1의 토큰 25개를 소각
+        const burnAmount = ethers.parseUnits("25", 0);
+        await rabbitCoin.connect(addr2).burnFrom(addr1.address, burnAmount);
+    
+        // addr1의 잔액 확인
+        expect(await rabbitCoin.balanceOf(addr1.address)).to.equal(transferAmount - burnAmount);
+    
+        // 총 공급량 확인
+        const initialSupplyBN = ethers.parseUnits(initialSupply.toString(), 0);
+        expect(await rabbitCoin.totalSupply()).to.equal(initialSupplyBN - burnAmount);
+      });
+    
+      it("승인된 금액보다 많은 양을 소각하려 하면 실패해야 함", async function () {
+        // owner가 addr1에게 100 RAB를 전송
+        await rabbitCoin.transfer(addr1.address, 100);
+    
+        // addr1이 addr2에게 50 RAB를 소각할 수 있도록 승인
+        await rabbitCoin.connect(addr1).approve(addr2.address, 50);
+    
+        // addr2가 승인된 금액보다 많은 양을 소각하려 하면 실패해야 함
+        await expect(
+          rabbitCoin.connect(addr2).burnFrom(addr1.address, 51)
+        ).to.be.revertedWith("ERC20: burn amount exceeds allowance");
+      });
     });
   });
 

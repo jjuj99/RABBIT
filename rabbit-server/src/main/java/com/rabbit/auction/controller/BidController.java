@@ -38,8 +38,7 @@ public class BidController {
 
     @BidControllerSwagger.GetBidListApi
     @GetMapping
-    public ResponseEntity<CustomApiResponse<?>> getBids(@PathVariable("auctionId") Integer auctionId, Authentication authentication) {
-        String userId = (String) authentication.getPrincipal();
+    public ResponseEntity<CustomApiResponse<?>> getBids(@PathVariable("auctionId") Integer auctionId) {
 
         List<BidResponseDTO> result = bidService.getBids(auctionId);
 

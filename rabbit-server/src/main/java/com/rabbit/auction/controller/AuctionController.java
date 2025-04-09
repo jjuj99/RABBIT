@@ -108,8 +108,7 @@ public class AuctionController {
     @AuctionControllerSwagger.GetAuctionDetailApi
     @GetMapping("/{auctionId}")
     public ResponseEntity<CustomApiResponse<AuctionDetailResponseDTO>> getAuctionDetail(
-            @PathVariable("auctionId") Integer auctionId, Authentication authentication) {
-        String userId = (String) authentication.getPrincipal();
+            @PathVariable("auctionId") Integer auctionId) {
 
         AuctionDetailResponseDTO auctionDetailResponse = auctionService.getAuctionDetail(auctionId);
 
@@ -118,8 +117,7 @@ public class AuctionController {
 
     @AuctionControllerSwagger.GetSimilarAuctionsApi
     @GetMapping("/{auctionId}/similar")
-    public ResponseEntity<CustomApiResponse<?>> getSimilarAuctions(@Valid @PathVariable Integer auctionId, Authentication authentication) {
-        String userId = (String) authentication.getPrincipal();
+    public ResponseEntity<CustomApiResponse<?>> getSimilarAuctions(@Valid @PathVariable Integer auctionId) {
 
         SimilarAuctionResponseDTO response = auctionService.getSimilarAuctions(auctionId);
 
@@ -128,8 +126,7 @@ public class AuctionController {
 
     @AuctionControllerSwagger.GetAuctionEventApi
     @GetMapping("/{auctionId}/event")
-    public ResponseEntity<CustomApiResponse<?>> getAuctionEvents(@Valid @PathVariable Integer auctionId, Authentication authentication) {
-        String userId = (String) authentication.getPrincipal();
+    public ResponseEntity<CustomApiResponse<?>> getAuctionEvents(@Valid @PathVariable Integer auctionId) {
 
         List<ContractEventDTO> events = auctionService.getAuctionEvents(auctionId);
 

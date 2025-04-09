@@ -155,6 +155,10 @@ const LoginButton = () => {
           user: {
             nickname: loginRes.data.nickname,
             userName: loginRes.data.userName,
+            email: loginRes.data.email,
+            bankId: loginRes.data.bankId,
+            bankName: loginRes.data.bankName,
+            refundAccount: loginRes.data.refundAccount,
           },
         });
         setIsLoading(false);

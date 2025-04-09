@@ -85,57 +85,6 @@ contract RabbitCoin is IRabbitCoin, Ownable {
         return true;
     }
     
-    // 승인된 양만큼 한 주소에서 다른 주소로 RAB를 전송
-    function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
-        uint256 currentAllowance = _allowances[sender][msg.sender];
-        if (currentAllowance != type(uint256).max) {
-            require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
-            unchecked {
-                _approve(sender, msg.sender, currentAllowance - amount);
-            }
-        }
-
-        _transfer(sender, recipient, amount);
-
-        return true;
-    }
-
-    // EIP-2612 서명을 통한 승인
-    function permit(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        bytes memory signature
-    ) external {
-        require(block.timestamp <= deadline, "RABBIT: expired deadline");
-        
-        bytes32 structHash = keccak256(
-            abi.encode(
-                PERMIT_TYPEHASH,
-                owner,
-                spender,
-                value,
-                _nonces[owner],
-                deadline
-            )
-        );
-        
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                DOMAIN_SEPARATOR(),
-                structHash
-            )
-        );
-        
-        address recoveredAddress = ECDSA.recover(digest, signature);
-        require(recoveredAddress != address(0) && recoveredAddress == owner, "RABBIT: invalid signature");
-        
-        _nonces[owner]++;
-        _approve(owner, spender, value);
-    }
-    
     // RAB 양을 늘림 (Mint)
     function mint(address account, uint256 amount) external override onlyOwner {
         require(account != address(0), "ERC20: mint to the zero address");
@@ -178,5 +127,68 @@ contract RabbitCoin is IRabbitCoin, Ownable {
         
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
+    }
+
+    // ============== 확장 함수 ==============
+
+    // 승인된 양만큼 한 주소에서 다른 주소로 RAB를 전송
+    function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
+        uint256 currentAllowance = _allowances[sender][msg.sender];
+        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
+        require(_balances[sender] >= amount, "ERC20: transfer amount exceeds balance");
+
+        _transfer(sender, recipient, amount);
+
+        return true;
+    }
+
+    // 특정 주소의 RAB를 소각 (Burn)
+    function burnFrom(address account, uint256 amount) external {
+        uint256 currentAllowance = _allowances[account][msg.sender];
+        require(currentAllowance >= amount, "ERC20: burn amount exceeds allowance");
+        require(_balances[account] >= amount, "ERC20: burn amount exceeds balance");
+        
+        unchecked {
+            _balances[account] -= amount;
+            _totalSupply -= amount;
+        }
+        
+        emit Transfer(account, address(0), amount);
+    }
+
+    // EIP-712 서명을 통한 승인
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        bytes memory signature
+    ) external {
+        require(block.timestamp <= deadline, "RABBIT: expired deadline");
+        
+        bytes32 structHash = keccak256(
+            abi.encode(
+                PERMIT_TYPEHASH,
+                owner,
+                spender,
+                value,
+                _nonces[owner],
+                deadline
+            )
+        );
+        
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                DOMAIN_SEPARATOR(),
+                structHash
+            )
+        );
+        
+        address recoveredAddress = ECDSA.recover(digest, signature);
+        require(recoveredAddress != address(0) && recoveredAddress == owner, "RABBIT: invalid signature");
+        
+        _nonces[owner]++;
+        _approve(owner, spender, value);
     }
 }

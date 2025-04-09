@@ -51,7 +51,7 @@ const BorrowDetail = () => {
     if (!data?.data) return;
     const value = e.target.value.replace(/[^0-9]/g, "");
     const numericValue = Number(value);
-    const maxAmount = Math.min(data.data.totalAmount, balance);
+    const maxAmount = Math.min(data.data.remainingPrincipal, balance);
     if (numericValue <= maxAmount) {
       setRepaymentAmount(numericValue);
     }
@@ -72,7 +72,7 @@ const BorrowDetail = () => {
     if (
       !isNaN(repaymentAmount) &&
       repaymentAmount > 0 &&
-      repaymentAmount <= data.data.totalAmount
+      repaymentAmount <= data.data.remainingPrincipal
     ) {
       earlyRepaymentMutation.mutate(repaymentAmount);
     }
@@ -101,13 +101,15 @@ const BorrowDetail = () => {
             crName={data.data.crName}
             crWallet={data.data.crWallet}
             la={data.data.la}
-            totalAmount={data.data.totalAmount}
+            remainingPrincipal={data.data.remainingPrincipal}
             repayType={data.data.repayType}
             ir={data.data.ir}
             dir={data.data.dir}
             defCnt={data.data.defCnt}
             contractDt={data.data.contractDt}
             pnStatus={data.data.pnStatus}
+            accel={data.data.accel}
+            accelDir={data.data.accelDir}
           />
           <div className="flex h-full w-full flex-col gap-2">
             <div className="flex h-full flex-col gap-2 lg:flex-col">
@@ -119,7 +121,7 @@ const BorrowDetail = () => {
                 />
               </div>
               <div className="flex h-full w-full flex-row gap-2">
-                <div className="flex h-full w-full flex-col justify-center gap-2 rounded-sm bg-gray-800 px-4 py-3">
+                <div className="flex h-full w-full min-w-[180px] flex-col justify-center gap-2 rounded-sm bg-gray-800 px-4 py-3">
                   <InfoRow
                     label="중도 상환 수수료"
                     value={`${data.data.earlypayFee}%`}
@@ -139,7 +141,7 @@ const BorrowDetail = () => {
                     </div>
                   )}
                 </div>
-                <div className="flex h-full w-fit flex-col gap-2 rounded-sm bg-gray-800 px-4 py-3">
+                <div className="flex h-full w-full flex-col gap-2 rounded-sm bg-gray-800 px-4 py-3">
                   <div className="whitespace-nowrap text-gray-100">
                     계약서 상세보기
                   </div>
@@ -205,7 +207,7 @@ const BorrowDetail = () => {
                 min="0"
               />
               <p className="text-sm text-gray-100">
-                최대 상환 가능 금액: {data.data.totalAmount.toLocaleString()} 원
+                남은 원금: {data.data.remainingPrincipal.toLocaleString()} 원
               </p>
               <p className="text-sm text-gray-100">
                 보유 금액: {balance.toLocaleString()} 원

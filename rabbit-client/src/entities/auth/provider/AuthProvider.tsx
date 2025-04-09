@@ -20,6 +20,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             user: {
               userName: authResponse.userName,
               nickname: authResponse.nickname,
+              email: authResponse.email,
+              bankId: authResponse.bankId,
+              bankName: authResponse.bankName,
+              refundAccount: authResponse.refundAccount,
             },
           });
         } else {

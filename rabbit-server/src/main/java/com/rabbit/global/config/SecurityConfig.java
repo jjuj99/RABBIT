@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .sessionManagement(session
                         -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 사용 비활성화
                 .authorizeHttpRequests(auth -> auth // API 접근 권한 설정
-                                .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**", "/favicon.ico", "/api/v1/auctions").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**", "/favicon.ico", "/api/v1/auctions/**", "/api/v1/auctions/{auctionId}/bids").permitAll()
                                 .requestMatchers("/api/v1/auth/**").permitAll()
                                 .requestMatchers("/api/v1/bank/**").permitAll()
                                 .requestMatchers("/api/v1/auctions/**").permitAll()

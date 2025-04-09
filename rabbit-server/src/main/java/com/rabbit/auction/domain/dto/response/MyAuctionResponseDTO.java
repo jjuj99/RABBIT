@@ -3,6 +3,7 @@ package com.rabbit.auction.domain.dto.response;
 import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import lombok.*;
 
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 
 @Getter
@@ -12,6 +13,7 @@ import java.time.ZonedDateTime;
 public class MyAuctionResponseDTO {
     private Integer auctionId;
     private ZonedDateTime bidDate;
+    private BigInteger tokenId;
     private SysCommonCodes.Auction auctionStatus;
     @Setter
     private String auctionStatusName; // 국제화된 상태명 필드 추가
@@ -21,17 +23,29 @@ public class MyAuctionResponseDTO {
     @Setter
     private String bidStatusName; // 국제화된 상태명 필드 추가
     private Long bidderNum; //입찰자 수
+    private String nftImageUrl;
 
-    // 생성자 수정 - String bidStatus
-    public MyAuctionResponseDTO(Integer auctionId, ZonedDateTime bidDate,
-                                SysCommonCodes.Auction auctionStatus, Long price,
-                                Long bidAmount, String bidStatus, Long bidderNum) {
+    public MyAuctionResponseDTO(
+            Integer auctionId,
+            ZonedDateTime bidDate,
+            BigInteger tokenId,
+            SysCommonCodes.Auction auctionStatus,
+            Long price,
+            Long bidAmount,
+            String bidStatus,
+            Long bidderNum
+    ) {
         this.auctionId = auctionId;
         this.bidDate = bidDate;
+        this.tokenId = tokenId;
         this.auctionStatus = auctionStatus;
         this.price = price;
         this.bidAmount = bidAmount;
         this.bidStatus = bidStatus;
         this.bidderNum = bidderNum;
+    }
+
+    public void setNftImage(String nftImage) {
+        this.nftImageUrl = nftImage;
     }
 }

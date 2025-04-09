@@ -23,7 +23,7 @@ const AuctionBidHistoryMobile = ({ data }: AuctionBidHistoryMobileProps) => {
               </div>
               <div className="h-[64px] w-[64px] sm:h-[84px] sm:w-[84px]">
                 <img
-                  src="/images/NFT.png"
+                  src={item.nftImageUrl}
                   alt="NFT"
                   className="h-full w-full rounded-sm object-cover"
                 />

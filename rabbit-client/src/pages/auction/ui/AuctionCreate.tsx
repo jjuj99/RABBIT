@@ -5,13 +5,16 @@ import { Sheet, SheetContent, SheetOverlay } from "@/shared/ui/CustomSheet";
 import { Separator } from "@/shared/ui/Separator";
 import { getMetaMaskProvider } from "@/entities/wallet/utils/getMetaMaskProvider";
 import getWalletAddress from "@/entities/wallet/utils/getWalletAddress";
-import { createAuctionAPI } from "@/features/auction/api/auctionApi";
+import {
+  createAuctionAPI,
+  getAvailableAuctionsAPI,
+} from "@/features/auction/api/auctionApi";
 import { AvailableAuctionsResponse } from "@/features/auction/types/response";
 import { MyNFTcard } from "@/entities/NFT/ui/MyNFTcard";
-import { availableAuctionsMock } from "@/features/auction/mocks/data";
 import { UnitInput } from "@/entities/common";
 import promissoryNoteAbi from "@/shared/lib/web3/ABI/PromissoryNoteABI.json";
 import { deleteAuctionAPI } from "@/features/auction/api/auctionApi";
+import { useQuery } from "@tanstack/react-query";
 
 // NFT 및 경매 컨트랙트 주소는 환경변수나 상수로 설정
 const PROMISSORYNOTE_AUCTION_ADDRESS = import.meta.env
@@ -33,7 +36,10 @@ const AuctionCreate = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // 모의 데이터 사용 (실제 서비스에서는 API 호출로 대체)
-  const availableAuctions = availableAuctionsMock;
+  const { data: availableAuctions } = useQuery({
+    queryKey: ["availableAuctions"],
+    queryFn: () => getAvailableAuctionsAPI(),
+  });
 
   const handleDayChange = (value: number) => {
     if (value > 7) {
@@ -146,7 +152,7 @@ const AuctionCreate = () => {
       const response = await createAuctionAPI({
         minimumBid: 20,
         endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        tokenId: "24",
+        tokenId: "2",
       });
 
       if (!response.data) {
@@ -158,15 +164,12 @@ const AuctionCreate = () => {
 
       try {
         // 4. transferFrom 호출: 현재 소유자(walletInfo.address) → 경매 컨트랙트 주소
-        const transferTx = await promissoryNoteContract.transferFrom(
-          walletInfo.address,
-          PROMISSORYNOTE_AUCTION_ADDRESS,
-          24,
-        );
+        const depositToAuction =
+          await promissoryNoteContract.depositToAuction(2);
 
-        console.log("TransferFrom 트랜잭션 전송됨:", transferTx.hash);
-        await transferTx.wait();
-        console.log("TransferFrom 트랜잭션 확정됨.");
+        console.log("DepositToAuction 트랜잭션 전송됨:", depositToAuction.hash);
+        await depositToAuction.wait();
+        console.log("DepositToAuction 트랜잭션 확정됨.");
 
         handleClose();
       } catch (error) {
@@ -367,7 +370,7 @@ const AuctionCreate = () => {
       <div className="flex w-full flex-col items-start gap-4 sm:px-7">
         <h3 className="text-lg">보유중인 차용증</h3>
         <ul className="flex flex-wrap justify-center gap-6">
-          {availableAuctions?.map((item: AvailableAuctionsResponse) => (
+          {availableAuctions?.data?.map((item: AvailableAuctionsResponse) => (
             <div
               key={item.tokenId}
               onClick={() => handleCardClick(item)}

@@ -55,6 +55,8 @@ public class RabbitCoin extends Contract {
 
     public static final String FUNC_BURN = "burn";
 
+    public static final String FUNC_BURNFROM = "burnFrom";
+
     public static final String FUNC_DECIMALS = "decimals";
 
     public static final String FUNC_MINT = "mint";
@@ -271,6 +273,15 @@ public class RabbitCoin extends Contract {
         final Function function = new Function(
                 FUNC_BURN, 
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(amount)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> burnFrom(String account, BigInteger amount) {
+        final Function function = new Function(
+                FUNC_BURNFROM, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, account), 
+                new org.web3j.abi.datatypes.generated.Uint256(amount)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }

@@ -134,11 +134,14 @@ public class ContractDetailResponseDTO {
         }
 
         // 남은 대출 일수 계산
-        long remainingDays = java.time.Duration.between(
-                ZonedDateTime.now().withHour(0).withMinute(0).withSecond(0),
-                contract.getMaturityDate().withHour(0).withMinute(0).withSecond(0)
-        ).toDays();
-        remainingDays = Math.max(0, remainingDays);
+        long remainingDays = 0;
+        if(contract.getMaturityDate()!=null) {
+            remainingDays = java.time.Duration.between(
+                    ZonedDateTime.now().withHour(0).withMinute(0).withSecond(0),
+                    contract.getMaturityDate().withHour(0).withMinute(0).withSecond(0)
+            ).toDays();
+        }
+//        remainingDays = Math.max(0, remainingDays);
 
         // 만기 시 총 상환 금액 계산 (원금 + 이자)
         BigDecimal totalRepayment = calculateTotalRepayment(contract);

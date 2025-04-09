@@ -61,6 +61,8 @@ public class SecurityConfig {
     // 허용된 프론트엔드 도메인만 API 요청 가능
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        System.out.println("✅ AllowedOrigins: " + corsProperties.getAllowedOrigins());
+
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(corsProperties.getAllowedOrigins()); // 허용할 도메인

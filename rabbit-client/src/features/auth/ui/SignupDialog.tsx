@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
+import LoadingOverlay from "@/widget/common/ui/LoadingOverray";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -65,9 +66,11 @@ const SignupConfirmDialog = ({
 const SignupFormDialog = ({
   isSignupModalOpen,
   setIsSignupModalOpen,
+  submmitState,
 }: {
   isSignupModalOpen: boolean;
   setIsSignupModalOpen: (isOpen: boolean) => void;
+  submmitState: [boolean, (isSubmitting: boolean) => void];
 }) => {
   const { bankList, send1won, verify1won, checkNickname, checkEmail, signup } =
     useSignup();
@@ -86,7 +89,7 @@ const SignupFormDialog = ({
 
   const [showVerificationCode, setShowVerificationCode] = useState(false);
   const [banks, setBanks] = useState<BankList[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = submmitState;
   // const [contractStatus, setContractStatus] = useState<
   //   "loading" | "ready" | "error"
   // >("loading");
@@ -606,7 +609,7 @@ const SignupDialog = ({
 }) => {
   const [isSignupConfirmOpen, setIsSignupConfirmOpen] = useState(isOpen);
   const [isSignupFormOpen, setIsSignupFormOpen] = useState(false);
-
+  const submmitState = useState(false);
   // isOpen prop이 변경될 때 확인 모달 상태 동기화
   useEffect(() => {
     setIsSignupConfirmOpen(isOpen);
@@ -624,6 +627,7 @@ const SignupDialog = ({
 
   return (
     <>
+      <LoadingOverlay content="회원가입 중..." isLoading={submmitState[0]} />
       <SignupConfirmDialog
         isOpen={isSignupConfirmOpen}
         onOpenChange={setIsSignupConfirmOpen}
@@ -632,6 +636,7 @@ const SignupDialog = ({
       <SignupFormDialog
         isSignupModalOpen={isSignupFormOpen}
         setIsSignupModalOpen={setIsSignupFormOpen}
+        submmitState={submmitState}
       />
     </>
   );

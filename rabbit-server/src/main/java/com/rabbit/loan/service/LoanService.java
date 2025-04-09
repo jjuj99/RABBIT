@@ -415,6 +415,7 @@ public class LoanService {
                                 .earlypayFee(earlyPayFee)
                                 .defCnt(repaymentInfo.overdueInfo.defCnt.intValue())
                                 .creditScore(creditScore)
+                                .nftImageUrl(metadata.nftImage)
                                 .build();
                     } catch (Exception e) {
                         log.warn("[채권자 NFT 조회 실패] tokenId={}", contract.getTokenId(), e);

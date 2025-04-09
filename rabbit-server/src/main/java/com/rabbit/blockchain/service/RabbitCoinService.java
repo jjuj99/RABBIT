@@ -42,6 +42,10 @@ public class RabbitCoinService {
         return rabbitCoin.burn(amount).send();
     }
 
+    public TransactionReceipt burnFrom(String account, BigInteger amount) throws Exception {
+        return rabbitCoin.burnFrom(account, amount).send();
+    }
+
     public TransactionReceipt permit(String owner, String spender, BigInteger value, BigInteger deadline, byte[] signature) throws Exception {
         return rabbitCoin.permit(owner, spender, value, deadline, signature).send();
     }

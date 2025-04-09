@@ -11,18 +11,20 @@ async function main() {
   console.log("Account balance:", (await ethers.provider.getBalance(deployer.address)).toString());
 
   // 배포된 주소 가져오기
-  let rabbitCoinAddress, promissoryNoteAddress, repaymentSchedulerAddress;
+  let rabbitCoinAddress, promissoryNoteAddress, repaymentSchedulerAddress, promissoryNoteAuctionAddress;
   
   try {
     const deploymentData = JSON.parse(fs.readFileSync(path.join(__dirname, "../deployment-addresses.json"), "utf8"));
     rabbitCoinAddress = deploymentData.rabbitCoinAddress;
     promissoryNoteAddress = deploymentData.promissoryNoteAddress;
     repaymentSchedulerAddress = deploymentData.repaymentSchedulerAddress;
+    promissoryNoteAuctionAddress = deploymentData.promissoryNoteAuctionAddress;
     
     console.log("Loaded deployment addresses:");
     console.log("- RabbitCoin:", rabbitCoinAddress);
     console.log("- PromissoryNote:", promissoryNoteAddress);
     console.log("- RepaymentScheduler:", repaymentSchedulerAddress);
+    console.log("- PromissoryNoteAuction:", promissoryNoteAuctionAddress);
   } catch (error) {
     console.error("Failed to read deployment addresses:", error.message);
     process.exit(1);
@@ -50,9 +52,26 @@ async function main() {
     console.log("⚠️ RepaymentScheduler address not found. Skipping update.");
   }
 
-  console.log("\n✅ RabbitCoin address update completed!");
-  console.log("Next, deploy PromissoryNoteAuction with the new RabbitCoin address.");
-  console.log("Run: npx hardhat run scripts/5_deploy_promissory_note_auction.js --network sepolia");
+  // PromissoryNoteAuction 컨트랙트에 새 RabbitCoin 주소 설정
+  if (promissoryNoteAuctionAddress) {
+    console.log("\nUpdating RabbitCoin address in PromissoryNoteAuction...");
+    
+    try {
+      const promissoryNoteAuction = await ethers.getContractAt("PromissoryNoteAuction", promissoryNoteAuctionAddress);
+      
+      // updateRabbitCoinAddress 함수 호출
+      const tx = await promissoryNoteAuction.updateRabbitCoinAddress(rabbitCoinAddress);
+      
+      await tx.wait();
+      console.log("✅ Successfully updated RabbitCoin address in PromissoryNoteAuction!");
+    } catch (error) {
+      console.error("Failed to update RabbitCoin address in PromissoryNoteAuction:", error.message);
+    }
+  } else {
+    console.log("⚠️ PromissoryNoteAuction address not found. Skipping update.");
+  }
+
+  console.log("\n✅ RabbitCoin address update completed in all dependent contracts!");
 }
 
 main()

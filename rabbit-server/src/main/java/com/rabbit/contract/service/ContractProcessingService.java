@@ -2,6 +2,10 @@ package com.rabbit.contract.service;
 
 import java.math.BigInteger;
 
+import com.rabbit.blockchain.service.RabbitCoinService;
+import com.rabbit.promissorynote.domain.dto.UserContractInfoDto;
+import com.rabbit.user.domain.entity.User;
+import com.rabbit.user.service.WalletService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +18,7 @@ import com.rabbit.global.ipfs.PinataUploader;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 /**
  * 계약 완료 처리, NFT 생성, 자금 전송 등의 서비스
@@ -29,6 +34,10 @@ public class ContractProcessingService {
     private final PinataUploader pinataUploader;
     private final ContractImageService contractImageService;
     private final PromissoryNoteBusinessService promissoryNoteBusinessService;
+    private final WalletService walletService;
+    private final SignatureService signatureService;
+    private final HashingService hashingService;
+    private final RabbitCoinService rabbitCoinService;
 
     /**
      * 계약 완료 처리 (NFT 생성, 자금 전송 등)
@@ -39,11 +48,14 @@ public class ContractProcessingService {
         // 시작 시간 측정
         long startTime = System.currentTimeMillis();
         try {
+            // 사용자 정보 한 번만 준비 (지갑 주소 등)
+            UserContractInfoDto userInfo = prepareUserContractInfo(contract);
+
             // 1. NFT 생성
-            BigInteger tokenId = generateNFT(contract);
+            BigInteger tokenId = generateNFT(contract, userInfo);
 
             // 2. 자금 전송
-            transferFunds(contract);
+            transferFunds(contract, userInfo);
 
             // 3. 상태 업데이트
             contract.updateStatus(SysCommonCodes.Contract.CONTRACTED);
@@ -68,7 +80,7 @@ public class ContractProcessingService {
      * @param contract 계약 엔티티
      * @return 생성된 NFT 토큰 ID
      */
-    private BigInteger generateNFT(Contract contract) {
+    private BigInteger generateNFT(Contract contract, UserContractInfoDto userInfo) {
         try {
             // 1. 개인정보가 암호화된 테마 PDF 생성 (IPFS용)
             byte[] encryptedPdfBytes = whiteThemePdfService.generateEncryptedWhiteThemeContractPdf(contract);
@@ -88,7 +100,7 @@ public class ContractProcessingService {
 
             // 4. 블록체인에 트랜잭션 전송하여 NFT 발행
             // PDF URL은 contractTermsHash로 사용, imgUrl은 이미지 URL로 사용
-            BigInteger tokenId = promissoryNoteBusinessService.mintPromissoryNoteNFT(contract, pdfUrl, imgUrl);
+            BigInteger tokenId = promissoryNoteBusinessService.mintPromissoryNoteNFT(contract, pdfUrl, imgUrl, userInfo);
             log.info("[NFT 발행 완료] 계약 ID: {}, 토큰 ID: {}", contract.getContractId(), tokenId);
 
             // 5. 생성된 NFT 정보 설정 - nftImageUrl에 이미지 URL 설정
@@ -106,7 +118,7 @@ public class ContractProcessingService {
      * @param contract 계약 엔티티
      * @return 생성된 NFT 토큰 ID
      */
-    private BigInteger generateNFTLegacy(Contract contract) {
+    private BigInteger generateNFTLegacy(Contract contract, UserContractInfoDto userInfo) {
         try {
             // 1. 개인정보가 암호화된 PDF 생성 (IPFS용)
             byte[] encryptedPdfBytes = contractPdfService.generateEncryptedContractPdf(contract);
@@ -124,7 +136,7 @@ public class ContractProcessingService {
 
             // 4. 블록체인에 트랜잭션 전송하여 NFT 발행
             // PDF URL은 contractTermsHash로 사용, imgUrl은 이미지 URL로 사용
-            BigInteger tokenId = promissoryNoteBusinessService.mintPromissoryNoteNFT(contract, pdfUrl, imgUrl);
+            BigInteger tokenId = promissoryNoteBusinessService.mintPromissoryNoteNFT(contract, pdfUrl, imgUrl, userInfo);
             log.info("[NFT 발행 완료] 계약 ID: {}, 토큰 ID: {}", contract.getContractId(), tokenId);
 
             // 5. 생성된 NFT 정보 설정 - nftImageUrl에 이미지 URL 설정
@@ -138,22 +150,80 @@ public class ContractProcessingService {
     }
 
     /**
+     * 사용자 계약 정보(지갑 주소, 서명, 해시 등)를 미리 준비하는 메서드
+     *
+     * @param contract 계약 정보
+     * @return 사용자 계약 정보 DTO
+     */
+    private UserContractInfoDto prepareUserContractInfo(Contract contract) {
+        User creditor = contract.getCreditor();
+        User debtor = contract.getDebtor();
+
+        // 지갑 주소 가져오기 (외부 서비스에서 조회)
+        String creditorWalletAddress = walletService.getUserPrimaryWalletAddressById(creditor.getUserId());
+        if (creditorWalletAddress == null || creditorWalletAddress.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "채권자 지갑 주소가 유효하지 않습니다.");
+        }
+
+        String debtorWalletAddress = walletService.getUserPrimaryWalletAddressById(debtor.getUserId());
+        if (debtorWalletAddress == null || debtorWalletAddress.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "채무자 지갑 주소가 유효하지 않습니다.");
+        }
+
+        // 서명 정보 가져오기
+        String creditorSign = signatureService.getSignature(creditor.getUserId(), contract.getContractId());
+        String debtorSign = signatureService.getSignature(debtor.getUserId(), contract.getContractId());
+
+        // 정보 해시 생성
+        String creditorInfoHash = hashingService.hashUserInfo(creditor);
+        String debtorInfoHash = hashingService.hashUserInfo(debtor);
+
+        // DTO 생성 및 반환
+        return UserContractInfoDto.builder()
+                .creditorWalletAddress(creditorWalletAddress)
+                .debtorWalletAddress(debtorWalletAddress)
+                .creditorSign(creditorSign)
+                .debtorSign(debtorSign)
+                .creditorInfoHash(creditorInfoHash)
+                .debtorInfoHash(debtorInfoHash)
+                .build();
+    }
+
+    /**
      * 자금 전송
      * @param contract 계약 엔티티
      */
-    private void transferFunds(Contract contract) {
-        // 실제 자금 전송 로직 구현 필요
-        // 예: 블록체인 트랜잭션, 내부 계좌 이체 등
-        log.info("[자금 전송 - 시뮬레이션] {} -> {}, 금액: {}",
-                contract.getCreditor().getNickname(),
-                contract.getDebtor().getNickname(),
-                contract.getLoanAmount());
+    private void transferFunds(Contract contract, UserContractInfoDto userInfo) {
+        try {
+            // UserContractInfoDto에서 지갑 주소 가져오기
+            String creditorWalletAddress = userInfo.getCreditorWalletAddress();
+            String debtorWalletAddress = userInfo.getDebtorWalletAddress();
 
-        // 여기에 실제 자금 전송 로직 구현
-        // 예: blockchainService.transferFunds(
-        //     walletService.getUserPrimaryWalletAddress(contract.getCreditor()),
-        //     walletService.getUserPrimaryWalletAddress(contract.getDebtor()),
-        //     contract.getLoanAmount()
-        // );
+            // 대출 금액
+            BigInteger loanAmount = contract.getLoanAmount().toBigInteger();
+
+            log.info("[자금 전송 시작] {} -> {}, 금액: {}, 채권자 지갑: {}, 채무자 지갑: {}",
+                    contract.getCreditor().getNickname(),
+                    contract.getDebtor().getNickname(),
+                    contract.getLoanAmount(),
+                    creditorWalletAddress,
+                    debtorWalletAddress);
+
+            // 실제 자금 전송 - RabbitCoinService 사용
+            TransactionReceipt receipt = rabbitCoinService.transferFrom(
+                    creditorWalletAddress,  // 채권자 지갑 주소 (from)
+                    debtorWalletAddress,    // 채무자 지갑 주소 (to)
+                    loanAmount              // 송금 금액
+            );
+
+            if (!receipt.isStatusOK()) {
+                throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "자금 전송에 실패했습니다.");
+            }
+
+            log.info("[자금 전송 완료] 트랜잭션 해시: {}", receipt.getTransactionHash());
+        } catch (Exception e) {
+            log.error("[자금 전송 실패] 오류: {}", e.getMessage(), e);
+            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "자금 전송 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 }

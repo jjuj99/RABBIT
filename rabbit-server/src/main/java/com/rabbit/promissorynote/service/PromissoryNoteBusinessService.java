@@ -10,6 +10,7 @@ import java.util.Optional;
 import com.rabbit.blockchain.service.PromissoryNoteService;
 import com.rabbit.blockchain.wrapper.PromissoryNote;
 import com.rabbit.blockchain.wrapper.RepaymentScheduler;
+import com.rabbit.promissorynote.domain.dto.UserContractInfoDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -50,6 +51,7 @@ public class PromissoryNoteBusinessService {
      * 차용증 NFT 발행 및 데이터베이스 저장
      *
      * @param contract 계약 정보
+     * @param nftPdFUri NFT PDF URI
      * @param nftImageUri NFT 이미지 URI
      * @return 생성된 토큰 ID
      */
@@ -58,22 +60,19 @@ public class PromissoryNoteBusinessService {
         log.info("[블록체인][시작] 차용증 NFT 발행 시작 - 계약 ID: {}", contract.getContractId());
 
         try {
+            // 사용자 정보 한 번만 조회하여 캐싱
+            UserContractInfoDto userInfo = prepareUserContractInfo(contract);
+
             // 1. 메타데이터 생성
-            PromissoryNote.PromissoryMetadata metadata = createPromissoryMetadata(contract, nftPdFUri, nftImageUri);
+            PromissoryNote.PromissoryMetadata metadata = createPromissoryMetadata(contract, userInfo, nftPdFUri, nftImageUri);
 
-            // 2. 채권자 지갑 주소 확인
-            String creditorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getCreditor().getUserId());
-            if (creditorWalletAddress == null || creditorWalletAddress.isBlank()) {
-                throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "채권자 지갑 주소가 유효하지 않습니다.");
-            }
+            // 2. NFT 민팅 (PromissoryNoteService 사용)
+            BigInteger tokenId = promissoryNoteService.mintPromissoryNote(metadata, userInfo.getCreditorWalletAddress());
 
-            // 3. NFT 민팅 (PromissoryNoteService 사용)
-            BigInteger tokenId = promissoryNoteService.mintPromissoryNote(metadata, creditorWalletAddress);
+            // 3. DB에 저장
+            savePromissoryNoteToDatabase(tokenId, contract, userInfo, nftPdFUri, nftImageUri);
 
-            // 4. DB에 저장
-            savePromissoryNoteToDatabase(tokenId, contract, nftPdFUri, nftImageUri);
-
-            // 5. 계약 정보 업데이트
+            // 4. 계약 정보 업데이트
             contract.setNftInfo(tokenId, nftImageUri);
 
             log.info("[블록체인][완료] 차용증 NFT 발행 성공 - 계약 ID: {}, 토큰 ID: {}",
@@ -88,12 +87,53 @@ public class PromissoryNoteBusinessService {
     }
 
     /**
+     * 사용자 계약 정보(지갑 주소, 서명, 해시 등)를 미리 준비하는 메서드
+     *
+     * @param contract 계약 정보
+     * @return 사용자 계약 정보 DTO
+     */
+    private UserContractInfoDto prepareUserContractInfo(Contract contract) {
+        User creditor = contract.getCreditor();
+        User debtor = contract.getDebtor();
+
+        // 지갑 주소 가져오기 (외부 서비스에서 조회)
+        String creditorWalletAddress = walletService.getUserPrimaryWalletAddressById(creditor.getUserId());
+        if (creditorWalletAddress == null || creditorWalletAddress.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "채권자 지갑 주소가 유효하지 않습니다.");
+        }
+
+        String debtorWalletAddress = walletService.getUserPrimaryWalletAddressById(debtor.getUserId());
+        if (debtorWalletAddress == null || debtorWalletAddress.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "채무자 지갑 주소가 유효하지 않습니다.");
+        }
+
+        // 서명 정보 가져오기
+        String creditorSign = signatureService.getSignature(creditor.getUserId(), contract.getContractId());
+        String debtorSign = signatureService.getSignature(debtor.getUserId(), contract.getContractId());
+
+        // 정보 해시 생성
+        String creditorInfoHash = hashingService.hashUserInfo(creditor);
+        String debtorInfoHash = hashingService.hashUserInfo(debtor);
+
+        // DTO 생성 및 반환
+        return UserContractInfoDto.builder()
+                .creditorWalletAddress(creditorWalletAddress)
+                .debtorWalletAddress(debtorWalletAddress)
+                .creditorSign(creditorSign)
+                .debtorSign(debtorSign)
+                .creditorInfoHash(creditorInfoHash)
+                .debtorInfoHash(debtorInfoHash)
+                .build();
+    }
+
+    /**
      * 상환 일정 등록
      *
      * @param tokenId 토큰 ID
      * @param contract 계약 정보
+     * @param userInfo 사용자 계약 정보
      */
-    private void registerRepaymentSchedule(BigInteger tokenId, Contract contract) throws Exception {
+    private void registerRepaymentSchedule(BigInteger tokenId, Contract contract, UserContractInfoDto userInfo) throws Exception {
         log.info("[블록체인] 상환 일정 등록 시작 - 토큰 ID: {}", tokenId);
 
         TransactionReceipt receipt = repaymentScheduler.registerRepaymentSchedule(tokenId).send();
@@ -105,73 +145,48 @@ public class PromissoryNoteBusinessService {
         RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentScheduler.getRepaymentInfo(tokenId).send();
 
         // 데이터베이스에 상환 일정 저장
-        saveRepaymentScheduleToDatabase(tokenId, contract, repaymentInfo);
+        saveRepaymentScheduleToDatabase(tokenId, contract, repaymentInfo, userInfo);
 
         log.info("[블록체인] 상환 일정 등록 완료 - 토큰 ID: {}, 트랜잭션: {}",
                 tokenId, receipt.getTransactionHash());
     }
 
     /**
-     * NFT 발행 트랜잭션에서 토큰 ID 추출
-     *
-     * @param receipt 트랜잭션 영수증
-     * @return 생성된 토큰 ID
-     */
-    private BigInteger extractTokenIdFromMintReceipt(TransactionReceipt receipt) {
-        // 트랜잭션 로그에서 PromissoryNoteMinted 이벤트 찾기
-        var events = PromissoryNote.getPromissoryNoteMintedEvents(receipt);
-        if (events.isEmpty()) {
-            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "NFT 발행 이벤트를 찾을 수 없습니다.");
-        }
-
-        return events.get(0).tokenId;
-    }
-
-    /**
      * 차용증 메타데이터 생성
      *
      * @param contract 계약 정보
+     * @param userInfo 사용자 계약 정보
+     * @param nftPdFUri NFT PDF URI
      * @param nftImageUri NFT 이미지 URI
      * @return 메타데이터 객체
      */
-    private PromissoryNote.PromissoryMetadata createPromissoryMetadata(Contract contract, String nftPdFUri, String nftImageUri) {
+    private PromissoryNote.PromissoryMetadata createPromissoryMetadata(
+            Contract contract,
+            UserContractInfoDto userInfo,
+            String nftPdFUri,
+            String nftImageUri) {
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         // 채권자/채무자 정보 준비
         User creditor = contract.getCreditor();
         User debtor = contract.getDebtor();
 
-        // 지갑 주소와 서명 정보 가져오기 (외부 서비스에서 조회)
-        String creditorWalletAddress = walletService.getUserPrimaryWalletAddressById(creditor.getUserId());
-        String debtorWalletAddress = walletService.getUserPrimaryWalletAddressById(debtor.getUserId());
-        String creditorSign = signatureService.getSignature(creditor.getUserId(), contract.getContractId());
-        String debtorSign = signatureService.getSignature(debtor.getUserId(), contract.getContractId());
-
-        // 정보 해시 생성 -> 차용증별 솔트 추가해서 db 저장 예정
-        String creditorInfoHash = hashingService.hashUserInfo(creditor);
-        String debtorInfoHash = hashingService.hashUserInfo(debtor);
-
         // CrInfo (채권자 정보) 생성
         PromissoryNote.CrInfo crInfo = new PromissoryNote.CrInfo(
-                creditorSign,
+                userInfo.getCreditorSign(),
                 creditor.getUserName(),
-                creditorWalletAddress,
-                creditorInfoHash
+                userInfo.getCreditorWalletAddress(),
+                userInfo.getCreditorInfoHash()
         );
 
         // DrInfo (채무자 정보) 생성
         PromissoryNote.DrInfo drInfo = new PromissoryNote.DrInfo(
-                debtorSign,
+                userInfo.getDebtorSign(),
                 debtor.getUserName(),
-                debtorWalletAddress,
-                debtorInfoHash
+                userInfo.getDebtorWalletAddress(),
+                userInfo.getDebtorInfoHash()
         );
-
-        // 추가 조항 해시 생성
-//        String contractTermsHash = null;
-//        if (contract.getContractTerms() != null && !contract.getContractTerms().isEmpty()) {
-//            contractTermsHash = hashingService.hashText(contract.getContractTerms());
-//        }
 
         // 추가 조항 해시 생성 부분 수정 => nftPdFUri 기입으로 대체
         String contractTermsHash = nftPdFUri; // PDF URL을 contractTermsHash에 설정
@@ -179,7 +194,6 @@ public class PromissoryNoteBusinessService {
         // AddTerms (추가 조항) 생성
         PromissoryNote.AddTerms addTerms = new PromissoryNote.AddTerms(
                 contract.getContractTerms() != null ? contract.getContractTerms() : "",
-//                contractTermsHash != null ? contractTermsHash : ""
                 contractTermsHash // PDF URL을 addTermsHash에 설정
         );
 
@@ -210,31 +224,20 @@ public class PromissoryNoteBusinessService {
      *
      * @param tokenId 토큰 ID
      * @param contract 계약 정보
+     * @param userInfo 사용자 계약 정보
+     * @param nftPdFUri NFT PDF URI
      * @param nftImageUri NFT 이미지 URI
      */
-    private void savePromissoryNoteToDatabase(BigInteger tokenId, Contract contract, String nftPdFUri, String nftImageUri) {
+    private void savePromissoryNoteToDatabase(
+            BigInteger tokenId,
+            Contract contract,
+            UserContractInfoDto userInfo,
+            String nftPdFUri,
+            String nftImageUri) {
+
         // 채권자/채무자 정보
         User creditor = contract.getCreditor();
         User debtor = contract.getDebtor();
-
-        // 지갑 주소와 서명 정보
-        String creditorWalletAddress = walletService.getUserPrimaryWalletAddressById(creditor.getUserId());
-        String debtorWalletAddress = walletService.getUserPrimaryWalletAddressById(debtor.getUserId());
-        String creditorSign = signatureService.getSignature(creditor.getUserId(), contract.getContractId());
-        String debtorSign = signatureService.getSignature(debtor.getUserId(), contract.getContractId());
-
-        // 정보 해시 생성
-        String creditorInfoHash = hashingService.hashUserInfo(creditor);
-        String debtorInfoHash = hashingService.hashUserInfo(debtor);
-
-        // 추가 조항 해시 생성
-//        String contractTermsHash = null;
-//        if (contract.getContractTerms() != null && !contract.getContractTerms().isEmpty()) {
-//            contractTermsHash = hashingService.hashText(contract.getContractTerms());
-//        }
-
-        // 추가 조항 해시 생성 부분 수정 => nftPdFUri 기입으로 대체
-        String contractTermsHash = nftPdFUri; // PDF URL을 contractTermsHash에 설정
 
         // LocalDate로 변환
         LocalDate maturityDate = contract.getMaturityDate().toLocalDate();
@@ -243,13 +246,13 @@ public class PromissoryNoteBusinessService {
         PromissoryNoteEntity entity = PromissoryNoteEntity.builder()
                 .tokenId(tokenId)
                 .creditorName(creditor.getUserName())
-                .creditorWalletAddress(creditorWalletAddress)
-                .creditorSign(creditorSign)
-                .creditorInfoHash(creditorInfoHash)
+                .creditorWalletAddress(userInfo.getCreditorWalletAddress())
+                .creditorSign(userInfo.getCreditorSign())
+                .creditorInfoHash(userInfo.getCreditorInfoHash())
                 .debtorName(debtor.getUserName())
-                .debtorWalletAddress(debtorWalletAddress)
-                .debtorSign(debtorSign)
-                .debtorInfoHash(debtorInfoHash)
+                .debtorWalletAddress(userInfo.getDebtorWalletAddress())
+                .debtorSign(userInfo.getDebtorSign())
+                .debtorInfoHash(userInfo.getDebtorInfoHash())
                 .loanAmount(contract.getLoanAmount().longValue())
                 .interestRate(contract.getInterestRate().multiply(BigDecimal.valueOf(100)).intValue())
                 .loanTerm(contract.getLoanTerm())
@@ -263,7 +266,7 @@ public class PromissoryNoteBusinessService {
                         contract.getPrepaymentInterestRate().multiply(BigDecimal.valueOf(100)).intValue() : 0)
                 .accelerationClause(contract.getDefaultCount())
                 .addTerms(contract.getContractTerms())
-                .addTermsHash(contractTermsHash)
+                .addTermsHash(nftPdFUri)
                 .nftImage(nftImageUri)
                 .deletedFlag(false)
                 .build();
@@ -278,14 +281,16 @@ public class PromissoryNoteBusinessService {
      * @param tokenId 토큰 ID
      * @param contract 계약 정보
      * @param repaymentInfo 블록체인에서 받아온 상환 정보
+     * @param userInfo 사용자 계약 정보
      */
-    private void saveRepaymentScheduleToDatabase(BigInteger tokenId, Contract contract,
-                                                 RepaymentScheduler.RepaymentInfo repaymentInfo) {
+    private void saveRepaymentScheduleToDatabase(
+            BigInteger tokenId,
+            Contract contract,
+            RepaymentScheduler.RepaymentInfo repaymentInfo,
+            UserContractInfoDto userInfo) {
+
         // 블록체인 타임스탬프를 Instant로 변환
         Instant nextPaymentInstant = Instant.ofEpochSecond(repaymentInfo.nextMpDt.longValue());
-
-        // 채무자 지갑 주소
-        String debtorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getDebtor().getUserId());
 
         RepaymentSchedule entity = RepaymentSchedule.builder()
                 .tokenId(tokenId)
@@ -299,7 +304,7 @@ public class PromissoryNoteBusinessService {
                 .remainingPayments(repaymentInfo.remainingPayments.intValue())
                 .fixedPaymentAmount(repaymentInfo.fixedPaymentAmount.longValue())
                 .repaymentType(repaymentInfo.repayType)
-                .debtorWalletAddress(debtorWalletAddress)
+                .debtorWalletAddress(userInfo.getDebtorWalletAddress())
                 .activeFlag(repaymentInfo.activeFlag)
                 .overdueFlag(repaymentInfo.overdueInfo.overdueFlag)
                 .overdueStartDate(null) // 초기에는 연체가 없으므로 null

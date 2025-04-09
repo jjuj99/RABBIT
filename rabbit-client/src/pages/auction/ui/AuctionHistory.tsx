@@ -23,7 +23,7 @@ const AuctionHistory = () => {
   return (
     <div className="container mx-auto py-8">
       <h2 className="mb-6 text-xl font-bold sm:text-2xl">입찰 내역</h2>
-      <AuctionBidHistory data={bidHistory?.data || []} />
+      <AuctionBidHistory data={bidHistory?.data?.content || []} />
     </div>
   );
 };

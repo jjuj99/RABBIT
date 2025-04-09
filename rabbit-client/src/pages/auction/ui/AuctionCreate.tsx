@@ -40,6 +40,7 @@ const AuctionCreate = () => {
     queryKey: ["availableAuctions"],
     queryFn: () => getAvailableAuctionsAPI(),
   });
+  console.log(new Date(Date.now() + 32400000 + 150000).toISOString());
 
   const handleDayChange = (value: number) => {
     if (value > 7) {
@@ -150,9 +151,9 @@ const AuctionCreate = () => {
       );
 
       const response = await createAuctionAPI({
-        minimumBid: 20,
-        endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        tokenId: "2",
+        minimumBid: 100,
+        endDate: new Date(Date.now() + 150000).toISOString(),
+        tokenId: selectedItem?.tokenId ?? "",
       });
 
       if (!response.data) {
@@ -164,8 +165,9 @@ const AuctionCreate = () => {
 
       try {
         // 4. transferFrom 호출: 현재 소유자(walletInfo.address) → 경매 컨트랙트 주소
-        const depositToAuction =
-          await promissoryNoteContract.depositToAuction(2);
+        const depositToAuction = await promissoryNoteContract.depositToAuction(
+          selectedItem?.tokenId,
+        );
 
         console.log("DepositToAuction 트랜잭션 전송됨:", depositToAuction.hash);
         await depositToAuction.wait();
@@ -370,15 +372,17 @@ const AuctionCreate = () => {
       <div className="flex w-full flex-col items-start gap-4 sm:px-7">
         <h3 className="text-lg">보유중인 차용증</h3>
         <ul className="flex flex-wrap justify-center gap-6">
-          {availableAuctions?.data?.map((item: AvailableAuctionsResponse) => (
-            <div
-              key={item.tokenId}
-              onClick={() => handleCardClick(item)}
-              className="cursor-pointer"
-            >
-              <MyNFTcard item={item} />
-            </div>
-          ))}
+          {availableAuctions?.data?.content.map(
+            (item: AvailableAuctionsResponse) => (
+              <div
+                key={item.tokenId}
+                onClick={() => handleCardClick(item)}
+                className="cursor-pointer"
+              >
+                <MyNFTcard item={item} />
+              </div>
+            ),
+          )}
         </ul>
       </div>
       <Sheet

@@ -33,11 +33,14 @@ const AuctionDetail = () => {
     null,
   );
 
+  const VITE_API_URL = import.meta.env.VITE_API_URL;
+  const VITE_API_VERSION = import.meta.env.VITE_API_VERSION;
+
   useEffect(() => {
     if (!auctionId) return;
 
     const eventSource = new EventSource(
-      `/subscribe?type=auction&id=${auctionId}`,
+      `${VITE_API_URL}/${VITE_API_VERSION}/subscribe/auction?id=${auctionId}`,
     );
 
     eventSource.onmessage = (event) => {
@@ -65,6 +68,7 @@ const AuctionDetail = () => {
   const {
     data: PNInfo,
     isLoading: PNInfoLoading,
+    isError: PNInfoError,
     refetch: refetchPNInfo,
   } = useQuery({
     queryKey: ["PNInfoList", auctionId],
@@ -74,13 +78,18 @@ const AuctionDetail = () => {
   const {
     data: bidList,
     isLoading: bidListLoading,
+    isError: bidListError,
     refetch: refetchBidList,
   } = useQuery({
     queryKey: ["bidList", auctionId],
     queryFn: () => getBidListAPI(Number(auctionId)),
   });
 
-  const { data: EventList, isLoading: EventListLoading } = useQuery({
+  const {
+    data: EventList,
+    isLoading: EventListLoading,
+    isError: EventListError,
+  } = useQuery({
     queryKey: ["NFTEventList", auctionId],
     queryFn: () => getNFTEventListAPI(Number(auctionId)),
   });
@@ -96,27 +105,11 @@ const AuctionDetail = () => {
     setIsDialogOpen(false);
   };
 
-  if (EventListLoading) {
-    return <div>로딩중...</div>;
-  }
-
-  if (!EventList?.data) {
-    return <div>데이터가 없습니다.</div>;
-  }
-
-  if (PNInfoLoading || bidListLoading) {
-    return <div>로딩중...</div>;
-  }
-
-  if (!PNInfo?.data || !bidList?.data) {
-    return <div>데이터가 없습니다.</div>;
-  }
-
   return (
     <>
       <section className="flex h-full flex-col gap-4">
         <h2 className="font-bit h-fit w-full flex-col gap-4 rounded-xl bg-gray-900 px-4 py-4 text-xl sm:text-3xl">
-          {"RABBIT #" + auctionId}
+          {"RABBIT #" + PNInfo?.data?.tokenId}
         </h2>
         <div className="flex w-full flex-col gap-8">
           <div className="flex h-fit w-full flex-col items-center gap-6 lg:flex-row">
@@ -125,21 +118,39 @@ const AuctionDetail = () => {
               <img
                 alt="NFT"
                 className="h-auto w-full object-contain"
-                src="/images/NFT.png"
+                src={PNInfo?.data?.nftImageUrl}
               />
             </div>
             {/* 오른쪽 영역 */}
             <div className="flex h-full w-full flex-1 flex-col gap-4">
-              <AuctionBidPanel CBP={PNInfo?.data?.price} />
+              {/* PN 정보 패널: 에러와 로딩 별도 처리 */}
+              {PNInfoLoading ? (
+                <div className="loader-sprite" />
+              ) : PNInfoError ? (
+                <div>PN 정보 로드 중 에러가 발생했습니다.</div>
+              ) : (
+                <AuctionBidPanel CBP={PNInfo?.data?.price} />
+              )}
 
-              <AuctionBidList data={bidList?.data || []} />
+              {/* 입찰 목록: 에러와 로딩 별도 처리 */}
+              {bidListLoading ? (
+                <div className="loader-sprite" />
+              ) : bidListError ? (
+                <div>입찰 목록 로드 중 에러가 발생했습니다.</div>
+              ) : (
+                <AuctionBidList data={bidList?.data || []} />
+              )}
             </div>
           </div>
 
           <div className="flex h-fit w-full items-center justify-center gap-4 rounded-sm bg-gray-900 py-4 sm:h-[82px]">
             <span className="font-medium sm:text-2xl">경매 종료까지</span>
             <span className="sm-font-bold w-[100px] text-2xl font-bold sm:text-4xl">
-              <CountdownTimer endDate={PNInfo.data.endDate} />
+              {PNInfo?.data ? (
+                <CountdownTimer endDate={PNInfo.data.endDate} />
+              ) : (
+                <div className="loader-sprite" />
+              )}
             </span>
           </div>
 
@@ -149,9 +160,13 @@ const AuctionDetail = () => {
             </h3>
             <div className="flex w-full justify-center">
               {PNInfoLoading ? (
-                <div>로딩중...</div>
+                <div className="loader-sprite" />
+              ) : PNInfoError ? (
+                <div>PN 정보 에러.</div>
+              ) : PNInfo?.data ? (
+                <PNInfoList data={PNInfo.data} />
               ) : (
-                PNInfo?.data && <PNInfoList data={PNInfo.data} />
+                <div>데이터가 없습니다.</div>
               )}
             </div>
             <div className="w-full">
@@ -160,15 +175,23 @@ const AuctionDetail = () => {
               )}
             </div>
           </div>
+
           <div className="flex flex-col gap-1 sm:rounded-lg sm:bg-gray-900 sm:p-4">
             <h3 className="bg-succecss px-3 py-2 text-lg font-semibold text-white sm:py-2 sm:text-xl">
               차용증 기록
             </h3>
             <div className="w-full rounded-sm bg-gray-900">
-              {isDesktop ? (
-                <NFTEventList data={EventList.data.eventList} />
+              {EventListLoading ? (
+                <div>로딩중...</div>
+              ) : EventListError ? (
+                <div>이벤트 기록 로드 에러.</div>
               ) : (
-                <NFTEventListMobile data={EventList.data.eventList} />
+                EventList?.data &&
+                (isDesktop ? (
+                  <NFTEventList data={EventList.data.eventList} />
+                ) : (
+                  <NFTEventListMobile data={EventList.data.eventList} />
+                ))
               )}
             </div>
           </div>

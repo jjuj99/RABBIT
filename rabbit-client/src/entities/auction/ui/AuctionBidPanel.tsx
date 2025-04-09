@@ -125,8 +125,8 @@ const AuctionBidPanel = ({ CBP = 0 }: AuctionBidPanelProps) => {
           </div>
           <div className="flex w-full gap-2">
             <UnitInput
-              value={balance}
-              unit="원"
+              value={bidPrice}
+              unit="RAB"
               type="number"
               wrapperClassName="w-full"
               className="w-full bg-white"

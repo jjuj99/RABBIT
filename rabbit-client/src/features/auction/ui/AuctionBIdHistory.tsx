@@ -9,6 +9,7 @@ interface AuctionBidHistoryProps {
 
 const AuctionBidHistory = ({ data }: AuctionBidHistoryProps) => {
   const isDesktop = useMediaQuery("lg");
+  console.log(data);
 
   if (!data || data.length === 0) {
     return (

@@ -16,7 +16,7 @@ export const NFTCard = ({ item }: NFTCardProps) => {
       <div className="relative h-full w-full rounded-sm">
         <NFTCardInfo item={item} />
         <img
-          src="/images/NFT.png"
+          src={item.nftImageUrl}
           alt="NTF"
           className="opacity-100 transition-opacity duration-300 ease-in-out group-hover:opacity-0"
         />

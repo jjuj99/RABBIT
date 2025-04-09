@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [queryClient]);
 
   if (isLoading) {
-    return <div>인증 중</div>;
+    return <div className="loader-sprite" />;
   }
 
   return (

@@ -23,7 +23,7 @@ export const MyNFTcard = ({ item }: NFTCardProps) => {
         <MyNFTCardInfo item={item} isTouched={isTouched} />
         <div className="flex justify-center">
           <img
-            src="/images/NFT.png"
+            src={item.nftImageUrl}
             alt="NTF"
             className={cn(
               "h-[192px] w-[192px] transition-opacity duration-300 ease-in-out",

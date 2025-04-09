@@ -1,25 +1,16 @@
 import UnitInput from "@/entities/common/ui/UnitInput";
-import { Button } from "@/shared/ui/button";
-import { Textarea } from "@/shared/ui/textarea";
 import { InputForm, SelectRepayType } from "@/entities/contract";
 import { useContractForm } from "@/features/contract";
-import { Calendar } from "@/shared/ui/calendar";
+import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/shared/ui/form";
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
-import dateFormat from "@/shared/utils/dateFormat";
+import { Form, FormField } from "@/shared/ui/form";
+import { Textarea } from "@/shared/ui/textarea";
 import BasicDialog from "@/widget/common/ui/BasicDialog";
 import EmailSearchDialog from "@/widget/common/ui/EmailSearchDialog";
-import PASSDialog from "@/widget/common/ui/PASSDialog";
-import { useState } from "react";
-import { InfoIcon } from "lucide-react";
 import LoadingOverlay from "@/widget/common/ui/LoadingOverray";
+import PASSDialog from "@/widget/common/ui/PASSDialog";
+import { InfoIcon } from "lucide-react";
+import { useState } from "react";
 
 const ContractCreate = () => {
   const {
@@ -324,7 +315,7 @@ const ContractCreate = () => {
                     />
                   )}
                 />
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="contractDt"
                   render={({ field }) => (
@@ -363,7 +354,7 @@ const ContractCreate = () => {
                       </Popover>
                     </FormItem>
                   )}
-                />
+                /> */}
               </div>
             </div>
             <div className="flex w-full flex-col gap-3 border-b-2 pb-4">

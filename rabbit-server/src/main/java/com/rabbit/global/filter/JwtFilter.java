@@ -42,8 +42,13 @@ public class JwtFilter extends OncePerRequestFilter {
 //            "/api/v1/coins/**",
             "/api/v1/sse/**",
             "/api/v1/ipfs/**",
-            "/api/v1/auctions/**",
-            "/api/v1/auctions/{auctionId}/bids",
+
+            "/api/v1/auctions",
+            "/api/v1/auctions/*/info",
+            "/api/v1/auctions/*/similar",
+            "/api/v1/auctions/*/event",
+            "/api/v1/auctions/*/force-end",
+            "/api/v1/auctions/*/bids/list"
     };
 
     @Override

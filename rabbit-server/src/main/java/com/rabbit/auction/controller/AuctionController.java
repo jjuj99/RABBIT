@@ -106,7 +106,7 @@ public class AuctionController {
     }
 
     @AuctionControllerSwagger.GetAuctionDetailApi
-    @GetMapping("/{auctionId}")
+    @GetMapping("/{auctionId}/info")
     public ResponseEntity<CustomApiResponse<AuctionDetailResponseDTO>> getAuctionDetail(
             @PathVariable("auctionId") Integer auctionId) {
 

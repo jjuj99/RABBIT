@@ -171,7 +171,7 @@ public class LoanService {
             PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(contract.getTokenId());
             RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(contract.getTokenId());
 
-            List<ContractEventDTO> events = eventService.getEventList(contract.getTokenId());
+//            List<ContractEventDTO> events = eventService.getEventList(contract.getTokenId());
 
             String pdfUrl = promissoryNoteBusinessService.getPromissoryNotePdfUriByTokenId(contract.getTokenId());
 
@@ -202,7 +202,7 @@ public class LoanService {
                     .accelDir(20) // 기한 이익 상실 연체 이자율을 없는 거 같은데
                     .addTerms(promissoryMetadata.addTerms.addTerms)
                     .addTermsHash(pdfUrl)
-                     .eventList(events) // 이벤트 내역 불러오기도 있는가
+//                     .eventList(events) // 이벤트 내역 불러오기도 있는가
                     .build();
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -332,7 +332,7 @@ public class LoanService {
             PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(contract.getTokenId());
             RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(contract.getTokenId());
 
-            List<ContractEventDTO> events = eventService.getEventList(contract.getTokenId());
+//            List<ContractEventDTO> events = eventService.getEventList(contract.getTokenId());
             String pdfUrl = promissoryNoteBusinessService.getPromissoryNotePdfUriByTokenId(contract.getTokenId());
 
             return LentDetailResponseDTO.builder()
@@ -362,7 +362,7 @@ public class LoanService {
                     .accelDir(20) // 기한 이익 상실 연체 이자율을 없는 거 같은데
                     .addTerms(promissoryMetadata.addTerms.addTerms)
                     .addTermsHash(pdfUrl)
-                    .eventList(events) // 이벤트 내역 불러오기도 있는가
+//                    .eventList(events) // 이벤트 내역 불러오기도 있는가
                     .build();
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -380,7 +380,8 @@ public class LoanService {
                 .map(contract -> {
                     try {
                         PromissoryNote.PromissoryMetadata metadata = promissoryNoteService.getPromissoryMetadata(contract.getTokenId());
-                        RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(contract.getTokenId());
+//                        RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(contract.getTokenId());
+                        RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(contract.getTokenId());
 
                         // 채무자 신용점수 조회
                         String creditScore = bankService.getCreditScore(contract.getDebtor().getUserId());
@@ -412,7 +413,7 @@ public class LoanService {
                                 .dir(dir)
                                 .earlypayFlag(metadata.earlyPayFlag)
                                 .earlypayFee(earlyPayFee)
-                                .defCnt(repaymentInfo.defCnt.intValue())
+                                .defCnt(repaymentInfo.overdueInfo.defCnt.intValue())
                                 .creditScore(creditScore)
                                 .build();
                     } catch (Exception e) {
@@ -437,5 +438,23 @@ public class LoanService {
                 .pageSize(pageable.getPageSize())
                 .totalElements(content.size())
                 .build();
+    }
+
+    public List<ContractEventDTO> getEventList(int contractId, int userId) {
+        // 1. 해당 차용증 Id의 차용증 객체 호출
+        Contract contract = contractRepository.findByContractIdAndDeletedFlagFalse(contractId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 차용증의 정보가 존재하지 않습니다."));
+
+        // 차용증에 채권자, 채무자에 userId가 아니라면 (당사자가 아니라면 에러처리 추가해야 함)
+        if (contract.getCreditor().getUserId() != userId && contract.getDebtor().getUserId() != userId) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED, "해당 정보에 접근 권한이 없습니다.");
+        }
+
+        try {
+            return eventService.getEventList(contract.getTokenId());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "NFT 조회 중 오류가 발생했습니다.");
+        }
     }
 }

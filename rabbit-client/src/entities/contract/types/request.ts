@@ -20,7 +20,7 @@ export interface CreateContractRequest {
   passAuthToken: string;
   txId: string;
   authResultCode: string;
-  contractDt: string;
+  contractDt: string | null;
 }
 
 export interface RejectContractRequest {

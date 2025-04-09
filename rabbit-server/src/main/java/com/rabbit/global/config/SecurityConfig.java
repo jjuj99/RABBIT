@@ -28,6 +28,8 @@ public class SecurityConfig {
     private final JwtUtil jwtUtil;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
+    private final CorsProperties corsProperties;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -39,10 +41,13 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**", "/favicon.ico", "/api/v1/auctions/**", "/api/v1/auctions/{auctionId}/bids").permitAll()
                                 .requestMatchers("/api/v1/auth/**").permitAll()
                                 .requestMatchers("/api/v1/bank/**").permitAll()
-                                .requestMatchers("/api/v1/auctions/**").permitAll()
                                 .requestMatchers("/api/v1/sse/**").permitAll()
-//                                .requestMatchers("/api/v1/coins/**").permitAll()
                                 .requestMatchers("/api/v1/ipfs/**").permitAll()
+//                                .requestMatchers("/api/v1/auctions/**").permitAll()
+//                                .requestMatchers("/api/v1/coins/**").permitAll()
+
+                                .requestMatchers(HttpMethod.GET, "/api/v1/auctions/**").permitAll()
+
                                 .anyRequest().authenticated() // 모든 요청 인증 필요
 //                                .anyRequest().permitAll()
                 )
@@ -57,7 +62,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("https://localhost:8080", "http://localhost:8080", "https://j12a604.p.ssafy.io", "http://localhost:5173", "http://127.0.0.1:5500")); // 허용할 도메인
+        configuration.setAllowedOrigins(corsProperties.getAllowedOrigins()); // 허용할 도메인
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")); // 허용할 HTTP 메소드
         configuration.setAllowedHeaders(List.of("*")); // 모든 헤더 허용
         configuration.setExposedHeaders(List.of("Authorization")); // 클라이언트가 Authorization 읽을 수 있게

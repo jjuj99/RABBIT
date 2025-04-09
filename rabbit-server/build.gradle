@@ -30,6 +30,13 @@ repositories {
 
 ext {
     jjwtVersion = '0.12.6'
+    vaadinVersion = '23.3.8' // Vaadin 플러그인 버전과 일치시킴
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "com.vaadin:vaadin-bom:${vaadinVersion}"
+    }
 }
 
 dependencies {

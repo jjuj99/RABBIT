@@ -3,7 +3,6 @@ import useCreateContract from "@/entities/contract/hooks/useCreateContract";
 import useGetWallet from "@/entities/wallet/hooks/useGetWallet";
 import { useWeb3 } from "@/shared/lib/web3/context/useWeb3";
 import { passType } from "@/shared/type/Types";
-import dateFormat from "@/shared/utils/dateFormat";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -84,7 +83,7 @@ const useContractForm = () => {
     passAuthToken: z.string(),
     txId: z.string(),
     authResultCode: z.string(),
-    contractDt: z.date(),
+    contractDt: z.date().nullable(),
     contractId: z.number().nullable(),
   });
 
@@ -99,9 +98,6 @@ const useContractForm = () => {
       handlePassComplete();
     }
   }, [passState]);
-
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
 
   const form = useForm<z.infer<typeof contractSchema>>({
     resolver: zodResolver(contractSchema),
@@ -127,7 +123,7 @@ const useContractForm = () => {
       passAuthToken: "",
       txId: "",
       authResultCode: "",
-      contractDt: tomorrow,
+      contractDt: null,
       contractId: state?.contractId ? Number(state.contractId) : null,
     },
   });
@@ -148,7 +144,7 @@ const useContractForm = () => {
         repayType: data.repayType as "EPIP" | "EPP" | "BP",
         addTerms: data.addTerms ?? null,
         message: data.message ?? null,
-        contractDt: dateFormat(String(data.contractDt)),
+        contractDt: null,
       });
     } catch (error) {
       console.error(error);

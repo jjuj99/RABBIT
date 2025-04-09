@@ -43,6 +43,11 @@ const LoginButton = () => {
 
     // 1. 메타마스크 설치 여부 체크 - 없으면 예외 처리 toast 띄우기
     if (!isInstalled) {
+      toast.error(
+        "메타마스크가 설치되어 있지 않습니다. 설치 페이지로 이동합니다.",
+      );
+      // 설치 페이지로 리디렉션
+      window.open("https://metamask.io/download.html", "_blank");
       setIsLoading(false);
       return;
     }

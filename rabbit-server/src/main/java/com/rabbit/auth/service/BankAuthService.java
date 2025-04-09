@@ -20,6 +20,7 @@ import com.rabbit.user.repository.BankRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -47,44 +48,48 @@ public class BankAuthService {
         return bankRepository.findAll();
     }
 
+    @Transactional
     public void accountAuthSend(AccountAuthSendRequestDTO request) {
-        AccountInfo accountInfo = ssafyBankRepository.findByEmail(request.getEmail())
-                // 0. 이미 싸피은행 정보가 존재하면, 해당 정보 사용
-                .map(account -> new AccountInfo(account.getUserKey(), account.getAccountNo()))
-                // 없다면 생성
-                .orElseGet(() -> {
-                    // 1. 싸피 은행 유저인지 확인
-                    MemberRequestDTO memberRequest = MemberRequestDTO.builder()
-                            .userId(request.getEmail())
-                            .build();
-                    MemberResponseDTO memberResponse = bankApiService.searchMember(memberRequest).block();
+        SsafyAccount ssafyAccount = ssafyBankRepository.findByEmail(request.getEmail())
+                .orElseGet(() -> null);
 
-                    // 2. 싸피 은행 유저가 아니면 계정 생성
-                    if (memberResponse == null) {
-                        memberResponse = bankApiService.createMember(memberRequest).block();
-                    }
+        AccountInfo accountInfo;
 
-                    String userKey = memberResponse.getUserKey();
+        if (ssafyAccount != null) { // 0. 이미 싸피은행 정보가 존재하면, 해당 정보 사용
+            accountInfo = new AccountInfo(ssafyAccount.getUserKey(), ssafyAccount.getAccountNo());
+        } else { // 없다면 생성
+            // 1. 싸피 은행 유저인지 확인
+            MemberRequestDTO memberRequest = MemberRequestDTO.builder()
+                    .userId(request.getEmail())
+                    .build();
+            MemberResponseDTO memberResponse = bankApiService.searchMember(memberRequest).block();
 
-                    // 3. 계좌 생성
-                    CreateDemandAccountRequestDTO createDemandAccountRequest = CreateDemandAccountRequestDTO.builder()
-                            .userKey(userKey)
-                            .build();
+            // 2. 싸피 은행 유저가 아니면 계정 생성
+            if (memberResponse == null) {
+                memberResponse = bankApiService.createMember(memberRequest).block();
+            }
 
-                    CreateDemandAccountResponseDTO createDemandAccountResponse = bankApiService.createDemandAccount(createDemandAccountRequest).block();
-                    String accountNo = createDemandAccountResponse.getRec().getAccountNo();
+            String userKey = memberResponse.getUserKey();
 
-                    // 4. 우리 DB에 email, accountNo, userKey 저장
-                    ssafyBankRepository.save(SsafyAccount.builder()
-                            .email(request.getEmail())
-                            .accountNo(accountNo)
-                            .userKey(userKey)
-                            .createdAt(ZonedDateTime.now())
-                            .build()
-                    );
+            // 3. 계좌 생성
+            CreateDemandAccountRequestDTO createDemandAccountRequest = CreateDemandAccountRequestDTO.builder()
+                    .userKey(userKey)
+                    .build();
 
-                    return new AccountInfo(userKey, accountNo);
-                });
+            CreateDemandAccountResponseDTO createDemandAccountResponse = bankApiService.createDemandAccount(createDemandAccountRequest).block();
+            String accountNo = createDemandAccountResponse.getRec().getAccountNo();
+
+            // 4. 우리 DB에 email, accountNo, userKey 저장
+            ssafyBankRepository.save(SsafyAccount.builder()
+                    .email(request.getEmail())
+                    .accountNo(accountNo)
+                    .userKey(userKey)
+                    .createdAt(ZonedDateTime.now())
+                    .build()
+            );
+
+            accountInfo = new AccountInfo(userKey, accountNo);
+        }
 
         // 5. 해당 계좌로 인증번호 전송
         OpenAccountRequestDTO openAccountRequest = OpenAccountRequestDTO.builder()

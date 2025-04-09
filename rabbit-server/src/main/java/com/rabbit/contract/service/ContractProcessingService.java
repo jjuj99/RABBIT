@@ -24,9 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 public class ContractProcessingService {
 
     private final ContractPdfService contractPdfService;
+    private final DarkThemePdfService darkThemePdfService;
+    private final WhiteThemePdfService whiteThemePdfService;
     private final PinataUploader pinataUploader;
     private final ContractImageService contractImageService;
-    private final PromissoryNoteBusinessService promissoryNoteBusinessService; // 추가된 의존성
+    private final PromissoryNoteBusinessService promissoryNoteBusinessService;
 
     /**
      * 계약 완료 처리 (NFT 생성, 자금 전송 등)
@@ -62,11 +64,49 @@ public class ContractProcessingService {
     }
 
     /**
-     * NFT 생성
+     * NFT 생성 (테마 PDF 사용)
      * @param contract 계약 엔티티
      * @return 생성된 NFT 토큰 ID
      */
     private BigInteger generateNFT(Contract contract) {
+        try {
+            // 1. 개인정보가 암호화된 테마 PDF 생성 (IPFS용)
+            byte[] encryptedPdfBytes = whiteThemePdfService.generateEncryptedWhiteThemeContractPdf(contract);
+//            // 다크 테마 PDF 생성 (IPFS용)
+//            byte[] encryptedPdfBytes = darkThemePdfService.generateEncryptedWhiteThemeContractPdf(contract);
+
+            // 2. 암호화된 PDF를 IPFS에 업로드
+            String pdfFileName = "contract_" + contract.getContractId() + ".pdf";
+            String pdfUrl = pinataUploader.uploadContent(encryptedPdfBytes, pdfFileName, "application/pdf");
+            log.info("[IPFS 업로드 완료] 계약 ID: {}, URL: {}", contract.getContractId(), pdfUrl);
+
+            // 3. NFT 이미지 생성 및 IPFS 업로드
+            byte[] nftImageBytes = contractImageService.generateContractImage(contract);
+            String imageFileName = "contract_image_" + contract.getContractId() + ".png";
+            String imgUrl = pinataUploader.uploadContent(nftImageBytes, imageFileName, "image/png");
+            log.info("[이미지 IPFS 업로드 완료] 계약 ID: {}, 이미지 URL: {}", contract.getContractId(), imgUrl);
+
+            // 4. 블록체인에 트랜잭션 전송하여 NFT 발행
+            // PDF URL은 contractTermsHash로 사용, imgUrl은 이미지 URL로 사용
+            BigInteger tokenId = promissoryNoteBusinessService.mintPromissoryNoteNFT(contract, pdfUrl, imgUrl);
+            log.info("[NFT 발행 완료] 계약 ID: {}, 토큰 ID: {}", contract.getContractId(), tokenId);
+
+            // 5. 생성된 NFT 정보 설정 - nftImageUrl에 이미지 URL 설정
+            contract.setNftInfo(tokenId, imgUrl);
+
+            return tokenId;
+        } catch (Exception e) {
+            log.error("[NFT 생성 실패] 계약 ID: {}, 오류: {}", contract.getContractId(), e.getMessage(), e);
+            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "NFT 생성 중 오류가 발생했습니다");
+        }
+    }
+
+    /**
+     * 기존 스타일의 NFT 생성 (레거시 코드 - 참조용)
+     * @param contract 계약 엔티티
+     * @return 생성된 NFT 토큰 ID
+     */
+    private BigInteger generateNFTLegacy(Contract contract) {
         try {
             // 1. 개인정보가 암호화된 PDF 생성 (IPFS용)
             byte[] encryptedPdfBytes = contractPdfService.generateEncryptedContractPdf(contract);

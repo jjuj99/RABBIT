@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @Tag(name = "Loan", description = "나의 채무, 채권 정보 관련 API")
 @RestController
 @RequestMapping("/api/v1/loans")
@@ -81,11 +83,19 @@ public class LoanController {
     }
 
     @GetMapping("/lent/available-auctions")
-    public ResponseEntity<CustomApiResponse<?>> getAuctionAvailable(@Valid PageRequestDTO pageRequest, Authentication authentication) {
+    public ResponseEntity<CustomApiResponse<?>> getAuctionAvailable(@ModelAttribute PageRequestDTO pageRequest, Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
 
         Pageable pageable = pageRequest.toPageable();
         PageResponseDTO<LentAuctionResponseDTO> response = loanService.getAuctionAvailable(Integer.parseInt(userId), pageable);
+
+        return ResponseEntity.ok(CustomApiResponse.success(response));
+    }
+
+    @GetMapping("/lent/events/{contractId}")
+    public ResponseEntity<CustomApiResponse<List<ContractEventDTO>>> getEventList(@PathVariable int contractId, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+        List<ContractEventDTO> response = loanService.getEventList(contractId, Integer.parseInt(userId));
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }

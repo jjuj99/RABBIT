@@ -163,21 +163,20 @@ public class CoinService {
     }
 
     public void burnRabbitCoin(String account, BigInteger amount){
-        String zeroAddress = "0x0000000000000000000000000000000000000000";
         try {
-            // RabbitCoin 컨트랙트의 transfer를 통해 0주소로 RAB 전송
-            TransactionReceipt receipt = rabbitCoinService.transferFrom(account, zeroAddress, amount);
+            // RabbitCoin 컨트랙트의 burn으로 RAB 소각
+            TransactionReceipt receipt = rabbitCoinService.burnFrom(account, amount);
 
             // 트랜잭션 성공 여부 확인
             boolean isSuccess = "0x1".equals(receipt.getStatus());
             if (isSuccess) {
-                log.info("RAB 0주소로 전송 성공: {} {}", account, amount);
+                log.info("RAB 소각 성공: {} {}", account, amount);
             } else {
-                log.error("RAB 0주소로 전송 실패. 트랜잭션 상태: {}", receipt.getStatus());
+                log.error("RAB 소각 실패. 트랜잭션 상태: {}", receipt.getStatus());
             }
         } catch (Exception e) {
-            log.error("RAB 전송 오류: {}", e.getMessage(), e);
-            throw new BusinessException(ErrorCode.RAB_TRANSFER_FAIL, "RAB 전송 중 오류가 발생했습니다");
+            log.error("RAB 소각 오류: {}", e.getMessage(), e);
+            throw new BusinessException(ErrorCode.RAB_TRANSFER_FAIL, "RAB 소각 중 오류가 발생했습니다");
         }
     }
 

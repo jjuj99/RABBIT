@@ -43,9 +43,6 @@ public class PromissoryNoteBusinessService {
     private final PromissoryNoteService promissoryNoteService;
     private final PromissoryNoteRepository promissoryNoteRepository;
     private final RepaymentScheduleRepository repaymentScheduleRepository;
-    private final WalletService walletService;
-    private final SignatureService signatureService;
-    private final HashingService hashingService;
 
     /**
      * 차용증 NFT 발행 및 데이터베이스 저장
@@ -56,12 +53,10 @@ public class PromissoryNoteBusinessService {
      * @return 생성된 토큰 ID
      */
     @Transactional
-    public BigInteger mintPromissoryNoteNFT(Contract contract, String nftPdFUri, String nftImageUri) {
+    public BigInteger mintPromissoryNoteNFT(Contract contract, String nftPdFUri, String nftImageUri, UserContractInfoDto userInfo) {
         log.info("[블록체인][시작] 차용증 NFT 발행 시작 - 계약 ID: {}", contract.getContractId());
 
         try {
-            // 사용자 정보 한 번만 조회하여 캐싱
-            UserContractInfoDto userInfo = prepareUserContractInfo(contract);
 
             // 1. 메타데이터 생성
             PromissoryNote.PromissoryMetadata metadata = createPromissoryMetadata(contract, userInfo, nftPdFUri, nftImageUri);
@@ -86,45 +81,7 @@ public class PromissoryNoteBusinessService {
         }
     }
 
-    /**
-     * 사용자 계약 정보(지갑 주소, 서명, 해시 등)를 미리 준비하는 메서드
-     *
-     * @param contract 계약 정보
-     * @return 사용자 계약 정보 DTO
-     */
-    private UserContractInfoDto prepareUserContractInfo(Contract contract) {
-        User creditor = contract.getCreditor();
-        User debtor = contract.getDebtor();
 
-        // 지갑 주소 가져오기 (외부 서비스에서 조회)
-        String creditorWalletAddress = walletService.getUserPrimaryWalletAddressById(creditor.getUserId());
-        if (creditorWalletAddress == null || creditorWalletAddress.isBlank()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "채권자 지갑 주소가 유효하지 않습니다.");
-        }
-
-        String debtorWalletAddress = walletService.getUserPrimaryWalletAddressById(debtor.getUserId());
-        if (debtorWalletAddress == null || debtorWalletAddress.isBlank()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "채무자 지갑 주소가 유효하지 않습니다.");
-        }
-
-        // 서명 정보 가져오기
-        String creditorSign = signatureService.getSignature(creditor.getUserId(), contract.getContractId());
-        String debtorSign = signatureService.getSignature(debtor.getUserId(), contract.getContractId());
-
-        // 정보 해시 생성
-        String creditorInfoHash = hashingService.hashUserInfo(creditor);
-        String debtorInfoHash = hashingService.hashUserInfo(debtor);
-
-        // DTO 생성 및 반환
-        return UserContractInfoDto.builder()
-                .creditorWalletAddress(creditorWalletAddress)
-                .debtorWalletAddress(debtorWalletAddress)
-                .creditorSign(creditorSign)
-                .debtorSign(debtorSign)
-                .creditorInfoHash(creditorInfoHash)
-                .debtorInfoHash(debtorInfoHash)
-                .build();
-    }
 
     /**
      * 상환 일정 등록

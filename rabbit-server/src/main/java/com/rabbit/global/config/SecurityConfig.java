@@ -4,6 +4,7 @@ import com.rabbit.global.filter.JwtFilter;
 import com.rabbit.global.security.JwtAuthenticationEntryPoint;
 import com.rabbit.global.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,6 +21,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -61,7 +63,7 @@ public class SecurityConfig {
     // 허용된 프론트엔드 도메인만 API 요청 가능
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        System.out.println("✅ AllowedOrigins: " + corsProperties.getAllowedOrigins());
+        log.info("[Security] AllowedOrigins: {}", corsProperties.getAllowedOrigins());
 
         CorsConfiguration configuration = new CorsConfiguration();
 

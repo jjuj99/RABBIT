@@ -64,13 +64,13 @@ public class Contract {
     /**
      * 대출 시작일
      */
-    @Column(nullable = true)
+    @Column(nullable = false)
     private ZonedDateTime contractDate;
 
     /**
      * 대출 만기일
      */
-    @Column(nullable = true)
+    @Column(nullable = false)
     private ZonedDateTime maturityDate;
 
     /**
@@ -318,8 +318,8 @@ public class Contract {
                 .debtor(debtor)
                 .loanAmount(dto.getLa())
                 .interestRate(dto.getIr())
-//                .contractDate(dto.getContractDt())
-//                .maturityDate(dto.calculateMaturityDate())
+                .contractDate(dto.getContractDt())
+                .maturityDate(dto.calculateMaturityDate())
                 .prepaymentInterestRate(dto.getEarlypayFee())
                 .graceLineDays(7) // 기본값 설정 또는 설정 정보에서 가져옴
                 .contractTerms(dto.getAddTerms())

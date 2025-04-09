@@ -56,6 +56,9 @@ public class ContractCommandService {
      */
     @Transactional
     public ContractResponseDTO createContract(Integer userId, ContractRequestDTO requestDTO) {
+        // 임의 시간
+        requestDTO.setContractDt(ZonedDateTime.now());
+
         // 채무자 조회
         User debtor = contractQueryService.findUserById(userId);
 

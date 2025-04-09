@@ -92,8 +92,8 @@ public class ContractRequestDTO {
 
     // 대출 시작일과 만기일
     @Schema(description = "대출 시작일", example = "2025-04-01", required = true)
-    @NotNull(message = "대출 시작일은 필수입니다")
-    @Future(message = "대출 시작일은 현재 시점 이후여야 합니다")
+//    @NotNull(message = "대출 시작일은 필수입니다")
+//    @Future(message = "대출 시작일은 현재 시점 이후여야 합니다")
     private ZonedDateTime contractDt;
 
     // 기한이익상실

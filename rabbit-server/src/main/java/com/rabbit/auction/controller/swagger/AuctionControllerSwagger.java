@@ -268,6 +268,7 @@ public interface AuctionControllerSwagger {
                                             value = "{\n" +
                                                     "  \"status\": \"SUCCESS\",\n" +
                                                     "  \"data\": {\n" +
+                                                    "    \"tokenId\" : 1. \n" +
                                                     "    \"auctionId\": 1,\n" +
                                                     "    \"price\": 15000,\n" +
                                                     "    \"endDate\": \"2025-05-01T12:00:00Z\",\n" +

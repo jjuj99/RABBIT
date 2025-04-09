@@ -5,16 +5,7 @@ import java.math.BigInteger;
 import java.time.ZonedDateTime;
 
 import com.rabbit.user.domain.entity.User;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -256,6 +247,12 @@ public class Contract {
         this.updatedAt = ZonedDateTime.now();
 
         if (SysCommonCodes.Contract.CONTRACTED.equals(newStatus)) {
+            this.contractDate = ZonedDateTime.now()
+                    .withHour(0)
+                    .withMinute(0)
+                    .withSecond(0)
+                    .withNano(0);
+            this.maturityDate = contractDate.plusMonths(this.loanTerm).minusDays(1);
             this.updatedAt = ZonedDateTime.now();
         } else if (SysCommonCodes.Contract.CANCELED.equals(newStatus)) {
             this.updatedAt = ZonedDateTime.now();

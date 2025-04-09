@@ -265,6 +265,8 @@ public class AuctionService {
 
         //cancel로 상태 변경
         auction.setAuctionStatus(SysCommonCodes.Auction.CANCELED);
+
+        auctionRepository.save(auction);
     }
 
     public PageResponseDTO<MyAuctionResponseDTO> getMyBidAuctions(Integer userId, Pageable pageable) {
@@ -327,6 +329,7 @@ public class AuctionService {
             Long curPrice = auction.getPrice()==null? auction.getMinimumBid(): auction.getPrice();
 
             return AuctionDetailResponseDTO.builder()
+                    .tokenId(auction.getTokenId())
                     .auctionId(auction.getAuctionId())
                     .price(curPrice)  //현재 가격
                     .ir(ir)

@@ -265,6 +265,8 @@ public class AuctionService {
 
         //cancel로 상태 변경
         auction.setAuctionStatus(SysCommonCodes.Auction.CANCELED);
+
+        auctionRepository.save(auction);
     }
 
     public PageResponseDTO<MyAuctionResponseDTO> getMyBidAuctions(Integer userId, Pageable pageable) {

@@ -1,5 +1,6 @@
 package com.rabbit.blockchain.repository;
 
+import java.math.BigInteger;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +24,7 @@ public interface RepaymentScheduleRepository extends JpaRepository<RepaymentSche
      * @param tokenId 토큰 ID
      * @return 상환 일정
      */
-    Optional<RepaymentSchedule> findByTokenIdAndActiveFlagTrue(Long tokenId);
+    Optional<RepaymentSchedule> findByTokenIdAndActiveFlagTrue(BigInteger tokenId);
 
     /**
      * 활성화된 연체 상태인 상환 일정 목록 조회

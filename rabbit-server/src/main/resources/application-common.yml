@@ -33,10 +33,12 @@ server:
     # 클라이언트 IP와 프로토콜 정보를 가져올 헤더 지정
 
 spring:
+  transaction:
+    default-timeout: 60  # 기본 트랜잭션 타임아웃 (초)
   application:
     name: ${APPLICATION_NAME:rabbit}
   datasource:
-#    hikari:
+    hikari:
 #      auto-commit: true
 ##      connection-init-sql: SELECT 1
 #      connection-timeout: 5000
@@ -45,6 +47,8 @@ spring:
 #      maximum-pool-size: 50
 #      minimum-idle: 50
 #      validation-timeout: 5000
+      # 쿼리 타임아웃 설정 추가
+      query-timeout: 30               # SQL 쿼리 타임아웃 (30초)
     mvc:
 #      static-path-pattern: /file/**
       path-match:
@@ -172,6 +176,9 @@ cors:
     - "http://localhost:8080"
     - "http://localhost:5173"
     - "http://127.0.0.1:5500"
+    - "https://duypim9pw3dt4.cloudfront.net"
+    - "https://nft-rabbit.site"
+    - "https://j12a604.p.ssafy.io"
 
 # 쿠키 설정
 cookie:

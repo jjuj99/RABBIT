@@ -11,7 +11,11 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { getBorrowDetailAPI, earlypayAPI } from "@/entities/loan/api/loanApi";
+import {
+  getBorrowDetailAPI,
+  earlypayAPI,
+  getloanEventAPI,
+} from "@/entities/loan/api/loanApi";
 import { useNavigate, useParams } from "react-router";
 import {
   Dialog,
@@ -36,6 +40,11 @@ const BorrowDetail = () => {
   const { data } = useSuspenseQuery({
     queryKey: ["borrowDetail", contractId],
     queryFn: () => getBorrowDetailAPI(contractId!),
+  });
+
+  const { data: eventData } = useSuspenseQuery({
+    queryKey: ["loanEvent", contractId],
+    queryFn: () => getloanEventAPI(contractId!),
   });
 
   const earlyRepaymentMutation = useMutation({
@@ -183,9 +192,9 @@ const BorrowDetail = () => {
       <h2 className="text-xl font-bold sm:text-2xl">이벤트 리스트</h2>
       <div className="w-full rounded-sm bg-gray-900">
         {isDesktop ? (
-          <NFTEventList data={data.data.eventList} />
+          <NFTEventList data={eventData.data} />
         ) : (
-          <NFTEventListMobile data={data.data.eventList} />
+          <NFTEventListMobile data={eventData.data} />
         )}
       </div>
       <Dialog

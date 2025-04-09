@@ -23,7 +23,7 @@ const ContractReceivedList = () => {
   const { data: contractList } = useGetContractList({
     type: "received",
   });
-  console.log(contractList);
+  console.log("contractList", contractList);
 
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     field: "createdAt",

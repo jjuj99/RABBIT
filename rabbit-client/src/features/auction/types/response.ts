@@ -10,6 +10,7 @@ export type AuctionListResponse = Pagination<PNInfoListResponse>;
 
 export interface PNInfoListResponse {
   //경매 정보..
+  tokenId: string;
   auctionId: number;
   price: number;
   endDate: string;
@@ -24,6 +25,7 @@ export interface PNInfoListResponse {
   earlypayFee: number; //
   creditScore: number; //
   defCnt: number; //
+  nftImageUrl: string; //
 }
 
 export interface BidListResponse {
@@ -56,6 +58,8 @@ export interface BidHistoryResponse {
   bidStatus: bidStatus;
   bidStatusName: bidStatusName;
   bidderNum: number;
+  tokenId: string;
+  nftImageUrl: string;
 }
 
 export interface AvailableAuctionsResponse {
@@ -72,6 +76,7 @@ export interface AvailableAuctionsResponse {
   earlypayFee: number; //중도 상환 수수료
   defCnt: number; //연체 횟수
   creditScore: number; //신용점수
+  nftImageUrl: string; //NFT 이미지 URL
 }
 
 export interface TargetAuction {

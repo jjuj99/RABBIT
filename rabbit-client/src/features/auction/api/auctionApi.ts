@@ -2,12 +2,14 @@ import fetchOption from "@/shared/utils/fetchOption";
 import { AuctionListRequest } from "../types/request";
 import {
   AuctionDetailResponse,
+  AuctionForceEndResponse,
   AuctionListResponse,
   AuctionSimilarListResponse,
   AvailableAuctionsResponse,
   BidHistoryResponse,
   BidListResponse,
   CreateAuctionResponse,
+  MyAuctionListResponse,
   PNInfoListResponse,
   SubmitAuctionBidResponse,
 } from "../types/response";
@@ -149,6 +151,30 @@ export const getAvailableAuctionsAPI = async (): Promise<
 > => {
   const res = await fetch(
     `${VITE_API_URL}/${VITE_API_VERSION}/loans/lent/available-auctions`,
+    fetchOption("GET"),
+  );
+  const data = await res.json();
+  return data;
+};
+
+export const AuctionForceEndAPI = async ({
+  auctionId,
+}: {
+  auctionId: number;
+}): Promise<ApiResponse<AuctionForceEndResponse>> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/${auctionId}/force-end`,
+    fetchOption("POST"),
+  );
+  const data = await res.json();
+  return data;
+};
+
+export const getMyAuctionListAPI = async (): Promise<
+  ApiResponse<MyAuctionListResponse>
+> => {
+  const res = await fetch(
+    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/my-auctions`,
     fetchOption("GET"),
   );
   const data = await res.json();

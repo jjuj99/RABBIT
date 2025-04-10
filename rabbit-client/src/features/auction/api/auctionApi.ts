@@ -20,7 +20,7 @@ const VITE_API_VERSION = import.meta.env.VITE_API_VERSION;
 
 export const getAuctionListAPI = async (
   params: AuctionListRequest,
-): Promise<ApiResponse<AuctionListResponse>> => {
+): Promise<AuctionListResponse> => {
   const queryParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
@@ -36,7 +36,10 @@ export const getAuctionListAPI = async (
   const queryString = queryParams.toString();
   const url = `${VITE_API_URL}/${VITE_API_VERSION}/auctions${queryString ? `?${queryString}` : ""}`;
   const res = await fetch(url, fetchOption("GET"));
-  const data = await res.json();
+  if (!res.ok) {
+    throw new Error("Failed to fetch auction list");
+  }
+  const { data } = await res.json();
   return data;
 };
 

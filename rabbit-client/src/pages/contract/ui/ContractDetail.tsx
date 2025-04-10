@@ -477,14 +477,6 @@ const ContractDetail = () => {
                   {contract.ir}%
                 </div>
               </div>
-              <div>
-                <label className="text-lg text-gray-400 md:text-xl">
-                  계약 시행일
-                </label>
-                <div className="rounded-sm bg-gray-600 px-3 py-2 text-base">
-                  {contract.contractDt}
-                </div>
-              </div>
             </div>
           </div>
 

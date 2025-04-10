@@ -1,5 +1,6 @@
 package com.rabbit.auction.domain.dto.response;
 
+import com.rabbit.global.code.domain.enums.SysCommonCodes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,4 +31,6 @@ public class AuctionDetailResponseDTO {
     private String creditScore;     // 신용점수
     private Integer defCnt;          // 연체 횟수
     private String nftImageUrl;
+    private SysCommonCodes.Auction auctionStatus;
+    private boolean mineFlag;
 }

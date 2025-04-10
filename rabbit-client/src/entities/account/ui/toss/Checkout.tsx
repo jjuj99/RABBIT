@@ -8,7 +8,7 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-const clientKey = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
+const clientKey = "test_ck_Z61JOxRQVE1ppq70QkBgVW0X9bAq";
 const customerKey = "P8XYv-vzw2JrHwWrEiuUB";
 
 const Checkout = ({

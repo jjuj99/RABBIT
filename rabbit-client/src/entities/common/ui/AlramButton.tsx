@@ -21,7 +21,11 @@ import {
 } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { useNavigate } from "react-router";
-import { ReadNotificationAPI } from "@/widget/common/api/NotificationAPI";
+import {
+  GetNotificationAPI,
+  ReadNotificationAPI,
+} from "@/widget/common/api/NotificationAPI";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 const AlarmButton = () => {
   const context = useContext(NotificationContext);
@@ -32,6 +36,10 @@ const AlarmButton = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
 
+  const { data: notificationData } = useSuspenseQuery({
+    queryKey: ["notification"],
+    queryFn: () => GetNotificationAPI(),
+  });
   const handleNotificationClick = (notification: NotificationResponse) => {
     setSelectedNotification(notification);
     setIsModalOpen(true);
@@ -67,7 +75,7 @@ const AlarmButton = () => {
     <>
       <Menubar className="border-none bg-transparent p-0">
         <MenubarMenu>
-          <MenubarTrigger className="border-gradient relative bg-transparent p-2">
+          <MenubarTrigger className="border-gradient relative h-9 w-9 bg-transparent p-2">
             <img src="/icons/bell.svg" alt="알림버튼" />
             {unreadCount > 0 && (
               <div className="absolute -top-1 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs text-white">
@@ -76,11 +84,11 @@ const AlarmButton = () => {
             )}
           </MenubarTrigger>
           <MenubarContent>
-            {notifications.length === 0 ? (
+            {notificationData?.data?.length === 0 ? (
               <MenubarItem disabled>새로운 알림이 없습니다.</MenubarItem>
             ) : (
               <ScrollArea className="h-[300px] w-full">
-                {notifications.map((notification, index) => (
+                {notificationData?.data?.map((notification, index) => (
                   <>
                     <MenubarItem
                       key={notification.notificationId}

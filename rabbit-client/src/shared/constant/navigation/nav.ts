@@ -1,14 +1,10 @@
 export const NAV_ITEMS = [
   {
     to: "/contract/new",
-    label: "차용증 작성",
+    label: "차용증",
     activeLabel: "contract",
   },
-  {
-    to: "/auction/list",
-    label: "차용증 경매",
-    activeLabel: "auction",
-  },
+
   {
     to: "/loan/borrow",
     label: "채권\u2022채무",
@@ -18,6 +14,11 @@ export const NAV_ITEMS = [
     to: "/account/charge",
     label: "입\u2022출금",
     activeLabel: "account",
+  },
+  {
+    to: "/auction/list",
+    label: "경매",
+    activeLabel: "auction",
   },
 ];
 

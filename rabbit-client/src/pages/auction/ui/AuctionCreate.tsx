@@ -32,6 +32,7 @@ const AuctionCreate = () => {
   const [step, setStep] = useState(1);
   const [endDateday, setEndDateday] = useState(0);
   const [endDatehour, setEndDatehour] = useState(0);
+  const [endDateminute, setEndDateminute] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -40,7 +41,6 @@ const AuctionCreate = () => {
     queryKey: ["availableAuctions"],
     queryFn: () => getAvailableAuctionsAPI(),
   });
-  console.log(new Date(Date.now() + 32400000 + 150000).toISOString());
 
   const handleDayChange = (value: number) => {
     if (value > 7) {
@@ -76,11 +76,39 @@ const AuctionCreate = () => {
     setError(null);
   };
 
+  const handleMinuteChange = (value: number) => {
+    if (value >= 60) {
+      const newHours = endDatehour + Math.floor(value / 60);
+      if (newHours >= 24) {
+        const newDays = endDateday + Math.floor(newHours / 24);
+        if (newDays > 7) {
+          setError("7일을 초과할 수 없습니다.");
+          return;
+        }
+        setEndDateday(newDays);
+        setEndDatehour(newHours % 24);
+      } else {
+        setEndDatehour(newHours);
+      }
+      setEndDateminute(value % 60);
+    } else {
+      const totalDays =
+        endDateday + Math.floor((endDatehour + Math.floor(value / 60)) / 24);
+      if (totalDays >= 7) {
+        setError("7일을 초과할 수 없습니다.");
+        return;
+      }
+      setEndDateminute(value);
+    }
+    setError(null);
+  };
+
   const calculateEndDate = () => {
     const now = new Date();
     const endDate = new Date(now);
     endDate.setDate(endDate.getDate() + endDateday);
     endDate.setHours(endDate.getHours() + endDatehour);
+    endDate.setMinutes(endDate.getMinutes() + endDateminute);
     return endDate;
   };
 
@@ -114,11 +142,15 @@ const AuctionCreate = () => {
     setStep(1);
     setEndDateday(0);
     setEndDatehour(0);
+    setEndDateminute(0);
     setError(null);
   };
 
   const handleSubmit = async () => {
-    // if (!selectedItem) return;
+    if (!selectedItem) {
+      setError("경매할 차용증을 선택해주세요.");
+      return;
+    }
     setIsLoading(true);
     try {
       if (!window.ethereum) {
@@ -151,9 +183,9 @@ const AuctionCreate = () => {
       );
 
       const response = await createAuctionAPI({
-        minimumBid: 100,
-        endDate: new Date(Date.now() + 150000).toISOString(),
-        tokenId: selectedItem?.tokenId ?? "",
+        minimumBid: startPrice,
+        endDate: calculateEndDate().toISOString(),
+        tokenId: selectedItem?.tokenId.toString() ?? "",
       });
 
       if (!response.data) {
@@ -255,6 +287,13 @@ const AuctionCreate = () => {
                 onChange={(e) => handleHourChange(Number(e.target.value))}
                 borderType="white"
               />
+              <UnitInput
+                type="number"
+                value={endDateminute}
+                unit="분"
+                onChange={(e) => handleMinuteChange(Number(e.target.value))}
+                borderType="white"
+              />
             </div>
             <div className="text-lg">
               {formatDisplayDate(calculateEndDate())}까지
@@ -271,7 +310,10 @@ const AuctionCreate = () => {
                 onClick={handleNext}
                 variant="primary"
                 className="w-[140px]"
-                disabled={!!error || (endDateday === 0 && endDatehour === 0)}
+                disabled={
+                  !!error ||
+                  (endDateday === 0 && endDatehour === 0 && endDateminute === 0)
+                }
               >
                 다음
               </Button>

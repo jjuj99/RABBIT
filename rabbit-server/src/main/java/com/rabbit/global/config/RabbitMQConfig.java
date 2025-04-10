@@ -22,6 +22,8 @@ public class RabbitMQConfig {
         Map<String, Object> args = new HashMap<>();
         args.put("x-dead-letter-exchange", DEAD_EXCHANGE);
         args.put("x-dead-letter-routing-key", ROUTING_KEY);
+        args.put("x-queue-type", "classic");
+
         return new Queue(DELAY_QUEUE, true, false, false, args);
     }
 

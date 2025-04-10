@@ -4,12 +4,15 @@ import { Sheet, SheetContent, SheetTrigger } from "@/shared/ui/sheet";
 import { useAuctionFilterStore } from "@/shared/lib/store/auctionFilterStore";
 import { getAuctionListAPI } from "@/features/auction/api/auctionApi";
 import { AuctionListRequest } from "@/features/auction/types/request";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/shared/ui/button";
 import { useNavigate } from "react-router";
+import { useEffect, useRef } from "react";
+import { cn } from "@/shared/lib/utils";
 
 const AuctionList = () => {
   const queryClient = useQueryClient();
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const minPrice = useAuctionFilterStore((state) => state.minPrice);
   const maxPrice = useAuctionFilterStore((state) => state.maxPrice);
@@ -22,7 +25,12 @@ const AuctionList = () => {
   const matEnd = useAuctionFilterStore((state) => state.matEnd);
   const navigate = useNavigate();
 
-  const { data: auctionData, isLoading } = useQuery({
+  const {
+    data: auctionData,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery({
     queryKey: [
       "auctionList",
       {
@@ -37,9 +45,10 @@ const AuctionList = () => {
         matEnd,
       },
     ],
-    queryFn: () => {
+    queryFn: ({ pageParam }) => {
       const params: AuctionListRequest = {};
-
+      params.pageSize = 4;
+      params.pageNumber = pageParam;
       if (minPrice) params.minPrice = Number(minPrice);
       if (maxPrice) params.maxPrice = Number(maxPrice);
       if (maxIr) params.maxIr = Number(maxIr);
@@ -52,7 +61,39 @@ const AuctionList = () => {
 
       return getAuctionListAPI(params);
     },
+    getNextPageParam: (lastPage) => {
+      if (lastPage && lastPage.hasNext) {
+        return lastPage.pageNumber + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 0,
   });
+  console.log("auctionData", auctionData);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          console.log("hasNextPage", hasNextPage);
+
+          console.log("fetchNextPage");
+          fetchNextPage();
+        }
+      },
+      { threshold: 1.0 },
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (loadMoreRef.current) {
+        observer.unobserve(loadMoreRef.current);
+      }
+    };
+  }, [fetchNextPage, hasNextPage]);
 
   const handleFilterChange = () => {
     queryClient.invalidateQueries({ queryKey: ["auctionList"] });
@@ -99,17 +140,23 @@ const AuctionList = () => {
         <div className="flex w-full items-center justify-center xl:items-start xl:justify-start">
           <ul className="grid gap-10 lg:grid-cols-2 xl:grid-cols-3">
             {isLoading ? (
-              <li>로딩중...</li>
-            ) : !auctionData?.data?.content?.length ? (
-              <li>진행중인 경매가 없습니다.</li>
+              <div className="loader-sprite"></div>
+            ) : auctionData && auctionData.pages.length > 0 ? (
+              auctionData.pages.map((page) =>
+                page.content.map((item) => (
+                  <li key={item.auctionId}>
+                    <NFTCard item={item} />
+                  </li>
+                )),
+              )
             ) : (
-              auctionData.data.content.map((item) => (
-                <li key={item.auctionId}>
-                  <NFTCard item={item} />
-                </li>
-              ))
+              <li>진행중인 경매가 없습니다.</li>
             )}
           </ul>
+          <div
+            ref={loadMoreRef}
+            className={cn(isLoading ? "loader-sprite" : "h-10")}
+          ></div>
         </div>
       </section>
     </div>

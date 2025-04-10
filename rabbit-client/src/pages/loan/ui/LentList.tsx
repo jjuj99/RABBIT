@@ -36,7 +36,7 @@ const LentList = () => {
   if (!LentList?.data || LentList.data.content.length === 0) {
     return (
       <div className="w-full overflow-hidden rounded-lg bg-gray-900 p-4">
-        <div className="text-center text-base text-gray-400">
+        <div className="flex min-h-[300px] items-center justify-center text-center text-base text-gray-400">
           보유한 채권이 없습니다.
         </div>
       </div>
@@ -69,7 +69,7 @@ const LentList = () => {
           <span>판매하기</span>
         </Button>
       </div>
-      <div className="w-full overflow-hidden rounded-lg bg-gray-900">
+      <div className="w-full overflow-hidden rounded-lg">
         {isDesktop ? (
           <LentInfo data={LentList.data} onPageChange={setPage} />
         ) : (

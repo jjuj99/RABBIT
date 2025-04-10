@@ -9,7 +9,6 @@ import AuctionBidPanel from "@/entities/auction/ui/AuctionBidPanel";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router";
 import PNInfoList from "@/entities/auction/ui/PNInfoList";
-import CountdownTimer from "@/shared/ui/CountdownTimer";
 import useMediaQuery from "@/shared/hooks/useMediaQuery";
 import NFTEventListMobile from "@/entities/common/ui/NFTEventListMobile";
 import NFTEventList from "@/entities/common/ui/NFTEventList";
@@ -24,6 +23,7 @@ import {
 } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { BidUpdateEvent } from "@/entities/auction/types/NFTEventType";
+import AuctionCountdownTimer from "@/shared/ui/AuctionCountdownTimer";
 
 const AuctionDetail = () => {
   const { auctionId } = useParams<{ auctionId: string }>();
@@ -40,7 +40,7 @@ const AuctionDetail = () => {
     if (!auctionId) return;
 
     const eventSource = new EventSource(
-      `${VITE_API_URL}/${VITE_API_VERSION}/subscribe/auction?id=${auctionId}`,
+      `${VITE_API_URL}/${VITE_API_VERSION}/sse/subscribe/auction?id=${auctionId}`,
     );
 
     eventSource.onmessage = (event) => {
@@ -63,7 +63,7 @@ const AuctionDetail = () => {
     return () => {
       eventSource.close();
     };
-  }, [auctionId]);
+  });
 
   const {
     data: PNInfo,
@@ -104,6 +104,7 @@ const AuctionDetail = () => {
     refetchBidList();
     setIsDialogOpen(false);
   };
+  if (!auctionId) return;
 
   return (
     <>
@@ -147,7 +148,12 @@ const AuctionDetail = () => {
             <span className="font-medium sm:text-2xl">경매 종료까지</span>
             <span className="sm-font-bold w-[100px] text-2xl font-bold sm:text-4xl">
               {PNInfo?.data ? (
-                <CountdownTimer endDate={PNInfo.data.endDate} />
+                <AuctionCountdownTimer
+                  endDate={PNInfo.data.endDate}
+                  status={PNInfo.data.auctionStatus}
+                  mineFlag={PNInfo.data.mineFlag ?? false}
+                  auctionId={auctionId!}
+                />
               ) : (
                 <div className="loader-sprite" />
               )}

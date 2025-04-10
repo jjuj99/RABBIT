@@ -26,6 +26,8 @@ export interface PNInfoListResponse {
   creditScore: number; //
   defCnt: number; //
   nftImageUrl: string; //
+  auctionStatus: auctionStatus;
+  mineFlag?: boolean;
 }
 
 export interface BidListResponse {
@@ -98,4 +100,17 @@ export interface ComparisonAuction {
 export interface AuctionSimilarListResponse {
   targetAuction: TargetAuction;
   comparisonAuctions: ComparisonAuction[];
+}
+
+export interface AuctionForceEndResponse {
+  message: string;
+}
+
+export interface MyAuctionListResponse {
+  auctionId: number; // 경매 ID
+  price: number; // 경매 금액
+  endDate: string; // 경매 종료일
+  tokenId: string; // 토큰 ID
+  nftImageUrl: string; // NFT 이미지
+  auctionStatus: auctionStatus; // 경매 상태
 }

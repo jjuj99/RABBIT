@@ -19,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Pageable;
@@ -82,6 +83,15 @@ public class AuctionController {
         return ResponseEntity.ok(CustomApiResponse.success(result));
     }
 
+    @GetMapping("/my-auctions")
+    public ResponseEntity<CustomApiResponse<?>> myAuctions(Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+
+        List<AuctionMyListResponseDTO> result = auctionService.myAuctionList(Integer.parseInt(userId));
+
+        return ResponseEntity.ok(CustomApiResponse.success(result));
+    }
+
     @AuctionControllerSwagger.CancelAuctionApi
     @DeleteMapping("/{auctionId}")
     public ResponseEntity<CustomApiResponse<MessageResponse>> cancelAuction(
@@ -91,6 +101,14 @@ public class AuctionController {
         auctionService.cancelAuction(auctionId, Integer.valueOf(userId));
 
         return  ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("경매가 취소되었습니다.")));
+    }
+
+    @DeleteMapping("/internal/{auctionId}")
+    public ResponseEntity<CustomApiResponse<MessageResponse>> deleteAuction(@PathVariable("auctionId") Integer auctionId) {
+
+        auctionService.deleteAuction(auctionId);
+
+        return  ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("경매가 삭제되었습니다.")));
     }
 
     @AuctionControllerSwagger.GetMyBidAuctionsApi
@@ -108,9 +126,16 @@ public class AuctionController {
     @AuctionControllerSwagger.GetAuctionDetailApi
     @GetMapping("/{auctionId}/info")
     public ResponseEntity<CustomApiResponse<AuctionDetailResponseDTO>> getAuctionDetail(
-            @PathVariable("auctionId") Integer auctionId) {
+            @PathVariable("auctionId") Integer auctionId, Authentication authentication) {
+        Integer userId;
+        if (authentication == null) {
+            userId = null;
+        } else {
+            String id = (String) authentication.getPrincipal();
+            userId = Integer.valueOf(id);
+        }
 
-        AuctionDetailResponseDTO auctionDetailResponse = auctionService.getAuctionDetail(auctionId);
+        AuctionDetailResponseDTO auctionDetailResponse = auctionService.getAuctionDetail(auctionId, userId);
 
         return ResponseEntity.ok(CustomApiResponse.success(auctionDetailResponse));
     }

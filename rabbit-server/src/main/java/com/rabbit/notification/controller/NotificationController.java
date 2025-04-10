@@ -30,8 +30,8 @@ public class NotificationController {
 
     @NotificationControllerSwagger.ReadNotificationApi
     @PatchMapping("/{notificationId}/read")
-    public ResponseEntity<CustomApiResponse<?>> readNotification(@PathVariable Integer notificationId) {
-        String userId = "3";
+    public ResponseEntity<CustomApiResponse<?>> readNotification(@PathVariable Integer notificationId, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
 
         notificationService.readNotification(notificationId, Integer.parseInt(userId));
 

@@ -24,7 +24,9 @@ public class AuctionScheduler {
     private final ObjectMapper objectMapper;
 
     public void scheduleAuctionEnd(Integer auctionId, ZonedDateTime endDate) {
-        long delay = Duration.between(ZonedDateTime.now(), endDate).toMillis();
+        // endDate가 UTC라면 KST로 바꿔서 비교
+        ZonedDateTime adjustedEndDate = endDate; //<- 시간대 맞춰서
+        long delay = Duration.between(ZonedDateTime.now(), adjustedEndDate).toMillis();
 
         if (delay <= 0) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "경매 종료 시간이 현재보다 이전일 수 없습니다.");

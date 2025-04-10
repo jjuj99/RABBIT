@@ -34,6 +34,7 @@ import com.rabbit.notification.domain.dto.request.NotificationRequestDTO;
 import com.rabbit.notification.service.NotificationService;
 import com.rabbit.promissorynote.domain.entity.PromissoryNoteEntity;
 import com.rabbit.promissorynote.repository.PromissoryNoteRepository;
+import com.rabbit.promissorynote.service.PromissoryNoteBusinessService;
 import com.rabbit.sse.service.SseEventPublisher;
 import com.rabbit.user.domain.dto.response.ProfileInfoResponseDTO;
 import com.rabbit.user.domain.entity.User;
@@ -87,6 +88,7 @@ public class AuctionService {
 
     private final SysCommonCodeService sysCommonCodeService;
     private final RepaymentSchedulerService repaymentSchedulerService;
+    private final PromissoryNoteBusinessService promissoryNoteBusinessService;
 
     // 코드 타입 상수 정의
     private static final String AUCTION_STATUS = SysCommonCodes.Auction.values()[0].getCodeType();
@@ -241,6 +243,30 @@ public class AuctionService {
                 .build();
     }
 
+    public List<AuctionMyListResponseDTO> myAuctionList(Integer userId){
+        // userId가 동일한 경매만 필터링
+        List<Auction> auctions = auctionRepository.findAll()
+                .stream()
+                .filter(auction -> auction.getAssignor().getUserId().equals(userId))
+                .toList();
+
+        return auctions.stream()
+                .map(auction -> {
+                    String nftImageUrl = promissoryNoteRepository.findNftImageByTokenId(auction.getTokenId())
+                            .orElse(null);
+
+                    return AuctionMyListResponseDTO.builder()
+                            .auctionId(auction.getAuctionId())
+                            .price(auction.getPrice())
+                            .endDate(auction.getEndDate())
+                            .tokenId(auction.getTokenId())
+                            .nftImageUrl(nftImageUrl)
+                            .auctionStatus(auction.getAuctionStatus())
+                            .build();
+                })
+                .toList();
+    }
+
     public void cancelAuction(@Valid Integer auctionId, Integer userId) {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
@@ -267,6 +293,13 @@ public class AuctionService {
         auction.setAuctionStatus(SysCommonCodes.Auction.CANCELED);
 
         auctionRepository.save(auction);
+    }
+
+    public void deleteAuction(@Valid Integer auctionId) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
+
+        auctionRepository.delete(auction);
     }
 
     public PageResponseDTO<MyAuctionResponseDTO> getMyBidAuctions(Integer userId, Pageable pageable) {
@@ -299,17 +332,18 @@ public class AuctionService {
                 .build();
     }
 
-    public AuctionDetailResponseDTO getAuctionDetail(Integer auctionId) {
+    public AuctionDetailResponseDTO getAuctionDetail(Integer auctionId, Integer userId) {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
 
         User debtor = contractService.getDebtorByTokenId(auction.getTokenId());
-        String creditScore = bankService.getCreditScore(debtor.getUserId());
+//        String creditScore = bankService.getCreditScore(debtor.getUserId());
+        String creditScore = "B";
 
         //블록체인에서 직접 읽어온 값 추가 필요
         try {
             PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(auction.getTokenId());
-            RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(auction.getTokenId());
+            RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(auction.getTokenId());
 
             BigDecimal ir = new BigDecimal(promissoryMetadata.ir).divide(BigDecimal.valueOf(10000));
             BigDecimal dir = new BigDecimal(promissoryMetadata.dir).divide(BigDecimal.valueOf(10000));
@@ -328,6 +362,8 @@ public class AuctionService {
 
             Long curPrice = auction.getPrice()==null? auction.getMinimumBid(): auction.getPrice();
 
+            String pdfUrl = promissoryNoteBusinessService.getPromissoryNotePdfUriByTokenId(auction.getTokenId());
+
             return AuctionDetailResponseDTO.builder()
                     .tokenId(auction.getTokenId())
                     .auctionId(auction.getAuctionId())
@@ -341,10 +377,13 @@ public class AuctionService {
                     .earlypayFlag(promissoryMetadata.earlyPayFlag)
                     .earlypayFee(earlyPayFee)
                     .creditScore(creditScore)  //신용 점수
-                    .defCnt(repaymentInfo.defCnt.intValue())   //연체 횟수
+                    .defCnt(repaymentInfo.overdueInfo.defCnt.intValue())   //연체 횟수
                     .endDate(auction.getEndDate())
                     .createdAt(auction.getCreatedAt())
                     .nftImageUrl(promissoryMetadata.nftImage)
+                    .auctionStatus(auction.getAuctionStatus())
+                    .mineFlag(auction.getAssignor().getUserId().equals(userId))
+                    .pdfUrl(pdfUrl)
                     .build();
         } catch (Exception e) {
             log.error("[블록체인 오류] getPromissoryMetadata 실패", e);

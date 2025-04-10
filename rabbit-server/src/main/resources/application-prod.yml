@@ -43,6 +43,7 @@ cors:
 # 쿠키 설정
 cookie:
   secure: true
+  site: "None"
 
 # 운영 환경 로깅 설정
 logging:

@@ -112,7 +112,7 @@ public interface AuctionControllerSwagger {
             security = {@SecurityRequirement(name = "bearerAuth")},
             parameters = {
                     // 페이지네이션 파라미터
-                    @Parameter(name = "pageNo", description = "페이지 번호 (0부터 시작)", in = ParameterIn.QUERY, schema = @Schema(type = "integer", defaultValue = "0")),
+                    @Parameter(name = "pageNumber", description = "페이지 번호 (0부터 시작)", in = ParameterIn.QUERY, schema = @Schema(type = "integer", defaultValue = "0")),
                     @Parameter(name = "pageSize", description = "페이지당 항목 수", in = ParameterIn.QUERY, schema = @Schema(type = "integer", defaultValue = "10")),
                     @Parameter(name = "sortBy", description = "정렬 필드", in = ParameterIn.QUERY, schema = @Schema(type = "string", defaultValue = "price")),
                     @Parameter(name = "sortDirection", description = "정렬 방향 (ASC, DESC)", in = ParameterIn.QUERY, schema = @Schema(type = "string", defaultValue = "ASC")),
@@ -138,12 +138,12 @@ public interface AuctionControllerSwagger {
                                             @ExampleObject(
                                                     name = "성공 응답",
                                                     summary = "경매 목록 조회 성공",
-                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"content\": [\n      {\n        \"auctionId\": 1,\n        \"price\": 15000,\n        \"endDate\": \"2025-05-01T12:00:00\",\n        \"ir\": 5.5,\n        \"createdAt\": \"2025-03-22T10:00:00\",\n        \"repayType\": \"원리금 균등\",\n        \"totalAmount\": 1000000,\n        \"matDt\": \"2025-12-31T14:30:00\",\n        \"dir\": 1.05,\n   \"la\": 1000000000,\n   \"earlypayFlag\": true,\n      \"earlypayFee\": 1.03,\n        \"creditScore\": 800,\n        \"defCnt\": 0\n      }\n    ],\n    \"pageNo\": 0,\n    \"pageSize\": 10,\n    \"totalElements\": 1,\n    \"totalPages\": 1,\n    \"first\": true,\n    \"last\": true,\n    \"empty\": false\n  },\n  \"error\": null\n}"
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"content\": [\n      {\n        \"auctionId\": 1,\n        \"price\": 15000,\n        \"endDate\": \"2025-05-01T12:00:00\",\n        \"ir\": 5.5,\n        \"createdAt\": \"2025-03-22T10:00:00\",\n        \"repayType\": \"원리금 균등\",\n        \"totalAmount\": 1000000,\n        \"matDt\": \"2025-12-31T14:30:00\",\n        \"dir\": 1.05,\n   \"la\": 1000000000,\n   \"earlypayFlag\": true,\n      \"earlypayFee\": 1.03,\n        \"creditScore\": 800,\n        \"defCnt\": 0\n      }\n    ],\n    \"pageNumber\": 0,\n    \"pageSize\": 10,\n    \"totalElements\": 1,\n    \"totalPages\": 1,\n    \"first\": true,\n    \"last\": true,\n    \"empty\": false\n  },\n  \"error\": null\n}"
                                             ),
                                             @ExampleObject(
                                                     name = "빈 응답",
                                                     summary = "검색 결과 없음",
-                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"content\": [],\n    \"pageNo\": 0,\n    \"pageSize\": 10,\n    \"totalElements\": 0,\n    \"totalPages\": 0,\n    \"first\": true,\n    \"last\": true,\n    \"empty\": true\n  },\n  \"error\": null\n}"
+                                                    value = "{\n  \"status\": \"SUCCESS\",\n  \"data\": {\n    \"content\": [],\n    \"pageNumber\": 0,\n    \"pageSize\": 10,\n    \"totalElements\": 0,\n    \"totalPages\": 0,\n    \"first\": true,\n    \"last\": true,\n    \"empty\": true\n  },\n  \"error\": null\n}"
                                             )
                                     }
                             )
@@ -320,7 +320,7 @@ public interface AuctionControllerSwagger {
             description = "사용자가 입찰한 경매 목록을 페이징 기준에 따라 조회합니다.",
             security = {@SecurityRequirement(name = "bearerAuth")},
             parameters = {
-                    @Parameter(name = "pageNo", description = "페이지 번호 (0부터 시작)", in = ParameterIn.QUERY, schema = @Schema(type = "integer", defaultValue = "0")),
+                    @Parameter(name = "pageNumber", description = "페이지 번호 (0부터 시작)", in = ParameterIn.QUERY, schema = @Schema(type = "integer", defaultValue = "0")),
                     @Parameter(name = "pageSize", description = "페이지당 항목 수", in = ParameterIn.QUERY, schema = @Schema(type = "integer", defaultValue = "10"))
             },
             responses = {
@@ -348,7 +348,7 @@ public interface AuctionControllerSwagger {
                                                             "        \"bidderNum\": 5\n" +
                                                             "      }\n" +
                                                             "    ],\n" +
-                                                            "    \"pageNo\": 0,\n" +
+                                                            "    \"pageNumber\": 0,\n" +
                                                             "    \"pageSize\": 10,\n" +
                                                             "    \"totalElements\": 1,\n" +
                                                             "    \"totalPages\": 1,\n" +
@@ -366,7 +366,7 @@ public interface AuctionControllerSwagger {
                                                             "  \"status\": \"SUCCESS\",\n" +
                                                             "  \"data\": {\n" +
                                                             "    \"content\": [],\n" +
-                                                            "    \"pageNo\": 0,\n" +
+                                                            "    \"pageNumber\": 0,\n" +
                                                             "    \"pageSize\": 10,\n" +
                                                             "    \"totalElements\": 0,\n" +
                                                             "    \"totalPages\": 0,\n" +

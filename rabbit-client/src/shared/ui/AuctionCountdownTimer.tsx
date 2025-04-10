@@ -52,15 +52,15 @@ const AuctionCountdownTimer = ({
     navigate("/auction/list");
   };
 
-  if (status === "ING") {
+  if (status === "ING" && new Date(endDate) < new Date()) {
     if (mineFlag) {
       return (
         <>
           <button
             onClick={handleButtonClick}
-            className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+            className="bg-brand-primary h-fit w-fit rounded px-4 py-2 text-lg whitespace-nowrap text-black hover:bg-green-500"
           >
-            {time}
+            경매 종료
           </button>
           <Dialog open={showDialog} onOpenChange={setShowDialog}>
             <DialogContent>
@@ -78,6 +78,8 @@ const AuctionCountdownTimer = ({
         </>
       );
     }
+    return <span>경매 종료됨</span>;
+  } else if (status === "ING") {
     return <span>{time}</span>;
   }
 

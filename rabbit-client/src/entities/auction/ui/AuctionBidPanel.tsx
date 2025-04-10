@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
+import LoadingOverlay from "@/widget/common/ui/LoadingOverray";
 
 interface AuctionBidPanelProps {
   CBP?: number;
@@ -24,6 +25,7 @@ const AuctionBidPanel = ({ CBP = 0 }: AuctionBidPanelProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
   const [dialogType, setDialogType] = useState<"success" | "error">("success");
+  const [isBidding, setIsBidding] = useState(false);
 
   // 금액 단위 (예: 1만 = 10,000)
   const increments = {
@@ -43,6 +45,7 @@ const AuctionBidPanel = ({ CBP = 0 }: AuctionBidPanelProps) => {
     }
 
     try {
+      setIsBidding(true);
       const response = await SubmitAuctionBidAPI(Number(auctionId), bidPrice);
       if (response.status === "ERROR") {
         setDialogMessage(response.error?.message || "입찰에 실패했습니다.");
@@ -57,11 +60,14 @@ const AuctionBidPanel = ({ CBP = 0 }: AuctionBidPanelProps) => {
       setDialogMessage("입찰 중 오류가 발생했습니다.");
       setDialogType("error");
       setIsDialogOpen(true);
+    } finally {
+      setIsBidding(false);
     }
   };
 
   return (
     <>
+      <LoadingOverlay isLoading={isBidding} content="입찰 처리 중..." />
       <div className="bg-radial-lg flex h-fit w-full flex-col gap-1 rounded-sm border border-white px-4 py-4 sm:gap-3 sm:px-8 sm:py-6">
         <div className="flex flex-col gap-0 sm:gap-2">
           <h2 className="text-sm font-medium sm:text-xl">현재 입찰가</h2>

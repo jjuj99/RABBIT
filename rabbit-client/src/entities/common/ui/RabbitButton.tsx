@@ -34,13 +34,6 @@ const RabbitButton = () => {
           </div>
           <Separator />
           <div className="py-2">
-            <MenubarItem className="">
-              <span>메뉴</span>
-            </MenubarItem>
-            <Separator />
-            <MenubarItem className="">
-              <span>메뉴2</span>
-            </MenubarItem>
             <Separator />
             <MenubarItem className="">
               <RAB isColored={false} size="sm" amount={balance} />

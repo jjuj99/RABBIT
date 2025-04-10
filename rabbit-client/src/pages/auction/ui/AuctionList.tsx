@@ -99,7 +99,7 @@ const AuctionList = () => {
         <div className="flex w-full items-center justify-center xl:items-start xl:justify-start">
           <ul className="grid gap-10 lg:grid-cols-2 xl:grid-cols-3">
             {isLoading ? (
-              <li>로딩중...</li>
+              <div className="loader-sprite"></div>
             ) : !auctionData?.data?.content?.length ? (
               <li>진행중인 경매가 없습니다.</li>
             ) : (

@@ -1,6 +1,7 @@
 import { PNInfoListResponse } from "@/features/auction/types/response";
 import { cn } from "@/shared/lib/utils";
 import CountdownTimer from "@/shared/ui/CountdownTimer";
+import { useState } from "react";
 import { Link } from "react-router";
 
 type NFTCardProps = {
@@ -8,18 +9,29 @@ type NFTCardProps = {
 };
 
 export const NFTCard = ({ item }: NFTCardProps) => {
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   return (
     <Link
       to={`/auction/${item.auctionId}`}
-      className="group bg-black-glass border-white-glass shadow-glow flex h-fit w-[326px] flex-col items-center gap-3 rounded-lg border px-3 pt-4 pb-7 md:w-[300px] 2xl:w-[326px]"
+      className="group bg-black-glass border-white-glass shadow-glow z-10 flex h-fit w-[326px] flex-col items-center gap-3 rounded-lg border px-3 pt-4 pb-7 md:w-[300px] 2xl:w-[326px]"
     >
       <div className="relative h-full w-full rounded-sm">
-        <NFTCardInfo item={item} />
-        <img
-          src={item.nftImageUrl}
-          alt="NTF"
-          className="opacity-100 transition-opacity duration-300 ease-in-out group-hover:opacity-0"
-        />
+        <NFTCardInfo item={item} className="z-10 bg-gray-900" />
+        <div className="relative h-[300px] w-full overflow-hidden rounded-sm">
+          {!isImageLoaded && (
+            <div className="absolute inset-0 animate-pulse bg-gray-700" />
+          )}
+          <img
+            loading="lazy"
+            onLoad={() => setIsImageLoaded(true)}
+            src={item.nftImageUrl}
+            alt="NTF"
+            className={cn(
+              "h-full w-full object-cover transition-opacity duration-500",
+              isImageLoaded ? "opacity-100" : "opacity-0",
+            )}
+          />
+        </div>
       </div>
 
       <span className="flex w-full justify-center gap-2 text-[18px]">

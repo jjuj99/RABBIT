@@ -82,6 +82,15 @@ public class AuctionController {
         return ResponseEntity.ok(CustomApiResponse.success(result));
     }
 
+    @GetMapping("/my-auctions")
+    public ResponseEntity<CustomApiResponse<?>> myAuctions(Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+
+        List<AuctionMyListResponseDTO> result = auctionService.myAuctionList(Integer.parseInt(userId));
+
+        return ResponseEntity.ok(CustomApiResponse.success(result));
+    }
+
     @AuctionControllerSwagger.CancelAuctionApi
     @DeleteMapping("/{auctionId}")
     public ResponseEntity<CustomApiResponse<MessageResponse>> cancelAuction(
@@ -108,9 +117,10 @@ public class AuctionController {
     @AuctionControllerSwagger.GetAuctionDetailApi
     @GetMapping("/{auctionId}/info")
     public ResponseEntity<CustomApiResponse<AuctionDetailResponseDTO>> getAuctionDetail(
-            @PathVariable("auctionId") Integer auctionId) {
+            @PathVariable("auctionId") Integer auctionId, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
 
-        AuctionDetailResponseDTO auctionDetailResponse = auctionService.getAuctionDetail(auctionId);
+        AuctionDetailResponseDTO auctionDetailResponse = auctionService.getAuctionDetail(auctionId, Integer.parseInt(userId));
 
         return ResponseEntity.ok(CustomApiResponse.success(auctionDetailResponse));
     }

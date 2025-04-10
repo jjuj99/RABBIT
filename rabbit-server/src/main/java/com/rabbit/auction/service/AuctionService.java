@@ -241,6 +241,30 @@ public class AuctionService {
                 .build();
     }
 
+    public List<AuctionMyListResponseDTO> myAuctionList(Integer userId){
+        // userId가 동일한 경매만 필터링
+        List<Auction> auctions = auctionRepository.findAll()
+                .stream()
+                .filter(auction -> auction.getAssignor().getUserId().equals(userId))
+                .toList();
+
+        return auctions.stream()
+                .map(auction -> {
+                    String nftImageUrl = promissoryNoteRepository.findNftImageByTokenId(auction.getTokenId())
+                            .orElse(null);
+
+                    return AuctionMyListResponseDTO.builder()
+                            .auctionId(auction.getAuctionId())
+                            .price(auction.getPrice())
+                            .endDate(auction.getEndDate())
+                            .tokenId(auction.getTokenId())
+                            .nftImageUrl(nftImageUrl)
+                            .auctionStatus(auction.getAuctionStatus())
+                            .build();
+                })
+                .toList();
+    }
+
     public void cancelAuction(@Valid Integer auctionId, Integer userId) {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
@@ -299,7 +323,7 @@ public class AuctionService {
                 .build();
     }
 
-    public AuctionDetailResponseDTO getAuctionDetail(Integer auctionId) {
+    public AuctionDetailResponseDTO getAuctionDetail(Integer auctionId, Integer userId) {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
 
@@ -345,6 +369,8 @@ public class AuctionService {
                     .endDate(auction.getEndDate())
                     .createdAt(auction.getCreatedAt())
                     .nftImageUrl(promissoryMetadata.nftImage)
+                    .auctionStatus(auction.getAuctionStatus())
+                    .mineFlag(auction.getAssignor().getUserId() == userId)
                     .build();
         } catch (Exception e) {
             log.error("[블록체인 오류] getPromissoryMetadata 실패", e);

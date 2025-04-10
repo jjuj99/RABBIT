@@ -47,6 +47,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Pageable;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -400,6 +401,22 @@ public class AuctionService {
         if (bids.isEmpty()) {   //낙찰자가 없는 경우
             auction.setAuctionStatus(SysCommonCodes.Auction.FAILED);
 
+            try {
+                // 경매 컨트랙트의 cancelAuction으로 경매 취소
+                TransactionReceipt receipt = promissoryNoteAuctionService.cancelAuction(auction.getTokenId());
+
+                // 트랜잭션 성공 여부 확인
+                boolean isSuccess = "0x1".equals(receipt.getStatus());
+                if (isSuccess) {
+                    log.info("경매 취소 성공");
+                } else {
+                    log.error("경매 취소 실패. 트랜잭션 상태: {}", receipt.getStatus());
+                }
+            } catch (Exception e) {
+                log.error("경매 취소 블록체인 오류: {}", e.getMessage(), e);
+                throw new BusinessException(ErrorCode.BLOCKCHAIN_AUCTION_CANCEL_FAIL, "블록체인에서 경매 취소에 실패했습니다.");
+            }
+
             //양도자에게 알림
             notificationService.createNotification(
                     NotificationRequestDTO.builder()
@@ -409,7 +426,8 @@ public class AuctionService {
                             .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
                             .build()
             );
-        } else {
+        }
+        else {
             Bid winningBid = bids.get(0);   //최고가
             auction.updatePriceAndBidder(winningBid.getBidAmount(), winningBid.getUserId());
             auction.setAuctionStatus(SysCommonCodes.Auction.COMPLETED);
@@ -419,52 +437,57 @@ public class AuctionService {
             ProfileInfoResponseDTO grantee = userService.getProfileInfo(winningBid.getUserId());
 
             // 상환 정보 조회 (연체 횟수, 남은 원금)
+            RepaymentInfo repaymentInfo;
             try {
-                RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(auction.getTokenId());
+                repaymentInfo = repaymentSchedulerService.getRepaymentInfo(auction.getTokenId());
+            } catch (Exception e) {
+                log.error("상환정보 조회 오류: {}", e.getMessage(), e);
+                throw new BusinessException(ErrorCode.BLOCKCHAIN_REPAYMENT_FAIL, "블록체인에서 상환 조회에 실패했습니다.");
+            }
 
-                // 채무자 정보 가져오기
-                User debtor = contractService.getDebtorByTokenId(auction.getTokenId());
-                MetamaskWallet debtorWallet = userService.getWalletByUserIdAndPrimaryFlagTrue(debtor.getUserId());
+            // 채무자 정보 가져오기
+            User debtor = contractService.getDebtorByTokenId(auction.getTokenId());
+            MetamaskWallet debtorWallet = userService.getWalletByUserIdAndPrimaryFlagTrue(debtor.getUserId());
 
-                // pdf 만들기
-                byte[] transferPdfBytes = auctionTransferPdfService.generateTransferAgreementPdf(
+            // pdf 만들기
+            byte[] transferPdfBytes = auctionTransferPdfService.generateTransferAgreementPdf(
+                    grantor.getUserName(),
+                    grantor.getWalletAddress(),
+                    grantee.getUserName(),
+                    grantee.getWalletAddress(),
+                    debtor.getUserName(),
+                    debtorWallet.getWalletAddress(),
+                    new BigDecimal(repaymentInfo.remainingPrincipal),
+                    LocalDate.now()
+            );
+
+            // pdf pinata에 업로드하기
+            String pdfFileName = "양도양수계약서_" + auction.getAuctionId() + ".pdf";
+            String pdfUrl = pinataUploader.uploadContent(transferPdfBytes, pdfFileName, "application/pdf");
+
+            auction.setContractIpfsUrl(pdfUrl);
+
+            // 해시값 구하기
+            String grantorHash = IntegrityHashUtil.generateIntegrityHash(grantor.getUserName(), grantor.getEmail(), grantor.getWalletAddress());
+            String granteeHash = IntegrityHashUtil.generateIntegrityHash(grantee.getUserName(), grantee.getEmail(), grantee.getWalletAddress());
+
+            // 부속 nft 발행
+            try {
+                // 메타데이터 생성
+                PromissoryNoteAuction.AppendixMetadata metadata = new PromissoryNoteAuction.AppendixMetadata(
+                        auction.getTokenId(),
+                        auction.getSellerSign(),
                         grantor.getUserName(),
-                        grantor.getWalletAddress(),
+                        grantor.getUserName(),
+                        grantorHash,
+                        winningBid.getBidderSign(),
                         grantee.getUserName(),
                         grantee.getWalletAddress(),
-                        debtor.getUserName(),
-                        debtorWallet.getWalletAddress(),
-                        new BigDecimal(repaymentInfo.remainingPrincipal),
-                        LocalDate.now()
+                        granteeHash,
+                        repaymentInfo.remainingPrincipal,
+                        ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                        pdfUrl
                 );
-
-                // pdf pinata에 업로드하기
-                String pdfFileName = "양도양수계약서_" + auction.getAuctionId() + ".pdf";
-                String pdfUrl = pinataUploader.uploadContent(transferPdfBytes, pdfFileName, "application/pdf");
-
-                auction.setContractIpfsUrl(pdfUrl);
-
-                // 해시값 구하기
-                String grantorHash = IntegrityHashUtil.generateIntegrityHash(grantor.getUserName(), grantor.getEmail(), grantor.getWalletAddress());
-                String granteeHash = IntegrityHashUtil.generateIntegrityHash(grantee.getUserName(), grantee.getEmail(), grantee.getWalletAddress());
-
-                AppendixMetadataDTO dto = AppendixMetadataDTO.builder()
-                        .tokenId(auction.getTokenId())
-                        .grantorSign(auction.getSellerSign())
-                        .grantorName(grantor.getUserName())
-                        .grantorWalletAddress(grantor.getWalletAddress())
-                        .grantorInfoHash(grantorHash)
-                        .granteeSign(winningBid.getBidderSign())
-                        .granteeName(grantee.getUserName())
-                        .granteeWalletAddress(grantee.getWalletAddress())
-                        .granteeInfoHash(granteeHash)
-                        .la(repaymentInfo.remainingPrincipal)
-                        .contractDate(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                        .originalText(pdfUrl)
-                        .build();
-
-                // 부속 nft 발행
-                PromissoryNoteAuction.AppendixMetadata metadata = AppendixMetadataMapper.toWeb3(dto);
 
                 MetamaskWallet currentBidderWallet = userService.getWalletByUserIdAndPrimaryFlagTrue(winningBid.getUserId());
 
@@ -474,68 +497,67 @@ public class AuctionService {
                         BigInteger.valueOf(winningBid.getBidAmount()),
                         metadata
                 );
-
-                // 낙찰자에게 성공 알림
-                notificationService.createNotification(
-                        NotificationRequestDTO.builder()
-                                .userId(winningBid.getUserId())
-                                .type(SysCommonCodes.NotificationType.AUCTION_SUCCESS)
-                                .relatedId(auctionId)
-                                .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
-                                .build()
-                );
-
-                User winner = userService.findById(winningBid.getUserId());
-                extendedMailService.sendAuctionContractToAssignee(
-                        winner.getEmail(),
-                        winner.getUserName(),
-                        auction.getTokenId(),
-                        transferPdfBytes
-                );
-
-                // 양도자에게 전송 예정 알림
-                notificationService.createNotification(
-                        NotificationRequestDTO.builder()
-                                .userId(auction.getAssignor().getUserId())
-                                .type(SysCommonCodes.NotificationType.AUCTION_TRANSFERRED)
-                                .relatedId(auctionId)
-                                .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
-                                .build()
-                );
-
-                User seller = userService.findById(auction.getAssignor().getUserId());
-                extendedMailService.sendAuctionContractToAssignor(
-                        seller.getEmail(),
-                        seller.getUserName(),
-                        auction.getTokenId(),
-                        transferPdfBytes
-                );
-
-                // 채무자에게 알림 메일 전송
-                byte[] noticePdfBytes = auctionTransferNoticePdfService.generateTransferNoticePdf(
-                        grantor.getUserName(),               // 양도인
-                        grantor.getWalletAddress(),
-                        grantee.getUserName(),               // 양수인
-                        grantee.getWalletAddress(),
-                        debtor.getUserName(),                // 제3채무자
-                        debtorWallet.getWalletAddress(),
-                        new BigDecimal(repaymentInfo.remainingPrincipal), // 채권 금액
-                        LocalDate.now()                      // 통지일자
-                );
-
-                extendedMailService.sendAuctionTransferNoticeEmail(
-                        debtor.getEmail(),
-                        debtor.getUserName(),
-                        grantee.getUserName(),
-                        noticePdfBytes,
-                        transferPdfBytes,
-                        auction.getAuctionId()
-                );
-
             } catch (Exception e) {
                 log.error("스마트컨트랙트 finalizeAuction 실패", e);
-                throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR);
+                throw new BusinessException(ErrorCode.BLOCKCHAIN_AUCTION_END_FAIL, "블록체인에서 경매 종료를 실패했습니다");
             }
+
+            // 낙찰자에게 성공 알림
+            notificationService.createNotification(
+                    NotificationRequestDTO.builder()
+                            .userId(winningBid.getUserId())
+                            .type(SysCommonCodes.NotificationType.AUCTION_SUCCESS)
+                            .relatedId(auctionId)
+                            .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
+                            .build()
+            );
+
+            User winner = userService.findById(winningBid.getUserId());
+            extendedMailService.sendAuctionContractToAssignee(
+                    winner.getEmail(),
+                    winner.getUserName(),
+                    auction.getTokenId(),
+                    transferPdfBytes
+            );
+
+            // 양도자에게 전송 예정 알림
+            notificationService.createNotification(
+                    NotificationRequestDTO.builder()
+                            .userId(auction.getAssignor().getUserId())
+                            .type(SysCommonCodes.NotificationType.AUCTION_TRANSFERRED)
+                            .relatedId(auctionId)
+                            .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
+                            .build()
+            );
+
+            User seller = userService.findById(auction.getAssignor().getUserId());
+            extendedMailService.sendAuctionContractToAssignor(
+                    seller.getEmail(),
+                    seller.getUserName(),
+                    auction.getTokenId(),
+                    transferPdfBytes
+            );
+
+            // 채무자에게 알림 메일 전송
+            byte[] noticePdfBytes = auctionTransferNoticePdfService.generateTransferNoticePdf(
+                    grantor.getUserName(),               // 양도인
+                    grantor.getWalletAddress(),
+                    grantee.getUserName(),               // 양수인
+                    grantee.getWalletAddress(),
+                    debtor.getUserName(),                // 제3채무자
+                    debtorWallet.getWalletAddress(),
+                    new BigDecimal(repaymentInfo.remainingPrincipal), // 채권 금액
+                    LocalDate.now()                      // 통지일자
+            );
+
+            extendedMailService.sendAuctionTransferNoticeEmail(
+                    debtor.getEmail(),
+                    debtor.getUserName(),
+                    grantee.getUserName(),
+                    noticePdfBytes,
+                    transferPdfBytes,
+                    auction.getAuctionId()
+            );
         }
 
         auctionRepository.save(auction);

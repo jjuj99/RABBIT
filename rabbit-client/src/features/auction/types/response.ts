@@ -26,6 +26,7 @@ export interface PNInfoListResponse {
   creditScore: number; //
   defCnt: number; //
   nftImageUrl: string; //
+  pdfUrl: string;
   auctionStatus: auctionStatus;
   mineFlag?: boolean;
 }

@@ -63,7 +63,7 @@ const AuctionDetail = () => {
     return () => {
       eventSource.close();
     };
-  });
+  }, [auctionId]);
 
   const {
     data: PNInfo,
@@ -74,7 +74,13 @@ const AuctionDetail = () => {
     queryKey: ["PNInfoList", auctionId],
     queryFn: () => getPNInfoListAPI(Number(auctionId)),
   });
-
+  console.log(PNInfo);
+  const [currentBidPrice, setCurrentBidPrice] = useState<number>(0);
+  useEffect(() => {
+    if (PNInfo?.data?.price) {
+      setCurrentBidPrice(PNInfo.data.price);
+    }
+  }, [PNInfo]);
   const {
     data: bidList,
     isLoading: bidListLoading,
@@ -109,9 +115,27 @@ const AuctionDetail = () => {
   return (
     <>
       <section className="flex h-full flex-col gap-4">
-        <h2 className="font-bit h-fit w-full flex-col gap-4 rounded-xl bg-gray-900 px-4 py-4 text-xl sm:text-3xl">
-          {"RABBIT #" + PNInfo?.data?.tokenId}
-        </h2>
+        <div className="flex items-center rounded-xl bg-gray-900 p-4">
+          <h2 className="font-bit h-fit w-full flex-col gap-4 text-xl sm:text-3xl">
+            {"RABBIT #" + PNInfo?.data?.tokenId}
+          </h2>
+          <Button
+            variant="gradient"
+            size="sm"
+            onClick={() => {
+              if (PNInfo?.data?.pdfUrl) {
+                window.open(
+                  PNInfo.data.pdfUrl,
+                  "_blank",
+                  "noopener,noreferrer",
+                );
+              }
+            }}
+          >
+            계약서 보기
+          </Button>
+        </div>
+
         <div className="flex w-full flex-col gap-8">
           <div className="flex h-fit w-full flex-col items-center gap-6 lg:flex-row">
             {/* 왼쪽 영역 */}
@@ -130,7 +154,7 @@ const AuctionDetail = () => {
               ) : PNInfoError ? (
                 <div>PN 정보 로드 중 에러가 발생했습니다.</div>
               ) : (
-                <AuctionBidPanel CBP={PNInfo?.data?.price} />
+                <AuctionBidPanel CBP={currentBidPrice} />
               )}
 
               {/* 입찰 목록: 에러와 로딩 별도 처리 */}

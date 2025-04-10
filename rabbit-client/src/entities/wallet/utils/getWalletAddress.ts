@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import type { EIP1193Provider } from "@/vite-env";
 
 type WalletAddressResult = {
@@ -15,13 +16,21 @@ const getWalletAddress = async ({
       return { address: null, error: "PROVIDER_NOT_FOUND" };
     }
 
-    const accounts = (await provider.request({
-      method: "eth_accounts", // eth_requestAccounts 대신 eth_accounts 사용
-    })) as string[];
+    // 최신 ethers.js API 사용
+    const ethersProvider = new ethers.BrowserProvider(provider);
+    const signer = await ethersProvider.getSigner();
 
-    return { address: accounts[0] || null };
-  } catch {
+    // 지갑 연결 요청
+    const accounts = await signer.getAddress();
+
+    return { address: accounts || null };
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === 4001) {
+      // 사용자가 요청을 거부한 경우
+      return { address: null, error: "USER_REJECTED" };
+    }
     return { address: null, error: "CONNECTION_ERROR" };
   }
 };
+
 export default getWalletAddress;

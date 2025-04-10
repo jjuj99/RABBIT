@@ -136,109 +136,73 @@ public class AuctionService {
     public PageResponseDTO<AuctionResponseDTO> searchAuctions(AuctionFilterRequestDTO request, Pageable pageable) {
         log.info("[AuctionService] 가격 조건 요청: minPrice={}, maxPrice={}", request.getMinPrice(), request.getMaxPrice());
 
-        Page<AuctionResponseDTO> result = auctionRepository.searchAuctions(request, pageable);
-
-        //블록체인 읽어와 다른 조건 필터링 구현 필요
+        // LEFT JOIN을 사용하여 기본 데이터 조회
+        Page<AuctionResponseDTO> result = auctionRepository.searchAuctionsWithLeftJoin(request, pageable);
+        
+        // 추가 데이터 설정 및 필터링
         List<AuctionResponseDTO> fullList = result.getContent().stream()
                 .map(dto -> {
                     try {
                         log.info("[Auction] 경매 목록을 위한 정보 호출 auctionId={}, tokenId={}", dto.getAuctionId(), dto.getTokenId());
 
-                        // 블록체인 메타데이터 조회
-                        PromissoryNote.PromissoryMetadata metadata = promissoryNoteService.getPromissoryMetadata(dto.getTokenId());
+                        // tokenId가 null인 경우 처리 (LEFT JOIN으로 인해 가능한 상황)
+                        if (dto.getTokenId() == null) {
+                            log.warn("[Auction] 해당 경매에 tokenId가 없습니다: auctionId={}" + dto.getAuctionId());
+                            return null;
+                        }
 
                         // 상환 정보 조회 (연체 횟수, 남은 원금)
                         RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(dto.getTokenId());
 
-                        // 채무자 조회 및 신용 점수 조회
-                        User debtor = contractService.getDebtorByTokenId(dto.getTokenId());
-                        String creditScore = bankService.getCreditScore(debtor.getUserId());
+                        // 채무자 wallet 주소를 활용하여 신용 점수 조회
+                        String creditScore = "B"; //bankService.getCreditScoreByWalletAddress(dto.getDrWallet());
 
-                        ZonedDateTime matDt = DateTimeUtils.toZonedDateTimeAtEndOfDay(metadata.matDt);
+                        // 필요한 추가 정보 설정
+                        dto.setCreditScore(creditScore);
+                        dto.setDefCnt(repaymentInfo.overdueInfo.defCnt.intValue());
+                        dto.setLa(repaymentInfo.remainingPrincipal.longValue());
+
+                        // 이자율 변환 처리 - Integer를 BigDecimal로 변환
+                        if (dto.getInterestRate() != null) {
+                            try {
+                                // Integer 타입의 interestRate를 BigDecimal로 변환 후 10000으로 나누기
+                                BigDecimal ir = new BigDecimal(dto.getInterestRate()).divide(new BigDecimal("10000"));
+                                dto.setIr(ir); // ir 필드에 저장
+                            } catch (Exception e) {
+                                log.warn("[Auction] 이자율 변환 오류: {}, 오류 내용: {}", dto.getInterestRate(), e.getMessage());
+                                return null;
+                            }
+                        } else {
+                            log.warn("[Auction] 이자율 정보가 없습니다: auctionId={}", dto.getAuctionId());
+                            return null;
+                        }
 
                         // 만기 수취액 계산
-                        BigDecimal ir = new BigDecimal(metadata.ir).divide(BigDecimal.valueOf(10000));
-
-                        // 만기수취액 계산
                         BigDecimal totalAmount = loanUtil.calculateTotalRepaymentAmount(
                                 new BigDecimal(repaymentInfo.remainingPrincipal),
-                                ir,
+                                dto.getIr(), // 변환된 이자율 사용
                                 repaymentInfo.remainingPayments.intValue(),
-                                SysCommonCodes.Repayment.toCalculationType(metadata.repayType),
+                                SysCommonCodes.Repayment.toCalculationType(dto.getRepayType()),
                                 LoanUtil.RoundingStrategy.HALF_UP,
                                 LoanUtil.TruncationStrategy.WON,
                                 LoanUtil.LegalLimits.getDefaultLimits()
                         );
+                        dto.setTotalAmount(totalAmount.longValue());
 
-                        return AuctionResponseDTO.builder()
-                                .auctionId(dto.getAuctionId())
-                                .price(dto.getPrice())
-                                .endDate(dto.getEndDate())
-                                .createdAt(dto.getCreatedAt())
-                                .ir(ir)
-                                .tokenId(dto.getTokenId())
-                                .repayType(SysCommonCodes.Repayment.fromCode(metadata.repayType).getCodeName())  // 한글 상환 방식
-                                .totalAmount(totalAmount.longValue()) // 총 수취액 로직 필요 시 계산 함수 넣기
-                                .matDt(matDt)
-                                .dir(new BigDecimal(metadata.dir))
-                                .la(repaymentInfo.remainingPrincipal.longValue())
-                                .earlypayFlag(metadata.earlyPayFlag)
-                                .earlypayFee(new BigDecimal(metadata.earlyPayFee))
-                                .creditScore(creditScore)
-                                .defCnt(repaymentInfo.overdueInfo.defCnt.intValue())
-                                .nftImageUrl(metadata.nftImage)
-                                .build();
-
+                        return dto;
                     } catch (Exception e) {
-                        log.warn("[리스트 변환 오류] auctionId={}", dto.getAuctionId(), e);
+                        log.error("[리스트 변환 오류] auctionId={}, 오류 내용={}", dto.getAuctionId(), e.getMessage(), e);
                         return null; // 예외 시 필터링 제외
                     }
                 })
                 .filter(Objects::nonNull)
-                .filter(dto -> {
-                    // 블록체인 기반 필터 조건 적용
-                    boolean irCheck = (request.getMinIr() == null || dto.getIr().compareTo(request.getMinIr()) >= 0)
-                            && (request.getMaxIr() == null || dto.getIr().compareTo(request.getMaxIr()) <= 0);
-
-                    // 상환 방식 여러 개 선택 가능 (IN 조건)
-                    boolean repayCheck = true;
-                    if (request.getRepayType() != null && !request.getRepayType().isEmpty()) {
-                        SysCommonCodes.Repayment repaymentEnum = SysCommonCodes.Repayment.fromCodeEnumName(dto.getRepayType()); // 한글 → Enum
-                        repayCheck = request.getRepayType().contains(repaymentEnum.getDisplayOrder());
-                    }
-
-                    // 만기일 필터링
-                    boolean matCheck = true;
-                    if (request.getMatTerm() != null) {
-                        ZonedDateTime now = ZonedDateTime.now();
-                        switch (request.getMatTerm()) {
-                            case 1 -> matCheck = dto.getMatDt().isBefore(now.plusMonths(1));
-                            case 3 -> matCheck = dto.getMatDt().isBefore(now.plusMonths(3));
-                            case 6 -> matCheck = dto.getMatDt().isBefore(now.plusMonths(6));
-                            case 12 -> matCheck = dto.getMatDt().isBefore(now.plusMonths(12));
-                        }
-                    } else if (request.getMatStart() != null && request.getMatEnd() != null) {
-                        matCheck = !dto.getMatDt().isBefore(request.getMatStart()) && !dto.getMatDt().isAfter(request.getMatEnd());
-                    }
-
-                    return irCheck && repayCheck && matCheck;
-                })
-                .toList();
-
-        // 블록체인 필터링 후 다시한번 페이징
-        int offset = (int) pageable.getOffset();
-        int limit = pageable.getPageSize();
-
-        List<AuctionResponseDTO> pagedList = fullList.stream()
-                .skip(offset)
-                .limit(limit)
                 .toList();
 
         return PageResponseDTO.<AuctionResponseDTO>builder()
-                .content(pagedList)
+                .content(fullList)
                 .pageNumber(pageable.getPageNumber())
                 .pageSize(pageable.getPageSize())
-                .totalElements(fullList.size()) // 전체 개수는 필터링된 데이터 기준
+                .totalElements(result.getTotalElements()) // 전체 개수는 쿼리 결과 기준
                 .build();
     }
 

@@ -51,7 +51,7 @@ public class SecurityConfig {
 
                                 .requestMatchers(HttpMethod.GET, "/api/v1/auctions/**").permitAll()
 
-                                .requestMatchers(HttpMethod.POST, "/api/v1/auctions/*/force-end").permitAll()
+//                                .requestMatchers(HttpMethod.POST, "/api/v1/auctions/*/force-end").permitAll()
 
                                 .anyRequest().authenticated() // 모든 요청 인증 필요
 //                                .anyRequest().permitAll()

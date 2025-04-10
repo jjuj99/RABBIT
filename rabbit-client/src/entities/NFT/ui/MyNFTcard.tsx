@@ -13,7 +13,7 @@ export const MyNFTcard = ({ item }: NFTCardProps) => {
 
   return (
     <div
-      className="bg-black-glass border-white-glass shadow-glow w- fit flex h-fit w-[300px] flex-col items-center gap-4 rounded-lg border px-3 pt-4 pb-7"
+      className="bg-black-glass border-white-glass shadow-glow flex h-fit w-full max-w-[300px] min-w-[270px] flex-col items-center gap-4 rounded-lg border px-3 pt-4 pb-7"
       onClick={() => setIsTouched(!isTouched)}
     >
       <div className="text-brand-primary font-bit flex w-full items-center justify-center text-base">

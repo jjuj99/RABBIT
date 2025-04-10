@@ -11,11 +11,13 @@ import {
 } from "@/features/auction/api/auctionApi";
 import { AvailableAuctionsResponse } from "@/features/auction/types/response";
 import { MyNFTcard } from "@/entities/NFT/ui/MyNFTcard";
+import { NFTSkeleton } from "@/entities/NFT/ui/NFTSkeleton";
 import { UnitInput } from "@/entities/common";
 import promissoryNoteAbi from "@/shared/lib/web3/ABI/PromissoryNoteABI.json";
 import { deleteAuctionAPI } from "@/features/auction/api/auctionApi";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
+import LoadingOverlay from "@/widget/common/ui/LoadingOverray";
 
 // NFT 및 경매 컨트랙트 주소는 환경변수나 상수로 설정
 const PROMISSORYNOTE_AUCTION_ADDRESS = import.meta.env
@@ -38,7 +40,7 @@ const AuctionCreate = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // 모의 데이터 사용 (실제 서비스에서는 API 호출로 대체)
-  const { data: availableAuctions } = useQuery({
+  const { data: availableAuctions, isLoading: isLoadingAuctions } = useQuery({
     queryKey: ["availableAuctions"],
     queryFn: () => getAvailableAuctionsAPI(),
   });
@@ -384,6 +386,7 @@ const AuctionCreate = () => {
                   onClick={handlePrev}
                   variant="secondary"
                   className="w-[140px]"
+                  disabled={isLoading}
                 >
                   이전
                 </Button>
@@ -396,53 +399,81 @@ const AuctionCreate = () => {
     }
   };
 
+  // 스켈레톤 카드 6개 배열 생성
+  const skeletonCards = Array(6).fill(0);
+
   return (
-    <section className="flex flex-col items-center justify-center gap-9 px-2 pt-9 sm:px-6">
-      <div className="flex flex-col items-center gap-4">
-        <h2 className="text-xl font-semibold whitespace-nowrap sm:text-3xl">
-          경매 생성
-        </h2>
-        <h3 className="text-text-secondary flex flex-wrap justify-center text-sm sm:text-lg">
-          <span>등록시 경매가 시작되며, </span>
-          <span>구매자의 입찰 발생시 경매를 취소할 수 없습니다.</span>
-        </h3>
-      </div>
-      <div className="flex w-full flex-col items-start gap-4 sm:px-7">
-        <h3 className="text-lg">보유중인 차용증</h3>
-        <ul className="flex flex-wrap justify-center gap-6">
-          {availableAuctions?.data?.content.map(
-            (item: AvailableAuctionsResponse) => (
-              <div
-                key={item.tokenId}
-                onClick={() => handleCardClick(item)}
-                className="cursor-pointer"
-              >
-                <MyNFTcard item={item} />
-              </div>
-            ),
+    <>
+      {/* 로딩 오버레이 - 경매 생성 중일 때 표시 */}
+      <LoadingOverlay content="경매 생성 중..." isLoading={isLoading} />
+
+      <section className="flex flex-col items-center justify-center gap-9 px-2 pt-9 sm:px-6">
+        <div className="flex flex-col items-center gap-4">
+          <h2 className="text-xl font-semibold whitespace-nowrap sm:text-3xl">
+            경매 생성
+          </h2>
+          <h3 className="text-text-secondary flex flex-wrap justify-center text-sm sm:text-lg">
+            <span>등록시 경매가 시작되며, </span>
+            <span>구매자의 입찰 발생시 경매를 취소할 수 없습니다.</span>
+          </h3>
+        </div>
+        <div className="flex w-full flex-col items-start gap-4 sm:px-7">
+          <h3 className="mb-8 text-2xl">
+            경매에 등록할 차용증을 선택해주세요.
+          </h3>
+
+          {/* 데이터 로딩 상태 표시 - 스켈레톤 UI로 대체 */}
+          {isLoadingAuctions ? (
+            <ul className="flex flex-wrap gap-6">
+              {skeletonCards.map((_, index) => (
+                <li key={`skeleton-${index}`}>
+                  <NFTSkeleton />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul className="flex min-h-[70vh] flex-wrap justify-center gap-6">
+              {availableAuctions?.data?.content.length ? (
+                availableAuctions.data.content.map(
+                  (item: AvailableAuctionsResponse) => (
+                    <div
+                      key={item.tokenId}
+                      onClick={() => handleCardClick(item)}
+                      className="cursor-pointer"
+                    >
+                      <MyNFTcard item={item} />
+                    </div>
+                  ),
+                )
+              ) : (
+                <div className="w-full py-10 text-center text-gray-400">
+                  경매 가능한 차용증이 없습니다.
+                </div>
+              )}
+            </ul>
           )}
-        </ul>
-      </div>
-      <Sheet
-        open={isOpen}
-        onOpenChange={(open) => {
-          setIsOpen(open);
-          if (!open) {
-            setStep(1);
-          }
-        }}
-      >
-        <SheetOverlay className="bg-black/40" />
-        <SheetContent
-          side="right"
-          className="w-[100vw] bg-transparent lg:w-[40vw]"
+        </div>
+        <Sheet
+          open={isOpen}
+          onOpenChange={(open) => {
+            setIsOpen(open);
+            if (!open) {
+              setStep(1);
+            }
+          }}
         >
-          <div className="flex h-full flex-col items-center justify-center gap-8">
-            {renderStepContent()}
-          </div>
-        </SheetContent>
-      </Sheet>
-    </section>
+          <SheetOverlay className="bg-black/40" />
+          <SheetContent
+            side="right"
+            className="w-[100vw] bg-transparent lg:w-[40vw]"
+          >
+            <div className="flex h-full flex-col items-center justify-center gap-8">
+              {renderStepContent()}
+            </div>
+          </SheetContent>
+        </Sheet>
+      </section>
+    </>
   );
 };
 

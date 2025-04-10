@@ -295,7 +295,7 @@ const SignupFormDialog = ({
         ...data,
         bankId: Number(data.bankId),
       };
-
+      console.log("submitData", submitData);
       const result = await signup(submitData);
       console.log(result);
       toast.success("회원가입이 완료되었습니다");

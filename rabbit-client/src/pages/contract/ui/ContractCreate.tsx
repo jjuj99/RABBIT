@@ -11,6 +11,7 @@ import LoadingOverlay from "@/widget/common/ui/LoadingOverray";
 import PASSDialog from "@/widget/common/ui/PASSDialog";
 import { InfoIcon } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const ContractCreate = () => {
   const {
@@ -19,7 +20,6 @@ const ContractCreate = () => {
     dialogOpen,
     setDialogOpen,
     dialogMessage,
-    setDialogMessage,
     isPassDialogOpen,
     setIsPassDialogOpen,
     setPassState,
@@ -38,8 +38,17 @@ const ContractCreate = () => {
           <form
             onSubmit={form.handleSubmit(onSubmit, (errors) => {
               console.log("유효성 검사 실패", errors);
-              setDialogOpen(true);
-              setDialogMessage("입력하신 내용을 확인해주세요.");
+              toast.error("입력하신 내용을 확인해주세요.");
+
+              // 주요 오류 필드를 찾아 보다 구체적인 오류 메시지 표시
+              const errorFields = Object.keys(errors);
+              if (errorFields.length > 0) {
+                const firstFieldName = errorFields[0] as keyof typeof errors;
+                const firstError = errors[firstFieldName];
+                if (firstError?.message) {
+                  toast.error(firstError.message as string);
+                }
+              }
             })}
             className="flex w-full flex-col items-center gap-9 bg-gray-900 px-4 py-9 md:px-11"
           >

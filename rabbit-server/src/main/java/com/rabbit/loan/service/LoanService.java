@@ -376,7 +376,7 @@ public class LoanService {
     public PageResponseDTO<LentAuctionResponseDTO> getAuctionAvailable(Integer userId, Pageable pageable) {
         List<Contract> contracts = contractRepository.findByCreditorIdAndContractStatus(userId, SysCommonCodes.Contract.CONTRACTED)
                 .stream()
-                .filter(contract -> contractRepository.findPromissoryNoteTransferabilityFlagTrueByContractId(contract.getContractId()))
+                .filter(Contract::getPromissoryNoteTransferabilityFlag)
                 .toList();
 
         // 이미 경매중인 차용증 제외

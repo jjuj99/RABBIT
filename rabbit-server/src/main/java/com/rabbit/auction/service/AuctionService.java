@@ -370,7 +370,7 @@ public class AuctionService {
                     .createdAt(auction.getCreatedAt())
                     .nftImageUrl(promissoryMetadata.nftImage)
                     .auctionStatus(auction.getAuctionStatus())
-                    .mineFlag(auction.getAssignor().getUserId() == userId)
+                    .mineFlag(auction.getAssignor().getUserId().equals(userId))
                     .build();
         } catch (Exception e) {
             log.error("[블록체인 오류] getPromissoryMetadata 실패", e);

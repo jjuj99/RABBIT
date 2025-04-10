@@ -216,6 +216,9 @@ blockchain:
     price: 20000000000
     limit: 4500000
 
+  transaction:
+    timeout: 60  # 블록체인 트랜잭션 타임아웃 (초)
+
 # Pinata (IPFS) 설정
 pinata:
   apiKey: ${PINATA_API_KEY}

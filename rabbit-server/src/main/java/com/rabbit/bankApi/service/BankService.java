@@ -32,23 +32,24 @@ public class BankService {
     public String getCreditScore(int userId) {
         try {
             // 1. userId로 이메일 조회
-            String email = userRepository.findById(userId)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "존재하지 않는 사용자입니다."))
-                    .getEmail();
+//            String email = userRepository.findById(userId)
+//                    .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "존재하지 않는 사용자입니다."))
+//                    .getEmail();
+//
+//            // 2. email로 userKey 조회
+//            String userKey = ssafyAccountRepository.findByEmail(email)
+//                    .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "등록된 계좌가 없습니다. " + email))
+//                    .getUserKey();
+//
+//            // 3. userKey로 신용등급 조회
+//            UserKeyRequestDTO request = UserKeyRequestDTO.builder()
+//                    .userKey(userKey)
+//                    .build();
+//
+//            MyCreditResponseDTO myCreditResponse = bankApiService.myCredit(request).block();
 
-            // 2. email로 userKey 조회
-            String userKey = ssafyAccountRepository.findByEmail(email)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "등록된 계좌가 없습니다. " + email))
-                    .getUserKey();
-
-            // 3. userKey로 신용등급 조회
-            UserKeyRequestDTO request = UserKeyRequestDTO.builder()
-                    .userKey(userKey)
-                    .build();
-
-            MyCreditResponseDTO myCreditResponse = bankApiService.myCredit(request).block();
-
-            return myCreditResponse.getRec().getRatingName();
+//            return myCreditResponse.getRec().getRatingName();
+            return "B";
         } catch (Exception e) {
             log.warn("신용등급 조회 실패: userId={}, 이유={}", userId, e.getMessage());
             return "-";

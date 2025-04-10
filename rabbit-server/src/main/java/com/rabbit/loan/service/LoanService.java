@@ -388,13 +388,13 @@ public class LoanService {
                         PromissoryNote.PromissoryMetadata metadata = promissoryNoteService.getPromissoryMetadata(contract.getTokenId());
 //                        RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(contract.getTokenId());
                         RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(contract.getTokenId());
-
+                        
                         // 채무자 신용점수 조회
                         String creditScore = bankService.getCreditScore(userId);
 
-                        BigDecimal ir = new BigDecimal(metadata.ir).divide(BigDecimal.valueOf(100));
-                        BigDecimal dir = new BigDecimal(metadata.dir).divide(BigDecimal.valueOf(100));
-                        BigDecimal earlyPayFee = new BigDecimal(metadata.earlyPayFee).divide(BigDecimal.valueOf(100));
+                        BigDecimal ir = new BigDecimal(metadata.ir).divide(BigDecimal.valueOf(10000));
+                        BigDecimal dir = new BigDecimal(metadata.dir).divide(BigDecimal.valueOf(10000));
+                        BigDecimal earlyPayFee = new BigDecimal(metadata.earlyPayFee).divide(BigDecimal.valueOf(1000));
 
                         // 만기수취액 계산
                         BigDecimal totalAmount = loanUtil.calculateTotalRepaymentAmount(
@@ -413,18 +413,19 @@ public class LoanService {
                                 .matDt(DateTimeUtils.toZonedDateTimeAtEndOfDay(metadata.matDt))
                                 .tokenId(contract.getTokenId())
                                 .la(repaymentInfo.remainingPrincipal.longValue())
-                                .ir(ir)
+                                .ir(ir.multiply(BigDecimal.valueOf(100)))
                                 .totalAmount(totalAmount.longValue()) // 수취액 로직 필요 시 수정
                                 .repayType(SysCommonCodes.Repayment.fromCode(metadata.repayType).getCodeName())
-                                .dir(dir)
+                                .dir(dir.multiply(BigDecimal.valueOf(100)))
                                 .earlypayFlag(metadata.earlyPayFlag)
-                                .earlypayFee(earlyPayFee)
+                                .earlypayFee(earlyPayFee.multiply(BigDecimal.valueOf(100)))
                                 .defCnt(repaymentInfo.overdueInfo.defCnt.intValue())
                                 .creditScore(creditScore)
                                 .nftImageUrl(metadata.nftImage)
                                 .build();
                     } catch (Exception e) {
                         log.warn("[채권자 NFT 조회 실패] tokenId={}", contract.getTokenId(), e);
+                        System.out.println(e.getMessage() + ", " + e);
                         throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR, "경매 가능한 차용증 조회에 실패했습니다.");
                     }
                 })

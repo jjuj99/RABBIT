@@ -1,5 +1,5 @@
+import { AccountHistoryResponse } from "@/entities/account/types/response";
 import AccountHistoryCard from "@/entities/account/ui/AccountHistoryCard";
-import { AccountHistoryResponse } from "@/entities/coin/api/coinApi";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Separator } from "@/shared/ui/Separator";
 import React from "react";
@@ -24,8 +24,8 @@ const AccountHistory = ({
             <ul className="flex flex-col gap-3">
               {data.map((item, index) => (
                 <React.Fragment key={item.createdAt + item.type + index}>
-                  <AccountHistoryCard key={item.createdAt} data={item} />
                   <Separator />
+                  <AccountHistoryCard key={item.createdAt} data={item} />
                 </React.Fragment>
               ))}
             </ul>

@@ -25,6 +25,7 @@ public class ContractNotificationHelper {
     private final NotificationService notificationService;
     private final ExtendedMailService extendedMailService;
     private final ContractPdfService contractPdfService;
+    private final WhiteThemePdfService whiteThemePdfService;
 
     /**
      * 알림 발송 헬퍼 메서드
@@ -53,8 +54,8 @@ public class ContractNotificationHelper {
     public void sendContractCompletionNotifications(Contract contract) {
         try {
             // PDF 생성
-            byte[] pdfBytes = contractPdfService.generateContractPdf(contract);
-
+//            byte[] pdfBytes = contractPdfService.generateContractPdf(contract);
+            byte[] pdfBytes = whiteThemePdfService.generateWhiteThemeContractPdf(contract);
             // 채무자에게 이메일 및 알림 발송
             User debtor = contract.getDebtor();
             if (debtor.getEmail() != null) {

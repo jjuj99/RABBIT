@@ -8,9 +8,32 @@ import useMediaQuery from "@/shared/hooks/useMediaQuery";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getLentDetailAPI, getloanEventAPI } from "@/entities/loan/api/loanApi";
 import { useNavigate, useParams } from "react-router";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
+
+const EventListSection = ({
+  isDesktop,
+  contractId,
+}: {
+  isDesktop: boolean;
+  contractId: string;
+}) => {
+  const { data: eventData } = useSuspenseQuery({
+    queryKey: ["loanEvent", contractId],
+    queryFn: () => getloanEventAPI(contractId),
+  });
+
+  return (
+    <div className="w-full rounded-sm bg-gray-900">
+      {isDesktop ? (
+        <NFTEventList data={eventData.data} />
+      ) : (
+        <NFTEventListMobile data={eventData.data} />
+      )}
+    </div>
+  );
+};
 
 const LentDetail = () => {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
@@ -25,11 +48,6 @@ const LentDetail = () => {
   });
 
   console.log(data);
-
-  const { data: eventData } = useSuspenseQuery({
-    queryKey: ["loanEvent", contractId],
-    queryFn: () => getloanEventAPI(contractId!),
-  });
 
   if (!contractId) {
     navigate("/loan");
@@ -131,13 +149,9 @@ const LentDetail = () => {
         endDate={data.data.matDt}
       />
       <h2 className="text-xl font-bold sm:text-2xl">이벤트 리스트</h2>
-      <div className="w-full rounded-sm bg-gray-900">
-        {isDesktop ? (
-          <NFTEventList data={eventData.data} />
-        ) : (
-          <NFTEventListMobile data={eventData.data} />
-        )}
-      </div>
+      <Suspense fallback={<div>이벤트 정보를 불러오는 중입니다...</div>}>
+        <EventListSection isDesktop={isDesktop} contractId={contractId} />
+      </Suspense>
     </div>
   );
 };

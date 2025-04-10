@@ -110,6 +110,7 @@ const AuctionDetail = () => {
     refetchBidList();
     setIsDialogOpen(false);
   };
+
   if (!auctionId) return;
 
   return (
@@ -169,7 +170,10 @@ const AuctionDetail = () => {
           </div>
 
           <div className="flex h-fit w-full items-center justify-center gap-4 rounded-sm bg-gray-900 py-4 sm:h-[82px]">
-            <span className="font-medium sm:text-2xl">경매 종료까지</span>
+            {PNInfo?.data?.endDate &&
+              new Date(PNInfo.data.endDate) > new Date() && (
+                <span className="font-medium sm:text-2xl">경매 종료까지</span>
+              )}
             <span className="sm-font-bold w-[100px] text-2xl font-bold sm:text-4xl">
               {PNInfo?.data ? (
                 <AuctionCountdownTimer

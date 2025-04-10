@@ -92,7 +92,7 @@ public class LoanController {
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }
 
-    @GetMapping("/lent/events/{contractId}")
+    @GetMapping("/events/{contractId}")
     public ResponseEntity<CustomApiResponse<List<ContractEventDTO>>> getEventList(@PathVariable int contractId, Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
         List<ContractEventDTO> response = loanService.getEventList(contractId, Integer.parseInt(userId));

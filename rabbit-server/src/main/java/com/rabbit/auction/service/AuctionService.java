@@ -542,7 +542,7 @@ public class AuctionService {
         // 남은 원금, 남은 상환일 조회 => nft에서 조회
         try {
             PromissoryNote.PromissoryMetadata metadata = promissoryNoteService.getPromissoryMetadata(BigInteger.valueOf(targetAuction.getAuctionId()));
-            RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(targetAuction.getTokenId());
+            RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(targetAuction.getTokenId());
 
             Long basePrincipal = repaymentInfo.remainingPrincipal.longValue();
             long baseDays = ChronoUnit.DAYS.between(LocalDate.now(),  LocalDate.parse(metadata.matDt));

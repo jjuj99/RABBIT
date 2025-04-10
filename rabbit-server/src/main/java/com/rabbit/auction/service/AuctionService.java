@@ -333,7 +333,7 @@ public class AuctionService {
         //블록체인에서 직접 읽어온 값 추가 필요
         try {
             PromissoryNote.PromissoryMetadata promissoryMetadata = promissoryNoteService.getPromissoryMetadata(auction.getTokenId());
-            RepaymentInfo repaymentInfo = repaymentSchedulerService.getRepaymentInfo(auction.getTokenId());
+            RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(auction.getTokenId());
 
             BigDecimal ir = new BigDecimal(promissoryMetadata.ir).divide(BigDecimal.valueOf(10000));
             BigDecimal dir = new BigDecimal(promissoryMetadata.dir).divide(BigDecimal.valueOf(10000));
@@ -365,7 +365,7 @@ public class AuctionService {
                     .earlypayFlag(promissoryMetadata.earlyPayFlag)
                     .earlypayFee(earlyPayFee)
                     .creditScore(creditScore)  //신용 점수
-                    .defCnt(repaymentInfo.defCnt.intValue())   //연체 횟수
+                    .defCnt(repaymentInfo.overdueInfo.defCnt.intValue())   //연체 횟수
                     .endDate(auction.getEndDate())
                     .createdAt(auction.getCreatedAt())
                     .nftImageUrl(promissoryMetadata.nftImage)

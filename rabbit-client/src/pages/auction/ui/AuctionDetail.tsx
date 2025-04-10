@@ -63,7 +63,7 @@ const AuctionDetail = () => {
     return () => {
       eventSource.close();
     };
-  }, [auctionId]);
+  });
 
   const {
     data: PNInfo,
@@ -104,6 +104,7 @@ const AuctionDetail = () => {
     refetchBidList();
     setIsDialogOpen(false);
   };
+  if (!auctionId) return;
 
   return (
     <>
@@ -147,7 +148,12 @@ const AuctionDetail = () => {
             <span className="font-medium sm:text-2xl">경매 종료까지</span>
             <span className="sm-font-bold w-[100px] text-2xl font-bold sm:text-4xl">
               {PNInfo?.data ? (
-                <CountdownTimer endDate={PNInfo.data.endDate} />
+                <CountdownTimer
+                  endDate={PNInfo.data.endDate}
+                  status={PNInfo.data.auctionStatus}
+                  mineFlag={PNInfo.data.mineFlag ?? false}
+                  auctionId={auctionId!}
+                />
               ) : (
                 <div className="loader-sprite" />
               )}

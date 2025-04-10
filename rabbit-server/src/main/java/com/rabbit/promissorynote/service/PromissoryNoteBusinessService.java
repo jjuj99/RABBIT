@@ -6,11 +6,17 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.rabbit.blockchain.service.PromissoryNoteService;
 import com.rabbit.blockchain.wrapper.PromissoryNote;
 import com.rabbit.blockchain.wrapper.RepaymentScheduler;
 import com.rabbit.promissorynote.domain.dto.UserContractInfoDto;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -23,9 +29,6 @@ import com.rabbit.contract.domain.entity.Contract;
 import com.rabbit.global.exception.BusinessException;
 import com.rabbit.global.exception.ErrorCode;
 import com.rabbit.user.domain.entity.User;
-import com.rabbit.user.service.WalletService;
-import com.rabbit.contract.service.SignatureService;
-import com.rabbit.contract.service.HashingService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,68 +47,118 @@ public class PromissoryNoteBusinessService {
     private final PromissoryNoteRepository promissoryNoteRepository;
     private final RepaymentScheduleRepository repaymentScheduleRepository;
 
+    // 블록체인 작업 타임아웃 설정
+    @Value("${blockchain.transaction.timeout:60}")
+    private int blockchainTransactionTimeoutSeconds;
+
     /**
-     * 차용증 NFT 발행 및 데이터베이스 저장
+     * 차용증 NFT 발행 - 트랜잭션 밖에서 호출되는 메소드
      *
      * @param contract 계약 정보
      * @param nftPdFUri NFT PDF URI
      * @param nftImageUri NFT 이미지 URI
      * @return 생성된 토큰 ID
      */
-    @Transactional
     public BigInteger mintPromissoryNoteNFT(Contract contract, String nftPdFUri, String nftImageUri, UserContractInfoDto userInfo) {
         log.info("[블록체인][시작] 차용증 NFT 발행 시작 - 계약 ID: {}", contract.getContractId());
 
+        // 1. 메타데이터 생성
+        PromissoryNote.PromissoryMetadata metadata = createPromissoryMetadata(contract, userInfo, nftPdFUri, nftImageUri);
+
+        // 2. 비동기 작업으로 NFT 민팅 실행 및 타임아웃 설정
+        CompletableFuture<BigInteger> mintFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return promissoryNoteService.mintPromissoryNote(metadata, userInfo.getCreditorWalletAddress());
+            } catch (Exception e) {
+                log.error("[블록체인][민팅 예외] NFT 민팅 중 오류: {}", e.getMessage(), e);
+                throw new CompletionException(e);
+            }
+        });
+
+        // 3. 설정된 타임아웃으로 결과 대기
         try {
+            BigInteger tokenId = mintFuture.get(blockchainTransactionTimeoutSeconds, TimeUnit.SECONDS);
+            log.info("[블록체인][민팅 성공] 토큰 ID: {}, 계약 ID: {}", tokenId, contract.getContractId());
 
-            // 1. 메타데이터 생성
-            PromissoryNote.PromissoryMetadata metadata = createPromissoryMetadata(contract, userInfo, nftPdFUri, nftImageUri);
-
-            // 2. NFT 민팅 (PromissoryNoteService 사용)
-            BigInteger tokenId = promissoryNoteService.mintPromissoryNote(metadata, userInfo.getCreditorWalletAddress());
-
-            // 3. DB에 저장
-            savePromissoryNoteToDatabase(tokenId, contract, userInfo, nftPdFUri, nftImageUri);
-
-            // 4. 계약 정보 업데이트
-            contract.setNftInfo(tokenId, nftImageUri);
-
-            log.info("[블록체인][완료] 차용증 NFT 발행 성공 - 계약 ID: {}, 토큰 ID: {}",
-                    contract.getContractId(), tokenId);
-
+            // 4. DB에 저장 및 토큰 ID 반환
+            savePromissoryNoteToDatabaseInNewTransaction(tokenId, contract, userInfo, nftPdFUri, nftImageUri);
             return tokenId;
-        } catch (Exception e) {
-            log.error("[블록체인][예외] 차용증 NFT 발행 중 예외 발생", e);
+
+        } catch (TimeoutException e) {
+            // 타임아웃 발생 시 실패로 처리
+            log.error("[블록체인][타임아웃] NFT 민팅 타임아웃 - 계약 ID: {}", contract.getContractId());
+            throw new BusinessException(ErrorCode.BLOCKCHAIN_TIMEOUT, "블록체인 트랜잭션이 타임아웃되었습니다. 나중에 다시 시도해주세요.");
+        } catch (InterruptedException | ExecutionException e) {
+            // 다른 예외는 일반적인 블록체인 에러로 변환
+            log.error("[블록체인][예외] NFT 민팅 실행 오류: {}", e.getCause() != null ? e.getCause().getMessage() : e.getMessage(), e);
             throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR,
-                    "NFT 발행 중 오류가 발생했습니다: " + e.getMessage());
+                    "NFT 발행 중 오류가 발생했습니다: " + (e.getCause() != null ? e.getCause().getMessage() : e.getMessage()));
         }
     }
 
-
+    /**
+     * 새 트랜잭션에서 DB에 차용증 NFT 정보 저장
+     */
+    @Transactional
+    public void savePromissoryNoteToDatabaseInNewTransaction(BigInteger tokenId, Contract contract,
+                                                             UserContractInfoDto userInfo, String nftPdFUri, String nftImageUri) {
+        savePromissoryNoteToDatabase(tokenId, contract, userInfo, nftPdFUri, nftImageUri);
+    }
 
     /**
-     * 상환 일정 등록
+     * 데이터베이스에 차용증 NFT 정보 저장
      *
      * @param tokenId 토큰 ID
      * @param contract 계약 정보
      * @param userInfo 사용자 계약 정보
+     * @param nftPdFUri NFT PDF URI
+     * @param nftImageUri NFT 이미지 URI
      */
-    private void registerRepaymentSchedule(BigInteger tokenId, Contract contract, UserContractInfoDto userInfo) throws Exception {
-        log.info("[블록체인] 상환 일정 등록 시작 - 토큰 ID: {}", tokenId);
+    private void savePromissoryNoteToDatabase(
+            BigInteger tokenId,
+            Contract contract,
+            UserContractInfoDto userInfo,
+            String nftPdFUri,
+            String nftImageUri) {
 
-        TransactionReceipt receipt = repaymentScheduler.registerRepaymentSchedule(tokenId).send();
-        if (!receipt.isStatusOK()) {
-            throw new BusinessException(ErrorCode.BLOCKCHAIN_ERROR, "상환 일정 등록 트랜잭션이 실패했습니다.");
-        }
+        // 채권자/채무자 정보
+        User creditor = contract.getCreditor();
+        User debtor = contract.getDebtor();
 
-        // 상환 정보 조회
-        RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentScheduler.getRepaymentInfo(tokenId).send();
+        // LocalDate로 변환
+        LocalDate maturityDate = contract.getMaturityDate().toLocalDate();
+        LocalDate contractDate = contract.getContractDate().toLocalDate();
 
-        // 데이터베이스에 상환 일정 저장
-        saveRepaymentScheduleToDatabase(tokenId, contract, repaymentInfo, userInfo);
+        PromissoryNoteEntity entity = PromissoryNoteEntity.builder()
+                .tokenId(tokenId)
+                .creditorName(creditor.getUserName())
+                .creditorWalletAddress(userInfo.getCreditorWalletAddress())
+                .creditorSign(userInfo.getCreditorSign())
+                .creditorInfoHash(userInfo.getCreditorInfoHash())
+                .debtorName(debtor.getUserName())
+                .debtorWalletAddress(userInfo.getDebtorWalletAddress())
+                .debtorSign(userInfo.getDebtorSign())
+                .debtorInfoHash(userInfo.getDebtorInfoHash())
+                .loanAmount(contract.getLoanAmount().longValue())
+                .interestRate(contract.getInterestRate().multiply(BigDecimal.valueOf(100)).intValue())
+                .loanTerm(contract.getLoanTerm())
+                .repaymentType(contract.getRepaymentType().getCode())
+                .maturityDate(maturityDate)
+                .monthlyPaymentDate(contract.getMonthlyPaymentDate())
+                .defaultInterestRate(contract.getDefaultInterestRate().multiply(BigDecimal.valueOf(100)).intValue())
+                .contractDate(contractDate)
+                .earlypayFlag(contract.getEarlyPayment())
+                .earlypayFee(contract.getPrepaymentInterestRate() != null ?
+                        contract.getPrepaymentInterestRate().multiply(BigDecimal.valueOf(100)).intValue() : 0)
+                .accelerationClause(contract.getDefaultCount())
+                .addTerms(contract.getContractTerms())
+                .addTermsHash(nftPdFUri)
+                .nftImage(nftImageUri)
+                .deletedFlag(false)
+                .build();
 
-        log.info("[블록체인] 상환 일정 등록 완료 - 토큰 ID: {}, 트랜잭션: {}",
-                tokenId, receipt.getTransactionHash());
+        promissoryNoteRepository.save(entity);
+        log.info("[데이터베이스] 차용증 NFT 정보 저장 완료 - 토큰 ID: {}", tokenId);
     }
 
     /**
@@ -174,107 +227,6 @@ public class PromissoryNoteBusinessService {
                 BigInteger.valueOf(contract.getDefaultCount()),
                 addTerms
         );
-    }
-
-    /**
-     * 데이터베이스에 차용증 NFT 정보 저장
-     *
-     * @param tokenId 토큰 ID
-     * @param contract 계약 정보
-     * @param userInfo 사용자 계약 정보
-     * @param nftPdFUri NFT PDF URI
-     * @param nftImageUri NFT 이미지 URI
-     */
-    private void savePromissoryNoteToDatabase(
-            BigInteger tokenId,
-            Contract contract,
-            UserContractInfoDto userInfo,
-            String nftPdFUri,
-            String nftImageUri) {
-
-        // 채권자/채무자 정보
-        User creditor = contract.getCreditor();
-        User debtor = contract.getDebtor();
-
-        // LocalDate로 변환
-        LocalDate maturityDate = contract.getMaturityDate().toLocalDate();
-        LocalDate contractDate = contract.getContractDate().toLocalDate();
-
-        PromissoryNoteEntity entity = PromissoryNoteEntity.builder()
-                .tokenId(tokenId)
-                .creditorName(creditor.getUserName())
-                .creditorWalletAddress(userInfo.getCreditorWalletAddress())
-                .creditorSign(userInfo.getCreditorSign())
-                .creditorInfoHash(userInfo.getCreditorInfoHash())
-                .debtorName(debtor.getUserName())
-                .debtorWalletAddress(userInfo.getDebtorWalletAddress())
-                .debtorSign(userInfo.getDebtorSign())
-                .debtorInfoHash(userInfo.getDebtorInfoHash())
-                .loanAmount(contract.getLoanAmount().longValue())
-                .interestRate(contract.getInterestRate().multiply(BigDecimal.valueOf(100)).intValue())
-                .loanTerm(contract.getLoanTerm())
-                .repaymentType(contract.getRepaymentType().getCode())
-                .maturityDate(maturityDate)
-                .monthlyPaymentDate(contract.getMonthlyPaymentDate())
-                .defaultInterestRate(contract.getDefaultInterestRate().multiply(BigDecimal.valueOf(100)).intValue())
-                .contractDate(contractDate)
-                .earlypayFlag(contract.getEarlyPayment())
-                .earlypayFee(contract.getPrepaymentInterestRate() != null ?
-                        contract.getPrepaymentInterestRate().multiply(BigDecimal.valueOf(100)).intValue() : 0)
-                .accelerationClause(contract.getDefaultCount())
-                .addTerms(contract.getContractTerms())
-                .addTermsHash(nftPdFUri)
-                .nftImage(nftImageUri)
-                .deletedFlag(false)
-                .build();
-
-        promissoryNoteRepository.save(entity);
-        log.info("[데이터베이스] 차용증 NFT 정보 저장 완료 - 토큰 ID: {}", tokenId);
-    }
-
-    /**
-     * 데이터베이스에 상환 일정 정보 저장
-     *
-     * @param tokenId 토큰 ID
-     * @param contract 계약 정보
-     * @param repaymentInfo 블록체인에서 받아온 상환 정보
-     * @param userInfo 사용자 계약 정보
-     */
-    private void saveRepaymentScheduleToDatabase(
-            BigInteger tokenId,
-            Contract contract,
-            RepaymentScheduler.RepaymentInfo repaymentInfo,
-            UserContractInfoDto userInfo) {
-
-        // 블록체인 타임스탬프를 Instant로 변환
-        Instant nextPaymentInstant = Instant.ofEpochSecond(repaymentInfo.nextMpDt.longValue());
-
-        RepaymentSchedule entity = RepaymentSchedule.builder()
-                .tokenId(tokenId)
-                .initialPrincipal(repaymentInfo.initialPrincipal.longValue())
-                .remainingPrincipal(repaymentInfo.remainingPrincipal.longValue())
-                .interestRate(repaymentInfo.ir.intValue())
-                .defaultInterestRate(repaymentInfo.dir.intValue())
-                .monthlyPaymentDate(contract.getMonthlyPaymentDate())
-                .nextMonthlyPaymentDate(nextPaymentInstant)
-                .totalPayments(repaymentInfo.totalPayments.intValue())
-                .remainingPayments(repaymentInfo.remainingPayments.intValue())
-                .fixedPaymentAmount(repaymentInfo.fixedPaymentAmount.longValue())
-                .repaymentType(repaymentInfo.repayType)
-                .debtorWalletAddress(userInfo.getDebtorWalletAddress())
-                .activeFlag(repaymentInfo.activeFlag)
-                .overdueFlag(repaymentInfo.overdueInfo.overdueFlag)
-                .overdueStartDate(null) // 초기에는 연체가 없으므로 null
-                .overdueDays(repaymentInfo.overdueInfo.overdueDays.intValue())
-                .accumulatedOverdueInterest(repaymentInfo.overdueInfo.aoi.longValue())
-                .defaultCount(repaymentInfo.overdueInfo.defCnt.intValue())
-                .accelerationClause(contract.getDefaultCount())
-                .currentInterestRate(repaymentInfo.overdueInfo.currentIr.intValue())
-                .totalDefaultCount(repaymentInfo.overdueInfo.totalDefCnt.intValue())
-                .build();
-
-        repaymentScheduleRepository.save(entity);
-        log.info("[데이터베이스] 상환 일정 정보 저장 완료 - 토큰 ID: {}", tokenId);
     }
 
     /**

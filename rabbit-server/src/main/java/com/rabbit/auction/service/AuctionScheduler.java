@@ -25,7 +25,7 @@ public class AuctionScheduler {
 
     public void scheduleAuctionEnd(Integer auctionId, ZonedDateTime endDate) {
         // endDate가 UTC라면 KST로 바꿔서 비교
-        ZonedDateTime adjustedEndDate = endDate.minusHours(9); //<- 시간대 맞춰서
+        ZonedDateTime adjustedEndDate = endDate; //<- 시간대 맞춰서
         long delay = Duration.between(ZonedDateTime.now(), adjustedEndDate).toMillis();
 
         if (delay <= 0) {

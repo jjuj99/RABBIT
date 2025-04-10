@@ -96,7 +96,7 @@ public class LoanService {
 
     public PageResponseDTO<BorrowListResponseDTO> borrowList(int userId, Pageable pageable) {
         // 1. 유저 Id로 해당 유저가 채무자인 차용증 리스트를 호출한다.
-        List<Contract> contracts = contractRepository.findByDebtorId(userId);
+        List<Contract> contracts = contractRepository.findByDebtorIdAndContractStatus(userId, SysCommonCodes.Contract.CONTRACTED);
 
         // 1-2. 만약 리스트가 비어있다면, 빈 리스트를 반환
         if (contracts.isEmpty()) {
@@ -259,7 +259,7 @@ public class LoanService {
 
     public PageResponseDTO<LentListResponseDTO> lentList(int userId, Pageable pageable) {
         // 1. 유저 Id로 해당 유저가 채무자인 차용증 리스트를 호출한다.
-        List<Contract> contracts = contractRepository.findByCreditorId(userId);
+        List<Contract> contracts = contractRepository.findByCreditorIdAndContractStatus(userId, SysCommonCodes.Contract.CONTRACTED);
 
         // 1-2. 만약 리스트가 비어있다면, 빈 리스트를 반환
         if (contracts.isEmpty()) {

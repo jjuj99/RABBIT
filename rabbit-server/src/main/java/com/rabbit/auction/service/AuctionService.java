@@ -34,6 +34,7 @@ import com.rabbit.notification.domain.dto.request.NotificationRequestDTO;
 import com.rabbit.notification.service.NotificationService;
 import com.rabbit.promissorynote.domain.entity.PromissoryNoteEntity;
 import com.rabbit.promissorynote.repository.PromissoryNoteRepository;
+import com.rabbit.promissorynote.service.PromissoryNoteBusinessService;
 import com.rabbit.sse.service.SseEventPublisher;
 import com.rabbit.user.domain.dto.response.ProfileInfoResponseDTO;
 import com.rabbit.user.domain.entity.User;
@@ -87,6 +88,7 @@ public class AuctionService {
 
     private final SysCommonCodeService sysCommonCodeService;
     private final RepaymentSchedulerService repaymentSchedulerService;
+    private final PromissoryNoteBusinessService promissoryNoteBusinessService;
 
     // 코드 타입 상수 정의
     private static final String AUCTION_STATUS = SysCommonCodes.Auction.values()[0].getCodeType();
@@ -359,6 +361,8 @@ public class AuctionService {
 
             Long curPrice = auction.getPrice()==null? auction.getMinimumBid(): auction.getPrice();
 
+            String pdfUrl = promissoryNoteBusinessService.getPromissoryNotePdfUriByTokenId(auction.getTokenId());
+
             return AuctionDetailResponseDTO.builder()
                     .tokenId(auction.getTokenId())
                     .auctionId(auction.getAuctionId())
@@ -378,6 +382,7 @@ public class AuctionService {
                     .nftImageUrl(promissoryMetadata.nftImage)
                     .auctionStatus(auction.getAuctionStatus())
                     .mineFlag(auction.getAssignor().getUserId().equals(userId))
+                    .pdfUrl(pdfUrl)
                     .build();
         } catch (Exception e) {
             log.error("[블록체인 오류] getPromissoryMetadata 실패", e);

@@ -33,4 +33,5 @@ public class AuctionDetailResponseDTO {
     private String nftImageUrl;
     private SysCommonCodes.Auction auctionStatus;
     private boolean mineFlag;
+    private String pdfUrl;
 }

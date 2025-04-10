@@ -246,8 +246,17 @@ const Signup = () => {
   };
 
   return (
-    <div className="mx-auto max-w-md p-6">
-      <LoadingOverlay content="회원가입 중..." isLoading={isSubmitting} />
+    <div className="mx-auto w-full max-w-[600px] bg-gray-900 p-6">
+      <LoadingOverlay
+        content={[
+          "회원가입 중...",
+          "회원가입에 필요한 서명은 3번입니다.",
+          "개발단계는 테스트넷이라 오래걸려요",
+          "아직 3개를 완료하지 않았다면 당황하지 말고 기다려주세요.",
+          "만약 지갑 팝업이 안뜬다면 직접 지갑을 켜주세요.",
+        ]}
+        isLoading={isSubmitting}
+      />
       <div className="mb-6">
         <h1 className="text-2xl font-bold">회원가입</h1>
         <p className="text-gray-500">

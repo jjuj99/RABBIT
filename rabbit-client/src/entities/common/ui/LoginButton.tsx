@@ -16,11 +16,12 @@ import { LOGIN_MESSAGE } from "@/entities/wallet/constant";
 import { useQueryClient } from "@tanstack/react-query";
 
 import SignupDialog from "@/features/auth/ui/SignupDialog";
+import { useNavigate } from "react-router";
 
 const LoginButton = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSignupDialogOpen, setIsSignupDialogOpen] = useState(false);
-
+  const navigate = useNavigate();
   const {
     isInstalled,
     isLoading: isMetaMaskLoading,
@@ -115,7 +116,8 @@ const LoginButton = () => {
     const { data: nonce } = await nonceMutation.mutateAsync(address);
     console.log(nonce);
     if (!nonce) {
-      setIsSignupDialogOpen(true);
+      // setIsSignupDialogOpen(true);
+      navigate("/sign-up");
       setIsLoading(false);
       return;
     }

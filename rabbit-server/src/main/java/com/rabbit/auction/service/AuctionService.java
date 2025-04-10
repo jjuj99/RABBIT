@@ -119,6 +119,7 @@ public class AuctionService {
         Auction auction = Auction.builder()
                 .assignor(assignor)  //아직 임의로 설정해둠
                 .minimumBid(auctionRequest.getMinimumBid())
+                .price(auctionRequest.getMinimumBid())
                 .endDate(auctionRequest.getEndDate())
                 .tokenId(auctionRequest.getTokenId())
                 .auctionStatus(SysCommonCodes.Auction.ING)

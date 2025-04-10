@@ -44,7 +44,10 @@ public enum ErrorCode {
 
     FUNCTIONALITY_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "error.functionality.not.supported", "지원하지 않는 기능입니다"),
 
+    // =========== Blockchain ===========
     BLOCKCHAIN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "error.blockchain", "블록체인 처리 중 오류가 발생했습니다"),
+    BLOCKCHAIN_TIMEOUT(HttpStatus.REQUEST_TIMEOUT, "error.blockchain.timeout", "블록체인 트랜잭션 처리 시간이 초과되었습니다. 나중에 다시 시도해주세요."),
+
     RAB_MINT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "error.rab.mint", "RAB 발행 중 오류가 발생했습니다"),
     WALLET_NOT_FOUND(HttpStatus.NOT_FOUND, "error.wallet.not.found", "사용자의 주 지갑을 찾을 수 없습니다"),
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "error.file.upload.failed", "파일 업로드 중 오류가 발생했습니다"),

@@ -19,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Pageable;
@@ -118,9 +119,15 @@ public class AuctionController {
     @GetMapping("/{auctionId}/info")
     public ResponseEntity<CustomApiResponse<AuctionDetailResponseDTO>> getAuctionDetail(
             @PathVariable("auctionId") Integer auctionId, Authentication authentication) {
-        String userId = (String) authentication.getPrincipal();
+        Integer userId;
+        if (authentication == null) {
+            userId = null;
+        } else {
+            String id = (String) authentication.getPrincipal();
+            userId = Integer.valueOf(id);
+        }
 
-        AuctionDetailResponseDTO auctionDetailResponse = auctionService.getAuctionDetail(auctionId, Integer.parseInt(userId));
+        AuctionDetailResponseDTO auctionDetailResponse = auctionService.getAuctionDetail(auctionId, userId);
 
         return ResponseEntity.ok(CustomApiResponse.success(auctionDetailResponse));
     }

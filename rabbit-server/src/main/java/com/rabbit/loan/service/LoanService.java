@@ -280,6 +280,7 @@ public class LoanService {
                 RepaymentScheduler.RepaymentInfo repaymentInfo = repaymentSchedulerService.getPaymentInfo(contract.getTokenId());
 
                 // 상환 상태가 활성화되어있는지 확인
+
                 if(!repaymentInfo.activeFlag) continue;
 
                 response.add(LentListResponseDTO.builder()
@@ -373,11 +374,10 @@ public class LoanService {
     }
 
     public PageResponseDTO<LentAuctionResponseDTO> getAuctionAvailable(Integer userId, Pageable pageable) {
-        Optional<String> userWallet = metamaskWalletRepository.findPrimaryWalletAddressByUserId(userId);
-
-        List<PromissoryNoteEntity> contracts = userWallet
-                .map(wallet -> promissoryNoteRepository.findByCreditorWalletAddressAndDeletedFlagFalse(wallet))
-                .orElse(Collections.emptyList());
+        List<Contract> contracts = contractRepository.findByCreditorIdAndContractStatus(userId, SysCommonCodes.Contract.CONTRACTED)
+                .stream()
+                .filter(contract -> contractRepository.findPromissoryNoteTransferabilityFlagTrueByContractId(contract.getContractId()))
+                .toList();
 
         // 이미 경매중인 차용증 제외
         List<LentAuctionResponseDTO> content = contracts.stream()
@@ -409,7 +409,7 @@ public class LoanService {
 
                         return LentAuctionResponseDTO.builder()
                                 .crId(userId)
-                                .crName(contract.getCreditorName())
+                                .crName(contract.getCreditor().getUserName())
                                 .matDt(DateTimeUtils.toZonedDateTimeAtEndOfDay(metadata.matDt))
                                 .tokenId(contract.getTokenId())
                                 .la(repaymentInfo.remainingPrincipal.longValue())

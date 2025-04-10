@@ -73,6 +73,9 @@ public interface ContractRepository extends JpaRepository<Contract, Long>, Contr
     // nft tokenId로 Contract 조회
     Optional<Contract> findByTokenId(BigInteger tokenId);
 
+    // 양도가능한 차용증인지 확인
+    boolean findPromissoryNoteTransferabilityFlagTrueByContractId(Integer contractId);
+
 
     // 휴대폰 번호로 채무자 찾기
 //    @Query("SELECT c FROM Contract c WHERE c.debtor.phone = :phone AND c.deletedFlag = false ORDER BY c.createdAt DESC")

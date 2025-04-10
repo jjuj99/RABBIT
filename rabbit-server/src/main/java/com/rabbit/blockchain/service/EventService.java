@@ -123,13 +123,13 @@ public class EventService {
             // 최신순 정렬 (timestamp는 yyyy-MM-ddTHH:mm:ss 형식이므로 앞부분만 잘라서 정렬)
             return allEvents.stream()
                     .sorted((e1, e2) -> e2.getTimestamp().compareTo(e1.getTimestamp()))
-                    .peek(event -> {
-                        // 날짜 문자열을 yyyy-MM-dd 형식으로 자르기
-                        String timestamp = event.getTimestamp();
-                        if (timestamp != null && timestamp.length() >= 10) {
-                            event.setTimestamp(timestamp.substring(0, 10));
-                        }
-                    })
+//                    .peek(event -> {
+//                        // 날짜 문자열을 yyyy-MM-dd 형식으로 자르기
+//                        String timestamp = event.getTimestamp();
+//                        if (timestamp != null && timestamp.length() >= 10) {
+//                            event.setTimestamp(timestamp.substring(0, 10));
+//                        }
+//                    })
                     .collect(Collectors.toList());
         } catch (Exception e) {
             log.error("[EventService] getEventList error", e);

@@ -103,6 +103,14 @@ public class AuctionController {
         return  ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("경매가 취소되었습니다.")));
     }
 
+    @DeleteMapping("/internal/{auctionId}")
+    public ResponseEntity<CustomApiResponse<MessageResponse>> deleteAuction(@PathVariable("auctionId") Integer auctionId) {
+
+        auctionService.deleteAuction(auctionId);
+
+        return  ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("경매가 삭제되었습니다.")));
+    }
+
     @AuctionControllerSwagger.GetMyBidAuctionsApi
     @GetMapping("/my-bids")
     public ResponseEntity<CustomApiResponse<?>> getMyBidAuctions(@Valid PageRequestDTO pageRequest, Authentication authentication) {

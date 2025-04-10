@@ -293,6 +293,13 @@ public class AuctionService {
         auctionRepository.save(auction);
     }
 
+    public void deleteAuction(@Valid Integer auctionId) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
+
+        auctionRepository.delete(auction);
+    }
+
     public PageResponseDTO<MyAuctionResponseDTO> getMyBidAuctions(Integer userId, Pageable pageable) {
         Page<MyAuctionResponseDTO> result = auctionRepository.getMyBidAuction(userId, pageable);
 

@@ -52,8 +52,10 @@ public enum ErrorCode {
     INSUFFICIENT_RAB_BALANCE(HttpStatus.BAD_REQUEST, "error.insufficient.balance", "보유한 RAB이 출금 요청액보다 부족합니다"),
     RAB_TRANSFER_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "error.rab.transfer", "RAB 전송 중 오류가 발생했습니다"),
     RAB_PERMIT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "fail.rab.permit", "RAB permit 중 오류가 발생했습니다"),
-    RAB_PERMIT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "error.rab.permit", "RAB permit을 실패하였습니다");
-
+    RAB_PERMIT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "error.rab.permit", "RAB permit을 실패하였습니다"),
+    BLOCKCHAIN_AUCTION_CANCEL_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "error.auction.cancel", "블록체인에서 경매 취소에 실패했습니다."),
+    BLOCKCHAIN_REPAYMENT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "error.repayment.info", "블록체인에서 상환 조회에 실패했습니다."),
+    BLOCKCHAIN_AUCTION_END_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "error.auction.end",  "블록체인에서 경매 종료를 실패했습니다");
 
     private final HttpStatus status;
     private final String messageKey;

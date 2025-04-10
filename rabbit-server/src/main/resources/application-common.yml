@@ -180,10 +180,6 @@ cors:
     - "https://nft-rabbit.site"
     - "https://j12a604.p.ssafy.io"
 
-# 쿠키 설정
-cookie:
-  secure: false
-
 # TOSS 설정
 toss:
   secret: ${TOSS_SECRET}

@@ -15,6 +15,7 @@ import { UnitInput } from "@/entities/common";
 import promissoryNoteAbi from "@/shared/lib/web3/ABI/PromissoryNoteABI.json";
 import { deleteAuctionAPI } from "@/features/auction/api/auctionApi";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 
 // NFT 및 경매 컨트랙트 주소는 환경변수나 상수로 설정
 const PROMISSORYNOTE_AUCTION_ADDRESS = import.meta.env
@@ -55,6 +56,8 @@ const AuctionCreate = () => {
     setError(null);
     setEndDateday(value);
   };
+
+  const navigate = useNavigate();
 
   const handleHourChange = (value: number) => {
     if (value >= 24) {
@@ -206,6 +209,7 @@ const AuctionCreate = () => {
         console.log("DepositToAuction 트랜잭션 확정됨.");
 
         handleClose();
+        navigate(`/auction/${response.data.auctionId}`);
       } catch (error) {
         console.error("Transfer 실패:", error);
         // transfer 실패 시 생성된 경매 삭제

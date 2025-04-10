@@ -27,6 +27,30 @@ import { Input } from "@/shared/ui/input";
 import { useState } from "react";
 import useGetBalance from "@/entities/wallet/hooks/useGetBalance";
 import { cn } from "@/shared/lib/utils";
+import { Suspense } from "react";
+
+const EventListSection = ({
+  isDesktop,
+  contractId,
+}: {
+  isDesktop: boolean;
+  contractId: string;
+}) => {
+  const { data: eventData } = useSuspenseQuery({
+    queryKey: ["loanEvent", contractId],
+    queryFn: () => getloanEventAPI(contractId),
+  });
+
+  return (
+    <div className="w-full rounded-sm bg-gray-900">
+      {isDesktop ? (
+        <NFTEventList data={eventData.data} />
+      ) : (
+        <NFTEventListMobile data={eventData.data} />
+      )}
+    </div>
+  );
+};
 
 const BorrowDetail = () => {
   const isDesktop = useMediaQuery("lg");
@@ -42,11 +66,6 @@ const BorrowDetail = () => {
   const { data } = useSuspenseQuery({
     queryKey: ["borrowDetail", contractId],
     queryFn: () => getBorrowDetailAPI(contractId!),
-  });
-
-  const { data: eventData } = useSuspenseQuery({
-    queryKey: ["loanEvent", contractId],
-    queryFn: () => getloanEventAPI(contractId!),
   });
 
   const earlyRepaymentMutation = useMutation({
@@ -202,13 +221,9 @@ const BorrowDetail = () => {
         endDate={data.data.matDt}
       />
       <h2 className="text-xl font-bold sm:text-2xl">이벤트 리스트</h2>
-      <div className="w-full rounded-sm bg-gray-900">
-        {isDesktop ? (
-          <NFTEventList data={eventData.data} />
-        ) : (
-          <NFTEventListMobile data={eventData.data} />
-        )}
-      </div>
+      <Suspense fallback={<div>이벤트 정보를 불러오는 중입니다...</div>}>
+        <EventListSection isDesktop={isDesktop} contractId={contractId} />
+      </Suspense>
       <Dialog
         open={isEarlyRepaymentOpen}
         onOpenChange={setIsEarlyRepaymentOpen}

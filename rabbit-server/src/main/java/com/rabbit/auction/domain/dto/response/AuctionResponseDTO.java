@@ -1,15 +1,14 @@
 package com.rabbit.auction.domain.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.ZonedDateTime;
 
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,5 +29,11 @@ public class AuctionResponseDTO {
     private String creditScore;     // 신용점수
     private Integer defCnt;          // 연체 횟수
     private String nftImageUrl;
+
+    @JsonIgnore
+    private String drWallet;
+
+    @JsonIgnore
+    private Integer interestRate;
 }
 

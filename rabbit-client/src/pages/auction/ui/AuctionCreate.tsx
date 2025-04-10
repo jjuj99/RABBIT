@@ -394,14 +394,6 @@ const AuctionCreate = () => {
 
   return (
     <section className="flex flex-col items-center justify-center gap-9 px-2 pt-9 sm:px-6">
-      <Button
-        onClick={handleSubmit}
-        variant="primary"
-        className="w-[140px]"
-        disabled={isLoading}
-      >
-        {isLoading ? "진행중..." : "확인"}
-      </Button>
       <div className="flex flex-col items-center gap-4">
         <h2 className="text-xl font-semibold whitespace-nowrap sm:text-3xl">
           경매 생성

@@ -106,7 +106,8 @@ export const deleteAuctionAPI = async (
   auctionId: number,
 ): Promise<ApiResponse<AuctionDetailResponse>> => {
   const res = await fetch(
-    `${VITE_API_URL}/${VITE_API_VERSION}/auctions/${auctionId}`,
+    `${VITE_API_URL}/${VITE_API_VERSION}/internal/${auctionId}`,
+
     fetchOption("DELETE"),
   );
   const data = await res.json();

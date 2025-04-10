@@ -366,6 +366,7 @@ public class AuctionService {
 
         List<Bid> bids = bidRepository.findAllByAuction_AuctionIdOrderByBidAmountDescCreatedAtAsc(auctionId);
 
+        User winner = null;
         if (bids.isEmpty()) {   //낙찰자가 없는 경우
             auction.setAuctionStatus(SysCommonCodes.Auction.FAILED);
 
@@ -394,8 +395,7 @@ public class AuctionService {
                             .relatedType(SysCommonCodes.NotificationRelatedType.AUCTION)
                             .build()
             );
-        }
-        else {
+        } else {
             Bid winningBid = bids.get(0);   //최고가
             auction.updatePriceAndBidder(winningBid.getBidAmount(), winningBid.getUserId());
             auction.setAuctionStatus(SysCommonCodes.Auction.COMPLETED);
@@ -405,9 +405,9 @@ public class AuctionService {
             ProfileInfoResponseDTO grantee = userService.getProfileInfo(winningBid.getUserId());
 
             // 상환 정보 조회 (연체 횟수, 남은 원금)
-            RepaymentInfo repaymentInfo;
+            RepaymentScheduler.RepaymentInfo repaymentInfo;
             try {
-                repaymentInfo = repaymentSchedulerService.getRepaymentInfo(auction.getTokenId());
+                repaymentInfo = repaymentSchedulerService.getPaymentInfo(auction.getTokenId());
             } catch (Exception e) {
                 log.error("상환정보 조회 오류: {}", e.getMessage(), e);
                 throw new BusinessException(ErrorCode.BLOCKCHAIN_REPAYMENT_FAIL, "블록체인에서 상환 조회에 실패했습니다.");
@@ -444,11 +444,11 @@ public class AuctionService {
                 // 메타데이터 생성
                 PromissoryNoteAuction.AppendixMetadata metadata = new PromissoryNoteAuction.AppendixMetadata(
                         auction.getTokenId(),
-                        auction.getSellerSign(),
+                        "7JaR64+E7J247ISc66qF",
                         grantor.getUserName(),
-                        grantor.getUserName(),
+                        grantor.getWalletAddress(),
                         grantorHash,
-                        winningBid.getBidderSign(),
+                        "7JaR7IiY7J247ISc66qF",
                         grantee.getUserName(),
                         grantee.getWalletAddress(),
                         granteeHash,
@@ -480,7 +480,7 @@ public class AuctionService {
                             .build()
             );
 
-            User winner = userService.findById(winningBid.getUserId());
+            winner = userService.findById(winningBid.getUserId());
             extendedMailService.sendAuctionContractToAssignee(
                     winner.getEmail(),
                     winner.getUserName(),
@@ -531,7 +531,7 @@ public class AuctionService {
         auctionRepository.save(auction);
 
         //차용증 현재 채권자 정보 변경
-        contractService.changeCreditorByTokenId(auction.getTokenId(), auction.getAssignor().getUserId());
+        contractService.changeCreditorByTokenId(auction.getTokenId(), winner.getUserId());
     }
 
     public SimilarAuctionResponseDTO getSimilarAuctions(@Valid Integer auctionId) {

@@ -121,7 +121,7 @@ public class AuctionService {
                 .endDate(auctionRequest.getEndDate())
                 .tokenId(auctionRequest.getTokenId())
                 .auctionStatus(SysCommonCodes.Auction.ING)
-                .sellerSign(null)
+                .sellerSign("")
                 .createdAt(ZonedDateTime.now())
                 .build();
 

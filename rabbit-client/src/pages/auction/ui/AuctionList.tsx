@@ -30,6 +30,7 @@ const AuctionList = () => {
     isLoading,
     fetchNextPage,
     hasNextPage,
+    isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: [
       "auctionList",
@@ -137,8 +138,8 @@ const AuctionList = () => {
             </Button>
           </div>
         </div>
-        <div className="flex w-full items-center justify-center xl:items-start xl:justify-start">
-          <ul className="grid gap-10 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="flex w-full flex-col items-center">
+          <ul className="grid w-full gap-10 lg:grid-cols-2 xl:grid-cols-3">
             {isLoading ? (
               <div className="loader-sprite"></div>
             ) : auctionData && auctionData.pages.length > 0 ? (
@@ -153,10 +154,14 @@ const AuctionList = () => {
               <li>진행중인 경매가 없습니다.</li>
             )}
           </ul>
-          <div
-            ref={loadMoreRef}
-            className={cn(isLoading ? "loader-sprite" : "h-10")}
-          ></div>
+
+          {/* 다음 페이지 로딩 인디케이터 - 항상 하단 중앙에 위치 */}
+          <div className="mt-6 flex w-full justify-center">
+            <div
+              ref={loadMoreRef}
+              className={cn(isFetchingNextPage && "loader-sprite")}
+            ></div>
+          </div>
         </div>
       </section>
     </div>

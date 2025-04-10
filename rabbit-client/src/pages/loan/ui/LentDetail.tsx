@@ -10,6 +10,7 @@ import { getLentDetailAPI, getloanEventAPI } from "@/entities/loan/api/loanApi";
 import { useNavigate, useParams } from "react-router";
 import { useState } from "react";
 import { cn } from "@/shared/lib/utils";
+import { Button } from "@/shared/ui/button";
 
 const LentDetail = () => {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
@@ -22,6 +23,8 @@ const LentDetail = () => {
     queryKey: ["lentDetail", contractId],
     queryFn: () => getLentDetailAPI(contractId!),
   });
+
+  console.log(data);
 
   const { data: eventData } = useSuspenseQuery({
     queryKey: ["loanEvent", contractId],
@@ -91,6 +94,27 @@ const LentDetail = () => {
               </div>
             </div>
             <Separator />
+          </div>
+          <div className="flex h-full w-full flex-col gap-2 rounded-sm bg-gray-800 px-4 py-3">
+            <div className="whitespace-nowrap text-gray-100">
+              계약서 상세보기
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              className="w-full"
+              onClick={() => {
+                if (data?.data?.addTermsHash) {
+                  window.open(
+                    data.data.addTermsHash,
+                    "_blank",
+                    "noopener,noreferrer",
+                  );
+                }
+              }}
+            >
+              확인
+            </Button>
           </div>
         </div>
       </div>

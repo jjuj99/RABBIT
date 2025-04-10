@@ -8,10 +8,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 const SuccessPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const orderId = searchParams.get("orderId");
+  const amount = searchParams.get("amount");
+  const paymentKey = searchParams.get("paymentKey");
+  console.log("최초렌더링");
+  console.log("orderId", orderId);
+  console.log("amount", amount);
+  console.log("paymentKey", paymentKey);
+  console.log("--------------------------------");
 
   useEffect(() => {
     // 쿼리 파라미터 값이 결제 요청할 때 보낸 데이터와 동일한지 반드시 확인하세요.
     // 클라이언트에서 결제 금액을 조작하는 행위를 방지할 수 있습니다.
+    console.log("useEffect 렌더링");
+    console.log("orderId", orderId);
+    console.log("amount", amount);
+    console.log("paymentKey", paymentKey);
+    console.log("--------------------------------");
     const requestData = {
       orderId: searchParams.get("orderId"),
       amount: searchParams.get("amount"),
@@ -24,6 +37,8 @@ const SuccessPage = () => {
         const response = await ConfirmAPI(requestData);
         console.log(response);
       } catch (error) {
+        console.log("error", error);
+
         if (error instanceof Error) {
           navigate(`account/fail?message=${error?.message}`);
         }

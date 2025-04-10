@@ -13,6 +13,7 @@ import HeaderMobile from "@/widget/common/ui/HeaderMobile";
 import MainNavMobile from "@/features/common/ui/MainNavMobile";
 import Footer from "@/widget/common/ui/Footer";
 import ProtectRoute from "@/widget/common/ui/ProtectRoute";
+import Signup from "@/pages/common/ui/Signup";
 
 function App() {
   const isDesktop = useMediaQuery("md");
@@ -24,6 +25,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="/sign-up" element={<Signup />} />
         <Route
           path="/loan/*"
           element={

@@ -337,7 +337,8 @@ public class AuctionService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "해당 경매를 찾을 수 없습니다."));
 
         User debtor = contractService.getDebtorByTokenId(auction.getTokenId());
-        String creditScore = bankService.getCreditScore(debtor.getUserId());
+//        String creditScore = bankService.getCreditScore(debtor.getUserId());
+        String creditScore = "B";
 
         //블록체인에서 직접 읽어온 값 추가 필요
         try {

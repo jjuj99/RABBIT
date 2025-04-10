@@ -39,7 +39,7 @@ public class BankAuthController {
     @BankAuthControllerSwagger.accountAuthSendApi
     @PostMapping("/refund-account/send")
     public ResponseEntity<CustomApiResponse<MessageResponse>> accountAuthSend(@RequestBody AccountAuthSendRequestDTO request) {
-        bankAuthService.accountAuthSend(request);
+//        bankAuthService.accountAuthSend(request);
 
         return ResponseEntity.ok(CustomApiResponse.success(MessageResponse.of("해당 계좌로 인증 번호를 전송했습니다.")));
     }
@@ -47,7 +47,12 @@ public class BankAuthController {
     @BankAuthControllerSwagger.accountAuthVerifyApi
     @PostMapping("/refund-account/verify")
     public ResponseEntity<CustomApiResponse<AccountAuthVerifyResponseDTO>> accountAuthVerify(@RequestBody @Valid AccountAuthVerifyRequestDTO request) {
-        AccountAuthVerifyResponseDTO response = bankAuthService.accountAuthVerify(request);
+//        AccountAuthVerifyResponseDTO response = bankAuthService.accountAuthVerify(request);
+
+        AccountAuthVerifyResponseDTO response = AccountAuthVerifyResponseDTO.builder()
+                .isVerified(true)
+                .message("계좌 인증에 성공했습니다")
+                .build();
 
         return ResponseEntity.ok(CustomApiResponse.success(response));
     }

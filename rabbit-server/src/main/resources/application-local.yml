@@ -32,6 +32,10 @@ spring:
 #    username: guest
 #    password: guest
 
+# 쿠키 설정
+cookie:
+  secure: false
+
 # 로컬 환경 로깅 설정
 logging:
   config: classpath:log4j2-local.xml

@@ -180,10 +180,6 @@ cors:
     - "https://nft-rabbit.site"
     - "https://j12a604.p.ssafy.io"
 
-# 쿠키 설정
-cookie:
-  secure: false
-
 # TOSS 설정
 toss:
   secret: ${TOSS_SECRET}
@@ -215,6 +211,9 @@ blockchain:
   gas:
     price: 20000000000
     limit: 4500000
+
+  transaction:
+    timeout: 60  # 블록체인 트랜잭션 타임아웃 (초)
 
 # Pinata (IPFS) 설정
 pinata:

@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
+import com.rabbit.contract.domain.dto.ContractProcessingInfoDTO;
 import com.rabbit.user.service.WalletService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -196,13 +197,14 @@ public class ContractCommandService {
      * @param userId     요청자 ID
      * @return 완료된 계약 정보
      */
-    @Transactional
     public ContractResponseDTO completeContract(Integer contractId, Integer userId) {
         // 시작 시간 측정
         long startTime = System.currentTimeMillis();
+
+        // 1. 트랜잭션 밖에서 계약 정보 조회
         Contract contract = contractQueryService.findContractById(contractId);
 
-        // 상태 전이 검증
+        // 2. 상태 전이 검증
         validateStatusTransition(
                 contract.getContractStatus(),
                 SysCommonCodes.Contract.CONTRACTED,
@@ -210,29 +212,42 @@ public class ContractCommandService {
                 contract
         );
 
-        // 계약 완료 처리 위임
-        contractProcessingService.completeContractProcessing(contract);
+        try {
+            // 3. 트랜잭션 밖에서 계약 처리 준비
+            ContractProcessingInfoDTO processingInfo =
+                    contractProcessingService.prepareContractProcessing(contract);
 
-        Contract updatedContract = contractRepository.save(contract);
+            // 4. 트랜잭션 내에서 계약 완료 처리
+            processContractInTransaction(contract, processingInfo);
 
-        // 2. 채무자 지갑 주소 확인
-        String debtorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getDebtor().getUserId());
-        if (debtorWalletAddress == null || debtorWalletAddress.isBlank()) {
-            debtorWalletAddress = "";
+            // 5. 트랜잭션 밖에서 채무자 지갑 주소 조회
+            String debtorWalletAddress = walletService.getUserPrimaryWalletAddressById(contract.getDebtor().getUserId());
+            if (debtorWalletAddress == null || debtorWalletAddress.isBlank()) {
+                debtorWalletAddress = "";
+            }
+
+            log.info("[계약 완료 처리] 계약 ID: {}, 채권자: {}, 채무자: {}",
+                    contractId, contract.getCreditor().getUserId(), contract.getDebtor().getUserId());
+
+            // 6. 트랜잭션 밖에서 PDF 생성, 이메일 및 알림 발송
+            notificationHelper.sendContractCompletionNotifications(contract);
+
+            // 성능 측정 및 소요 시간 로깅
+            long endTime = System.currentTimeMillis();
+            long elapsedTime = endTime - startTime;
+            log.info("[성능 측정] 계약 ID: {}, 총 소요 시간: {}ms", contract.getContractId(), elapsedTime);
+
+            return ContractResponseDTO.successFrom(contract, debtorWalletAddress);
+
+        } catch (BusinessException e) {
+            // 블록체인 타임아웃 예외도 다른 비즈니스 예외와 동일하게 처리
+            log.error("[계약 완료 처리 실패] 계약 ID: {}, 오류: {}", contractId, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("[계약 완료 처리 실패] 계약 ID: {}, 오류: {}", contractId, e.getMessage(), e);
+            throw new BusinessException(ErrorCode.BUSINESS_LOGIC_ERROR,
+                    "계약 완료 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
-
-        log.info("[계약 완료 처리] 계약 ID: {}, 채권자: {}, 채무자: {}",
-                contractId, contract.getCreditor().getUserId(), contract.getDebtor().getUserId());
-
-        // PDF 생성, 이메일 및 알림 발송
-        notificationHelper.sendContractCompletionNotifications(updatedContract);
-
-        // 종료 시간 측정 및 소요 시간 로깅
-        long endTime = System.currentTimeMillis();
-        long elapsedTime = endTime - startTime;
-        log.info("[성능 측정] 계약 ID: {}, NFT 생성 총 소요 시간: {}ms", contract.getContractId(), elapsedTime);
-
-        return ContractResponseDTO.successFrom(updatedContract, debtorWalletAddress);
     }
 
     /**
@@ -316,6 +331,16 @@ public class ContractCommandService {
 
         log.info("[채권자 변경] 계약 ID: {}, 토큰 ID: {}, 새 채권자 ID: {}",
                 contract.getContractId(), tokenId, newCreditorId);
+    }
+
+    /**
+     * 트랜잭션 내에서 계약 처리 수행
+     */
+    @Transactional
+    public void processContractInTransaction(Contract contract,
+                                             ContractProcessingInfoDTO processingInfo) {
+        contractProcessingService.completeContractProcessing(contract, processingInfo);
+        contractRepository.save(contract);
     }
 
     /**

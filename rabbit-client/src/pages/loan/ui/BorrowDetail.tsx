@@ -26,6 +26,7 @@ import {
 import { Input } from "@/shared/ui/input";
 import { useState } from "react";
 import useGetBalance from "@/entities/wallet/hooks/useGetBalance";
+import { cn } from "@/shared/lib/utils";
 
 const BorrowDetail = () => {
   const isDesktop = useMediaQuery("lg");
@@ -33,6 +34,7 @@ const BorrowDetail = () => {
   const [repaymentAmount, setRepaymentAmount] = useState<number>(0);
 
   const { balance } = useGetBalance();
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const { contractId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -100,10 +102,20 @@ const BorrowDetail = () => {
     <div className="flex flex-col gap-8">
       <h2 className="text-xl font-bold sm:text-2xl">채무 상세</h2>
       <div className="flex h-fit flex-col items-center gap-4 md:flex-row md:items-start">
-        <img
-          src={data.data.nftImage}
-          className="w-full rounded-sm md:h-[350px] md:w-[350px] lg:h-[466px] lg:w-[466px]"
-        />
+        <div className="relative aspect-square w-full max-w-[593px] rounded-sm">
+          {!isImageLoaded && (
+            <div className="absolute inset-0 animate-pulse rounded-sm bg-gray-800"></div>
+          )}
+          <img
+            onLoad={() => setIsImageLoaded(true)}
+            src={data.data.nftImage}
+            className={cn(
+              "h-full w-full rounded-sm object-cover transition-opacity duration-500",
+              isImageLoaded ? "opacity-100" : "opacity-0",
+            )}
+          />
+        </div>
+
         <div className="flex w-full flex-col gap-2">
           <LoanInfo
             tokenId={data.data.tokenId}

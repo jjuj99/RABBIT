@@ -5,9 +5,13 @@ interface BorrowSummaryListProps {
   summary?: BorrowSummaryResponse;
 }
 
-const BorrowSummaryList = ({ summary }: BorrowSummaryListProps) => {
-  if (!summary) return null;
-
+const BorrowSummaryList = ({
+  summary = {
+    totalOutgoingLa: 0,
+    monthlyOutgoingLa: 0,
+    nextOutgoingDt: "없음",
+  },
+}: BorrowSummaryListProps) => {
   return (
     <div className="flex flex-row justify-center gap-4">
       <LoanSummary

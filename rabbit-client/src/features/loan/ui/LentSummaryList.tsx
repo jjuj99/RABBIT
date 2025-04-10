@@ -22,19 +22,19 @@ const LentSummaryList = ({
             : "0 원"
         }
         subContent="빌려준 금액"
-        className="w-full"
+        className="w-full flex-1"
       />
       <LoanSummary
         title="월 상환 예정 금액"
         mainContent={`${summary.monthlyIncomingLa.toLocaleString()} RAB`}
         subContent="월 수익"
-        className="w-full"
+        className="w-full flex-1"
       />
       <LoanSummary
         title="다음 상환일"
         mainContent={summary.nextIncomingDt}
         subContent="가장 가까운 상환일"
-        className="w-full"
+        className="w-full flex-1"
       />
     </div>
   );

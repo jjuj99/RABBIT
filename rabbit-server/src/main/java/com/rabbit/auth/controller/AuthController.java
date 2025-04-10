@@ -45,6 +45,9 @@ public class AuthController {
     @Value("${cookie.secure}")
     private boolean cookieSecure;
 
+    @Value("${cookie.site}")
+    private String cookieSite;
+
     private final AuthService authService;
 
     @AuthControllerSwagger.nonceApi
@@ -75,7 +78,7 @@ public class AuthController {
                 .secure(cookieSecure)
                 .path("/")
                 .maxAge(60 * 60 * 24 * 7)
-                .sameSite("Strict")
+                .sameSite(cookieSite)
                 .build();
 
         httpResponse.addHeader("Set-Cookie", refreshCookie.toString());
@@ -104,7 +107,7 @@ public class AuthController {
                 .secure(cookieSecure)
                 .path("/")
                 .maxAge(0) // 쿠키 만료
-                .sameSite("Strict")
+                .sameSite(cookieSite)
                 .build();
 
         httpResponse.addHeader("Set-Cookie", emptyCookie.toString());

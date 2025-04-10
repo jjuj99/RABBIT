@@ -11,6 +11,8 @@ import {
 } from "chart.js";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { formatNumber } from "@/shared/utils/formatNumber";
+import { useNavigate } from "react-router";
+import { cn } from "@/shared/lib/utils";
 
 ChartJS.register(
   CategoryScale,
@@ -28,6 +30,7 @@ interface AuctionSimilarListProps {
 
 const AuctionSimilarList = ({ data }: AuctionSimilarListProps) => {
   const { targetAuction, comparisonAuctions } = data;
+  const navigate = useNavigate();
 
   // 데이터 정렬 및 퍼센타일 계산
   const sortedAuctions = [...comparisonAuctions, targetAuction].sort(
@@ -103,12 +106,16 @@ const AuctionSimilarList = ({ data }: AuctionSimilarListProps) => {
                 <tbody className="divide-y divide-gray-700 bg-gray-800">
                   {sortedAuctions.map((auction) => (
                     <tr
+                      onClick={() => {
+                        navigate(`/auction/${auction.auctionId}`);
+                      }}
                       key={auction.auctionId}
-                      className={
+                      className={cn(
                         auction.auctionId === targetAuction.auctionId
                           ? "bg-blue-900/30"
-                          : ""
-                      }
+                          : "",
+                        "cursor-pointer",
+                      )}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-white">
                         {auction.auctionId}

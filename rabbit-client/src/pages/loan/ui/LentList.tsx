@@ -69,7 +69,7 @@ const LentList = () => {
           <span>판매하기</span>
         </Button>
       </div>
-      <div className="w-full overflow-hidden rounded-lg bg-gray-900">
+      <div className="w-full overflow-hidden rounded-lg">
         {isDesktop ? (
           <LentInfo data={LentList.data} onPageChange={setPage} />
         ) : (

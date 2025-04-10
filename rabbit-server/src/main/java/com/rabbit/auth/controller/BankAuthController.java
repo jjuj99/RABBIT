@@ -1,6 +1,5 @@
 package com.rabbit.auth.controller;
 
-import com.rabbit.auth.controller.swagger.AuthControllerSwagger;
 import com.rabbit.auth.controller.swagger.BankAuthControllerSwagger;
 import com.rabbit.auth.domain.dto.request.AccountAuthSendRequestDTO;
 import com.rabbit.auth.domain.dto.request.AccountAuthVerifyRequestDTO;
@@ -31,6 +30,8 @@ public class BankAuthController {
     @GetMapping("/list")
     public ResponseEntity<CustomApiResponse<List<Bank>>> getAllBanks() {
         List<Bank> banks = bankAuthService.findAllBanks();
+
+        System.out.println(banks.get(0).getBankName());
 
         return ResponseEntity.ok(CustomApiResponse.success(banks));
     }

@@ -8,6 +8,36 @@ import { getLentListAPI, getLentSummaryAPI } from "@/entities/loan/api/loanApi";
 import { useState, useEffect } from "react";
 import { Button } from "@/shared/ui/button";
 import { useNavigate } from "react-router";
+import { Skeleton } from "@/shared/ui/skeleton";
+
+// 스켈레톤 UI 컴포넌트
+const LoanSummarySkeleton = ({ isDesktop }: { isDesktop: boolean }) => {
+  if (isDesktop) {
+    return (
+      <div className="grid grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-lg bg-gray-800 p-4">
+            <Skeleton className="mb-2 h-4 w-1/3" />
+            <Skeleton className="mb-4 h-6 w-1/2" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex overflow-hidden">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="mr-4 min-w-[280px] rounded-lg bg-gray-800 p-4">
+          <Skeleton className="mb-2 h-4 w-1/3" />
+          <Skeleton className="mb-4 h-6 w-1/2" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const LentList = () => {
   const isDesktop = useMediaQuery("lg");
@@ -23,7 +53,7 @@ const LentList = () => {
     window.history.replaceState({}, "", `?${params.toString()}`);
   }, [page]);
 
-  const { data: LentSummary } = useQuery({
+  const { data: LentSummary, isLoading: LentSummaryLoading } = useQuery({
     queryKey: ["LentSummary"],
     queryFn: () => getLentSummaryAPI(),
   });
@@ -50,12 +80,15 @@ const LentList = () => {
   return (
     <section className="flex flex-col gap-8">
       <div className="relative">
-        {isDesktop ? (
+        {LentSummaryLoading ? (
+          <LoanSummarySkeleton isDesktop={isDesktop} />
+        ) : isDesktop ? (
           <LoanSummaryList summary={LentSummary?.data} />
         ) : (
           <LoanSummaryCarousel summary={LentSummary?.data} />
         )}
       </div>
+
       <div className="flex flex-row items-center justify-between">
         <h2 className="text-xl font-semibold">빌려준 내역</h2>
         <Button

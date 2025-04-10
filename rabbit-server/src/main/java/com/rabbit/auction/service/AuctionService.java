@@ -9,8 +9,6 @@ import com.rabbit.auction.domain.entity.Auction;
 import com.rabbit.auction.repository.BidRepository;
 import com.rabbit.bankApi.service.BankService;
 import com.rabbit.blockchain.domain.dto.RepaymentInfo;
-import com.rabbit.blockchain.domain.dto.response.AppendixMetadataDTO;
-import com.rabbit.blockchain.mapper.AppendixMetadataMapper;
 import com.rabbit.blockchain.service.*;
 import com.rabbit.blockchain.wrapper.PromissoryNote;
 import com.rabbit.blockchain.wrapper.PromissoryNoteAuction;

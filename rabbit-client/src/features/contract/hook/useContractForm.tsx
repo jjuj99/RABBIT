@@ -42,7 +42,10 @@ const useContractForm = () => {
         .email({ message: "올바른 이메일 형식이 아닙니다" }),
       crName: z.string().min(1, { message: "이름을 입력해주세요" }),
       crWallet: z.string().min(1, { message: "지갑 주소를 입력해주세요" }),
-      la: z.number().min(99999, { message: "100,000원 이상" }),
+      la: z
+        .number()
+        .min(99999, { message: "100,000원 이상" })
+        .max(10000000000, { message: "100억을 넘을 수 없습니다." }),
       ir: z
         .number()
         .min(0, { message: "이자율은 0% 이상이어야 합니다" })

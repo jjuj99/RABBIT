@@ -137,12 +137,12 @@ public class AuthService {
         }
 
         // 싸피 은행 계정 정보 호출
-        SsafyAccount ssafyAccount = ssafyAccountRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED, "계좌 인증을 다시 시도해주세요."));
+//        SsafyAccount ssafyAccount = ssafyAccountRepository.findByEmail(request.getEmail())
+//                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED, "계좌 인증을 다시 시도해주세요."));
 
-        if (ssafyAccount.getUserKey() == null || ssafyAccount.getAccountNo() == null) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED, "계좌 인증을 다시 시도해주세요.");
-        }
+//        if (ssafyAccount.getUserKey() == null || ssafyAccount.getAccountNo() == null) {
+//            throw new BusinessException(ErrorCode.UNAUTHORIZED, "계좌 인증을 다시 시도해주세요.");
+//        }
 
         // 유저 엔티티 생성
         User user = userRepository.save(User.builder()

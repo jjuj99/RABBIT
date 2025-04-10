@@ -197,8 +197,9 @@ const AuctionCreate = () => {
 
       try {
         // 4. transferFrom 호출: 현재 소유자(walletInfo.address) → 경매 컨트랙트 주소
-        const depositToAuction =
-          await promissoryNoteContract.depositToAuction(24);
+        const depositToAuction = await promissoryNoteContract.depositToAuction(
+          selectedItem?.tokenId,
+        );
 
         console.log("DepositToAuction 트랜잭션 전송됨:", depositToAuction.hash);
         await depositToAuction.wait();

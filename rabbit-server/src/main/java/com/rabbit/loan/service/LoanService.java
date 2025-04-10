@@ -392,9 +392,9 @@ public class LoanService {
                         // 채무자 신용점수 조회
                         String creditScore = bankService.getCreditScore(userId);
 
-                        BigDecimal ir = new BigDecimal(metadata.ir).divide(BigDecimal.valueOf(10000));
-                        BigDecimal dir = new BigDecimal(metadata.dir).divide(BigDecimal.valueOf(10000));
-                        BigDecimal earlyPayFee = new BigDecimal(metadata.earlyPayFee).divide(BigDecimal.valueOf(10000));
+                        BigDecimal ir = new BigDecimal(metadata.ir).divide(BigDecimal.valueOf(100));
+                        BigDecimal dir = new BigDecimal(metadata.dir).divide(BigDecimal.valueOf(100));
+                        BigDecimal earlyPayFee = new BigDecimal(metadata.earlyPayFee).divide(BigDecimal.valueOf(100));
 
                         // 만기수취액 계산
                         BigDecimal totalAmount = loanUtil.calculateTotalRepaymentAmount(

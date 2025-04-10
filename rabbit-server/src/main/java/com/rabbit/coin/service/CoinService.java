@@ -146,7 +146,7 @@ public class CoinService {
         log.debug("사용자의 RAB 코인 소각 완료");
 
         // 싸피은행 입금 처리
-        bankService.deposit(userId, coinWithdrawRequestDTO.getAmount());
+//        bankService.deposit(userId, coinWithdrawRequestDTO.getAmount());
         log.debug("환불 계좌에 입금 완료");
 
         // 코인 출금 로그 저장

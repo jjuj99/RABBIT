@@ -1,5 +1,6 @@
 package com.rabbit.bankApi.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbit.bankApi.domain.api.Header.HeaderUtil;

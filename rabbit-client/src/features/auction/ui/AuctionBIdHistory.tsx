@@ -14,7 +14,7 @@ const AuctionBidHistory = ({ data }: AuctionBidHistoryProps) => {
   if (!data || data.length === 0) {
     return (
       <div className="w-full overflow-hidden rounded-lg bg-gray-900 p-4">
-        <div className="text-center text-base text-gray-400">
+        <div className="flex min-h-[300px] items-center justify-center text-center text-base text-gray-400">
           입찰 내역이 없습니다.
         </div>
       </div>

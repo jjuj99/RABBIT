@@ -183,7 +183,7 @@ const Home = () => {
                     </div>
                   </div>
                   <div className="flex justify-center">
-                    <div className="w-full max-w-[300px] transform transition-transform hover:scale-105">
+                    <div className="w-full max-w-[280px] transform transition-transform hover:scale-105 md:max-w-[300px]">
                       <MyNFTcard
                         item={{
                           tokenId: "1",

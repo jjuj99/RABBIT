@@ -67,7 +67,7 @@ const AlarmButton = () => {
     <>
       <Menubar className="border-none bg-transparent p-0">
         <MenubarMenu>
-          <MenubarTrigger className="border-gradient relative bg-transparent p-2">
+          <MenubarTrigger className="border-gradient relative h-9 w-9 bg-transparent p-2">
             <img src="/icons/bell.svg" alt="알림버튼" />
             {unreadCount > 0 && (
               <div className="absolute -top-1 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs text-white">

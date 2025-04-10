@@ -1,4 +1,5 @@
 import { withLazyComponent } from "@/widget/common/lib/withLazyComponent";
+import ProtectRoute from "@/widget/common/ui/ProtectRoute";
 import { Navigate, Route, Routes } from "react-router";
 
 const CoinCharge = withLazyComponent(
@@ -17,8 +18,22 @@ const AccountRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="charge" replace />} />
-      <Route path="charge" element={<CoinCharge />} />
-      <Route path="withdraw" element={<CoinWithdraw />} />
+      <Route
+        path="charge"
+        element={
+          <ProtectRoute>
+            <CoinCharge />
+          </ProtectRoute>
+        }
+      />
+      <Route
+        path="withdraw"
+        element={
+          <ProtectRoute>
+            <CoinWithdraw />
+          </ProtectRoute>
+        }
+      />
       <Route path="success" element={<SuccessPage />} />
       <Route path="fail" element={<FailPage />} />
     </Routes>

@@ -41,14 +41,7 @@ function App() {
             </ProtectRoute>
           }
         />
-        <Route
-          path="/account/*"
-          element={
-            <ProtectRoute>
-              <AccountRoutes />
-            </ProtectRoute>
-          }
-        />
+        <Route path="/account/*" element={<AccountRoutes />} />
       </Routes>
       <Footer />
       {!isDesktop && (

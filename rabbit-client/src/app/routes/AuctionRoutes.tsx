@@ -21,7 +21,6 @@ const AuctionRoutes = () => {
       <Route path="list" element={<AuctionList />} />
       <Route path="history" element={<AuctionHistory />} />
       <Route path="new" element={<AuctionCreate />} />
-
       <Route path=":auctionId" element={<AuctionDetail />} />
     </Routes>
   );

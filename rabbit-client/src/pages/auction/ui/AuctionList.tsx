@@ -47,7 +47,7 @@ const AuctionList = () => {
     ],
     queryFn: ({ pageParam }) => {
       const params: AuctionListRequest = {};
-      params.pageSize = 4;
+      params.pageSize = 9;
       params.pageNumber = pageParam;
       if (minPrice) params.minPrice = Number(minPrice);
       if (maxPrice) params.maxPrice = Number(maxPrice);

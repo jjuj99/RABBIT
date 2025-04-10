@@ -36,35 +36,6 @@ const AuctionDetail = () => {
   const VITE_API_URL = import.meta.env.VITE_API_URL;
   const VITE_API_VERSION = import.meta.env.VITE_API_VERSION;
 
-  useEffect(() => {
-    if (!auctionId) return;
-
-    const eventSource = new EventSource(
-      `${VITE_API_URL}/${VITE_API_VERSION}/sse/subscribe/auction?id=${auctionId}`,
-    );
-
-    eventSource.onmessage = (event) => {
-      try {
-        const bidUpdate = JSON.parse(event.data) as BidUpdateEvent;
-        if (bidUpdate.event === "bid-updated") {
-          setLatestBid(bidUpdate.data);
-          setIsDialogOpen(true);
-        }
-      } catch (error) {
-        console.error("SSE 데이터 파싱 오류:", error);
-      }
-    };
-
-    eventSource.onerror = (error) => {
-      console.error("SSE 연결 에러:", error);
-      eventSource.close();
-    };
-
-    return () => {
-      eventSource.close();
-    };
-  }, [auctionId]);
-
   const {
     data: PNInfo,
     isLoading: PNInfoLoading,
@@ -104,6 +75,39 @@ const AuctionDetail = () => {
     queryKey: ["AuctionSimilarList", auctionId],
     queryFn: () => getAuctionSimilarListAPI(Number(auctionId)),
   });
+
+  useEffect(() => {
+    if (!auctionId) return;
+
+    const eventSource = new EventSource(
+      `${VITE_API_URL}/${VITE_API_VERSION}/sse/subscribe/auction?id=${auctionId}`,
+    );
+
+    eventSource.onmessage = (event) => {
+      console.log(event);
+
+      try {
+        const bidUpdate = JSON.parse(event.data) as BidUpdateEvent;
+        if (bidUpdate.event === "bid-updated") {
+          setLatestBid(bidUpdate.data);
+          setCurrentBidPrice(bidUpdate.data.bidAmount);
+          refetchBidList();
+          setIsDialogOpen(true);
+        }
+      } catch (error) {
+        console.error("SSE 데이터 파싱 오류:", error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error("SSE 연결 에러:", error);
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [auctionId, refetchBidList]);
 
   const handleRefresh = () => {
     refetchPNInfo();

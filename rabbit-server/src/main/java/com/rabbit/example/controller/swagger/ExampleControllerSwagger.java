@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  * ExampleController의 Swagger 문서화를 위한 인터페이스
  * 이 인터페이스는 ExampleController의 API 메서드에 대한 Swagger 문서화 정보만 포함합니다.
  */
-@Tag(name = "Example", description = "예시 API - 예시 데이터의 CRUD 작업을 수행합니다")
+@Tag(name = "Example", description = "예시 API - 예시 데이터의 CRUD 작업을 수행합니다 - 테스트")
 public interface ExampleControllerSwagger {
 
     @Target({ElementType.METHOD})

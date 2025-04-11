@@ -32,7 +32,17 @@ const ContractCreate = () => {
 
   return (
     <>
-      <LoadingOverlay isLoading={isLoading} />
+      <LoadingOverlay
+        isLoading={isLoading}
+        content={[
+          "계약 정보를 불러오는 중입니다...",
+          "최대 2분 소요됩니다...",
+          "조금만 기다려주세요...",
+          "NFT가 생성되는 중 입니다.",
+          "그거 아시나요? 저는 모릅니다.",
+          "RABBIT의 뜻은 토끼입니다.",
+        ]}
+      />
       <main className="mt-9 md:text-xl">
         <Form {...form}>
           <form

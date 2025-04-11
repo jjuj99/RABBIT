@@ -405,7 +405,19 @@ const AuctionCreate = () => {
   return (
     <>
       {/* 로딩 오버레이 - 경매 생성 중일 때 표시 */}
-      <LoadingOverlay content="경매 생성 중..." isLoading={isLoading} />
+      <LoadingOverlay
+        content={[
+          "경매 생성 중...",
+          "최대 2분 소요됩니다...",
+          "Seporia 네트워크에 연결중...",
+          "메타마스크 확인 중...",
+          "차용증 예치중...",
+          "경매 확인 중..",
+          "진짜 생성 중..",
+          "거의 생성 중...",
+        ]}
+        isLoading={isLoading}
+      />
 
       <section className="flex flex-col items-center justify-center gap-9 px-2 pt-9 sm:px-6">
         <div className="flex flex-col items-center gap-4">

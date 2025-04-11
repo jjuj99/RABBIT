@@ -25,7 +25,7 @@ const VITE_API_VERSION = import.meta.env.VITE_API_VERSION;
 
 export const GetUserAPI = async (): Promise<ApiResponse<User>> => {
   const res = await fetch(
-    `${VITE_API_URL}/${VITE_API_VERSION}/user/me`,
+    `${VITE_API_URL}/${VITE_API_VERSION}/users/me`,
     fetchOption("GET", undefined, "access"),
   );
   const data = await res.json();

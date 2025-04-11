@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExampleRequestDTO {
+public class ExampleRequestDTO { 
 
     @Schema(description = "예시 제목", example = "예시 제목입니다", required = true)
     @NotBlank(message = "제목은 필수 입력값입니다")

@@ -14,6 +14,7 @@ import {
 } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { AuctionForceEndAPI } from "@/features/auction/api/auctionApi";
+import LoadingOverlay from "@/widget/common/ui/LoadingOverray";
 
 interface AuctionCountdownTimerProps {
   endDate: string;
@@ -56,6 +57,17 @@ const AuctionCountdownTimer = ({
     if (mineFlag) {
       return (
         <>
+          <LoadingOverlay
+            isLoading={forceEndMutation.isPending}
+            content={[
+              "경매 종료 중...",
+              "최대 2분 소요됩니다...",
+              "Seporia 네트워크에 연결중...",
+              "메타마스크 확인 중...",
+              "부속 NFT 발행 중",
+              "소유권 이전 중",
+            ]}
+          />
           <button
             onClick={handleButtonClick}
             className="bg-brand-primary h-fit w-fit rounded px-4 py-2 text-lg whitespace-nowrap text-black hover:bg-green-500"

@@ -627,7 +627,17 @@ const SignupDialog = ({
 
   return (
     <>
-      <LoadingOverlay content="회원가입 중..." isLoading={submmitState[0]} />
+      <LoadingOverlay
+        content={[
+          "회원 가입 중....",
+          "최대 2분 소요됩니다...",
+          "3번 인증 받으셔야 합니다..",
+          "지갑 연결 중입니다.",
+          "지갑 확인 중입니다...",
+          "컨펌을 눌러주세요.....",
+        ]}
+        isLoading={submmitState[0]}
+      />
       <SignupConfirmDialog
         isOpen={isSignupConfirmOpen}
         onOpenChange={setIsSignupConfirmOpen}

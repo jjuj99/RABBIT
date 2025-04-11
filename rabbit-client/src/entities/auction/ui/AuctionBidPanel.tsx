@@ -67,7 +67,20 @@ const AuctionBidPanel = ({ CBP = 0 }: AuctionBidPanelProps) => {
 
   return (
     <>
-      <LoadingOverlay isLoading={isBidding} content="입찰 처리 중..." />
+      <LoadingOverlay
+        isLoading={isBidding}
+        content={[
+          "경매 입찰 중...",
+          "최대 2분 소요됩니다...",
+          "Seporia 네트워크에 연결중...",
+          "메타마스크 확인 중...",
+          "차용증에 사인하는 중...",
+          "경매 확인 중..",
+          "진짜 입찰 중..",
+          "거의 입찰 중...",
+          "입찰 거의 완료!...?",
+        ]}
+      />
       <div className="bg-radial-lg flex h-fit w-full flex-col gap-1 rounded-sm border border-white px-4 py-4 sm:gap-3 sm:px-8 sm:py-6">
         <div className="flex flex-col gap-0 sm:gap-2">
           <h2 className="text-sm font-medium sm:text-xl">현재 입찰가</h2>
